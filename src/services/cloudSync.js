@@ -236,7 +236,7 @@ export const CloudSync = {
           });
           const userFin = localFinances[u.id] || { fixedExpenses: [], transactions: [] };
           if (userFin.transactions?.length > 0 || userFin.fixedExpenses?.length > 0) {
-            await CloudSync.pushFinancesToCloud(u.id, userFin.fixedExpenses, userFinances.transactions);
+            await CloudSync.pushFinancesToCloud(u.id, userFin.fixedExpenses, userFin.transactions);
           }
         } catch {}
       }

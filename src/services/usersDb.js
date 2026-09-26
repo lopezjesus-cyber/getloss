@@ -127,6 +127,14 @@ export const UsersDB = {
           FinancesDB.injectCloudData(cloudUser.id, cloudResult.finances);
         }
 
+        // Asegurar la descarga de las finanzas completas y más recientes
+        try {
+          const liveFinances = await CloudSync.pullFinancesFromCloud(cloudUser.id);
+          if (liveFinances && FinancesDB && FinancesDB.injectCloudData) {
+            FinancesDB.injectCloudData(cloudUser.id, liveFinances);
+          }
+        } catch {}
+
         UsersDB.setActiveSession(cloudUser);
         return cloudUser;
       }
