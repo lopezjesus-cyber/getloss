@@ -574,68 +574,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 position: 'relative',
-                padding: '1rem 0'
+                padding: '0.5rem 0'
               }}>
-                {/* Tarjeta Flotante Izquierda (Desktop Callout) */}
-                <div style={{
-                  position: 'absolute',
-                  left: '-1.5%',
-                  top: '22%',
-                  maxWidth: '220px',
-                  background: 'rgba(18, 18, 21, 0.85)',
-                  border: '1px solid rgba(255, 255, 255, 0.16)',
-                  borderRadius: '20px',
-                  padding: '1.25rem',
-                  backdropFilter: 'blur(24px)',
-                  boxShadow: '0 20px 45px rgba(0,0,0,0.7), 0 0 20px rgba(255,255,255,0.05)',
-                  textAlign: 'left',
-                  display: 'none',
-                  zIndex: 3
-                }} className="hide-on-mobile">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '0.5rem' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: '#ffffff', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 10px rgba(255,255,255,0.5)' }}>
-                      <LayoutDashboard size={16} />
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ffffff', display: 'block' }}>Panel Extendido</span>
-                      <span style={{ fontSize: '0.65rem', color: '#22c55e', fontWeight: '700' }}>● Multi-Columna 4K</span>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: '1.45', margin: 0 }}>
-                    Auditoría simultánea de ingresos, obligaciones indispensables y flujo de caja con recálculo en vivo.
-                  </p>
-                </div>
-
-                {/* Tarjeta Flotante Derecha (Desktop Callout) */}
-                <div style={{
-                  position: 'absolute',
-                  right: '-1.5%',
-                  top: '38%',
-                  maxWidth: '220px',
-                  background: 'rgba(18, 18, 21, 0.85)',
-                  border: '1px solid rgba(255, 255, 255, 0.16)',
-                  borderRadius: '20px',
-                  padding: '1.25rem',
-                  backdropFilter: 'blur(24px)',
-                  boxShadow: '0 20px 45px rgba(0,0,0,0.7), 0 0 20px rgba(255,255,255,0.05)',
-                  textAlign: 'left',
-                  display: 'none',
-                  zIndex: 3
-                }} className="hide-on-mobile">
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', marginBottom: '0.5rem' }}>
-                    <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Download size={16} />
-                    </div>
-                    <div>
-                      <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ffffff', display: 'block' }}>PDF Ejecutivo</span>
-                      <span style={{ fontSize: '0.65rem', color: '#a1a1aa', fontWeight: '700' }}>CSV para Excel</span>
-                    </div>
-                  </div>
-                  <p style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: '1.45', margin: 0 }}>
-                    Genera estados financieros formales con desglose auditado listos para imprimir o exportar con 1 clic.
-                  </p>
-                </div>
-
                 {/* CHASIS MACBOOK PRO 16" SPACE BLACK */}
                 <div className="apple-hardware-wrapper" style={{
                   width: '100%',
