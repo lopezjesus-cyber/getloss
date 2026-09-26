@@ -515,9 +515,14 @@ button {
   grid-column: span 5;
 }
 
+.apple-bento-span-12 {
+  grid-column: span 12;
+}
+
 @media (max-width: 900px) {
   .apple-bento-span-7,
-  .apple-bento-span-5 {
+  .apple-bento-span-5,
+  .apple-bento-span-12 {
     grid-column: span 12 !important;
   }
 }

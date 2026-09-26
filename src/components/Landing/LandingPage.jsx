@@ -40,8 +40,9 @@ import { formatMoney } from '../../utils/formatters';
 import { useDeviceDetect } from '../../hooks/useDeviceDetect';
 import { generateFinancialPdfReport } from '../../services/pdfGenerator';
 import { generateFinancialExcelReport } from '../../services/excelGenerator';
+import { BrandLogo } from '../Common/BrandLogo';
 
-export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
+export const LandingPage = ({ onOpenAuth, onToggleTheme, theme, detectedDevice, onOpenInstall, pwaInstall }) => {
   // Detección automática del dispositivo real del usuario
   const deviceDetect = useDeviceDetect();
   // Estado para el dispositivo seleccionado en el simulador: 'DESKTOP' o 'MOBILE'
@@ -297,37 +298,53 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           alignItems: 'center',
           justifyContent: 'space-between'
         }}>
-          {/* Logo Apple-Minimalist */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-            <span style={{
-              width: '9px',
-              height: '9px',
-              borderRadius: '50%',
-              backgroundColor: '#ffffff',
-              boxShadow: '0 0 12px #ffffff'
-            }} />
-            <span style={{
-              fontSize: '1.35rem',
-              fontWeight: '800',
-              letterSpacing: '-0.04em',
-              color: '#ffffff'
-            }}>
-              getloss
-            </span>
-          </div>
+          {/* Logo Oficial con Isotipo Vectorial */}
+          <BrandLogo variant="full" size="md" withGlow={true} />
 
           {/* Acciones de Cabecera */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+            {onOpenInstall && (
+              <button
+                onClick={onOpenInstall}
+                style={{
+                  padding: '0.45rem 1rem',
+                  borderRadius: '9999px',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  color: '#ffffff',
+                  border: '1px solid rgba(255, 255, 255, 0.18)',
+                  backdropFilter: 'blur(12px)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.16)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                  e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+                }}
+              >
+                <Download size={14} />
+                <span>Instalar App</span>
+              </button>
+            )}
+
             <button
               onClick={() => onOpenAuth(true)}
               style={{
-                padding: '0.5rem 1.15rem',
+                padding: '0.45rem 1.05rem',
                 borderRadius: '9999px',
-                fontSize: '0.825rem',
+                fontSize: '0.8rem',
                 fontWeight: '600',
                 background: 'transparent',
                 color: '#d4d4d8',
-                border: '1px solid rgba(255, 255, 255, 0.15)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 transition: 'all 0.2s ease',
                 cursor: 'pointer'
               }}
@@ -346,9 +363,9 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             <button
               onClick={() => onOpenAuth(false)}
               style={{
-                padding: '0.5rem 1.25rem',
+                padding: '0.45rem 1.15rem',
                 borderRadius: '9999px',
-                fontSize: '0.825rem',
+                fontSize: '0.8rem',
                 fontWeight: '700',
                 background: '#ffffff',
                 color: '#000000',
@@ -356,7 +373,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                 boxShadow: '0 0 20px rgba(255, 255, 255, 0.25)',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.4rem',
+                gap: '0.35rem',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease'
               }}
@@ -369,8 +386,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                 e.currentTarget.style.boxShadow = '0 0 20px rgba(255, 255, 255, 0.25)';
               }}
             >
-              <span>Crear Cuenta</span>
-              <ArrowRight size={14} />
+              <span>Comenzar</span>
+              <ArrowRight size={13} />
             </button>
           </div>
         </div>
@@ -444,13 +461,13 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'center',
-          gap: '1.25rem',
+          gap: '1rem',
           marginBottom: '3.5rem'
         }}>
           <button
             onClick={() => onOpenAuth(false)}
             style={{
-              padding: '0.95rem 2.5rem',
+              padding: '0.95rem 2.4rem',
               fontSize: '1rem',
               fontWeight: '700',
               borderRadius: '9999px',
@@ -477,27 +494,61 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             <ArrowRight size={17} />
           </button>
 
+          {onOpenInstall && (
+            <button
+              onClick={onOpenInstall}
+              style={{
+                padding: '0.95rem 2rem',
+                fontSize: '1rem',
+                fontWeight: '700',
+                borderRadius: '9999px',
+                background: 'linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.04) 100%)',
+                color: '#ffffff',
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                backdropFilter: 'blur(14px)',
+                boxShadow: '0 10px 30px rgba(0, 0, 0, 0.5)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.6rem',
+                cursor: 'pointer',
+                transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'scale(1.04)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                e.currentTarget.style.boxShadow = '0 0 30px rgba(255, 255, 255, 0.2)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.25)';
+                e.currentTarget.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.5)';
+              }}
+            >
+              <Download size={18} />
+              <span>Descargar / Instalar App</span>
+            </button>
+          )}
+
           <button
             onClick={() => onOpenAuth(true)}
             style={{
-              padding: '0.95rem 2.2rem',
+              padding: '0.95rem 1.85rem',
               fontSize: '1rem',
               fontWeight: '600',
               borderRadius: '9999px',
-              background: 'rgba(255, 255, 255, 0.08)',
-              color: '#ffffff',
-              border: '1px solid rgba(255, 255, 255, 0.18)',
-              backdropFilter: 'blur(12px)',
+              background: 'transparent',
+              color: '#a1a1aa',
+              border: '1px solid rgba(255, 255, 255, 0.12)',
               cursor: 'pointer',
               transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
             }}
             onMouseEnter={e => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.35)';
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+              e.currentTarget.style.color = '#ffffff';
             }}
             onMouseLeave={e => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.18)';
+              e.currentTarget.style.background = 'transparent';
+              e.currentTarget.style.color = '#a1a1aa';
             }}
           >
             <span>Iniciar Sesión</span>
@@ -904,12 +955,9 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                           zIndex: 10
                         }}>
                           <div>
-                            {/* Logo getloss con Indicador Pulsante */}
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingLeft: '0.25rem' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 10px #ffffff' }} />
-                                <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>getloss</span>
-                              </div>
+                            {/* Logo getloss Oficial Vectorial */}
+                            <div style={{ marginBottom: '1.25rem', paddingLeft: '0.25rem' }}>
+                              <BrandLogo variant="full" size="sm" withGlow={true} />
                             </div>
 
                             {/* Botón "+ Nuevo Movimiento" con Efecto Glow */}
@@ -2473,6 +2521,73 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
               </button>
             </div>
           </div>
+
+          {/* Bento Card 5: Instalación Nativa y PWA (Span 12) */}
+          <div className="apple-bento-card apple-bento-span-12" style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '2rem',
+            background: 'linear-gradient(135deg, rgba(39, 39, 42, 0.45) 0%, rgba(18, 18, 21, 0.95) 100%)',
+            border: '1px solid rgba(255, 255, 255, 0.18)',
+            padding: '2.25rem 2.5rem'
+          }}>
+            <div style={{ maxWidth: '620px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.85rem' }}>
+                <BrandLogo variant="app-icon" size="sm" withGlow={true} />
+                <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#86868b' }}>
+                  Descarga e Instalación Directa
+                </span>
+              </div>
+              <h3 style={{ fontSize: 'clamp(1.5rem, 2.8vw, 2.2rem)', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.03em', marginBottom: '0.65rem' }}>
+                Instálalo como App en tu PC y Celular.
+              </h3>
+              <p style={{ color: '#a1a1aa', fontSize: '0.95rem', lineHeight: '1.6', margin: 0 }}>
+                Sin pasar por tiendas de aplicaciones lentas. Obtén una experiencia fluida a pantalla completa, soporte de caché offline y acceso directo en tu dock o pantalla de inicio.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', minWidth: '220px' }}>
+              <button
+                type="button"
+                onClick={onOpenInstall}
+                style={{
+                  padding: '0.9rem 1.85rem',
+                  borderRadius: '9999px',
+                  background: '#ffffff',
+                  color: '#000000',
+                  fontWeight: '800',
+                  fontSize: '0.9rem',
+                  border: 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '0.55rem',
+                  boxShadow: '0 0 35px rgba(255, 255, 255, 0.35)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.transform = 'scale(1.03)';
+                  e.currentTarget.style.boxShadow = '0 0 45px rgba(255, 255, 255, 0.55)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 0 35px rgba(255, 255, 255, 0.35)';
+                }}
+              >
+                <Download size={18} />
+                <span>Instalar en tu Dispositivo</span>
+              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.85rem', fontSize: '0.72rem', color: '#86868b' }}>
+                <span>💻 Windows / Mac</span>
+                <span>•</span>
+                <span>📱 iPhone / Android</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -2654,11 +2769,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
         color: '#71717a',
         fontSize: '0.825rem'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-          <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ffffff' }} />
-          <span style={{ fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
-            getloss
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '0.65rem' }}>
+          <BrandLogo variant="full" size="sm" withGlow={true} />
         </div>
         <p>© {new Date().getFullYear()} getloss • Suite de control financiero quincenal y mensual optimizada para PC y Celular.</p>
       </footer>

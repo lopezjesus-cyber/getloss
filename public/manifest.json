@@ -1,0 +1,32 @@
+{
+  "name": "getloss • Control Financiero",
+  "short_name": "getloss",
+  "description": "Suite de control financiero personal de precisión. Separa tus obligaciones indispensables, audita tus movimientos y optimiza tu flujo de dinero en PC y Celular.",
+  "start_url": "/",
+  "id": "/",
+  "display": "standalone",
+  "background_color": "#09090B",
+  "theme_color": "#09090B",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/app-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

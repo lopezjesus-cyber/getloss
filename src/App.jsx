@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { UsersDB } from './services/usersDb';
 import { FinancesDB } from './services/financesDb';
 import { useDeviceDetect } from './hooks/useDeviceDetect';
+import { usePWAInstall } from './hooks/usePWAInstall';
 
 // Componente de Página de Inicio (Landing Page para usuarios no autenticados)
 import { LandingPage } from './components/Landing/LandingPage';
@@ -22,10 +23,12 @@ import { ReportsView } from './components/Reports/ReportsView';
 import { AuthModal } from './components/Auth/AuthModal';
 import { AddTransactionModal } from './components/Transactions/AddTransactionModal';
 import { ProfileModal } from './components/Profile/ProfileModal';
+import { InstallAppModal } from './components/Common/InstallAppModal';
 
 export default function App() {
   // Detección precisa de dispositivo (PC vs Celular)
   const { isMobile, isDesktop, deviceType, hasTouch } = useDeviceDetect();
+  const pwaInstall = usePWAInstall();
 
   // Estado de Usuario y Sesión
   const [currentUser, setCurrentUser] = useState(() => {
@@ -50,6 +53,7 @@ export default function App() {
   const [authInitialIsLogin, setAuthInitialIsLogin] = useState(true);
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
 
   // Control de Tema (Dark por defecto / Light)
   const [theme, setTheme] = useState(() => {
@@ -112,6 +116,8 @@ export default function App() {
           onToggleTheme={toggleTheme}
           theme={theme}
           detectedDevice={deviceType}
+          onOpenInstall={() => setIsInstallModalOpen(true)}
+          pwaInstall={pwaInstall}
         />
 
         <AuthModal
@@ -122,6 +128,12 @@ export default function App() {
             setCurrentUser(user);
             handleDataChanged();
           }}
+        />
+
+        <InstallAppModal
+          isOpen={isInstallModalOpen}
+          onClose={() => setIsInstallModalOpen(false)}
+          pwaInstall={pwaInstall}
         />
       </div>
     );
@@ -140,6 +152,7 @@ export default function App() {
           onLogout={handleLogout}
           onOpenProfile={() => setIsProfileOpen(true)}
           onOpenAddTx={() => setIsAddTxOpen(true)}
+          onOpenInstall={() => setIsInstallModalOpen(true)}
           isMobile={isMobile}
         />
 
@@ -276,6 +289,12 @@ export default function App() {
           setIsProfileOpen(false);
           handleDataChanged();
         }}
+      />
+
+      <InstallAppModal
+        isOpen={isInstallModalOpen}
+        onClose={() => setIsInstallModalOpen(false)}
+        pwaInstall={pwaInstall}
       />
     </div>
   );

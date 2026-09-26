@@ -1,5 +1,6 @@
 import React from 'react';
-import { Sun, Moon, LogIn, LogOut, User, Plus, Shield } from 'lucide-react';
+import { Sun, Moon, LogIn, LogOut, User, Plus, Shield, Download } from 'lucide-react';
+import { BrandLogo } from '../Common/BrandLogo';
 
 export const Navbar = ({
   user,
@@ -8,23 +9,41 @@ export const Navbar = ({
   onOpenAuth,
   onLogout,
   onOpenProfile,
-  onOpenAddTx
+  onOpenAddTx,
+  onOpenInstall
 }) => {
   return (
     <header className="top-navbar">
-      {/* Logotipo getloss */}
-      <div className="brand-logo-container">
-        <div className="brand-badge">
-          <span className="brand-dot" />
-          <span>getloss</span>
-        </div>
-        <span className="badge" style={{ fontSize: '0.7rem' }}>
+      {/* Logotipo Oficial getloss */}
+      <div className="brand-logo-container" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+        <BrandLogo variant="full" size="sm" withGlow={true} />
+        <span className="badge" style={{ fontSize: '0.68rem', padding: '0.2rem 0.55rem', borderRadius: '9999px', background: 'var(--bg-card-elevated)', border: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
           Fintech Suite
         </span>
       </div>
 
       {/* Controles del Lado Derecho */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+        {/* Botón Descargar / Instalar App */}
+        {onOpenInstall && (
+          <button
+            onClick={onOpenInstall}
+            className="btn-secondary"
+            title="Descargar o instalar getloss en tu dispositivo"
+            style={{
+              fontSize: '0.75rem',
+              padding: '0.4rem 0.75rem',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.35rem',
+              borderRadius: 'var(--radius-full)'
+            }}
+          >
+            <Download size={14} />
+            <span className="hide-on-mobile">Instalar App</span>
+          </button>
+        )}
+
         {/* Alternador de Tema Oscuro / Claro */}
         <button
           onClick={onToggleTheme}

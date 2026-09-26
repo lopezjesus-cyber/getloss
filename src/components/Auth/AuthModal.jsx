@@ -1,25 +1,25 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UsersDB } from '../../services/usersDb';
 import { EmailService } from '../../services/emailService';
-import { 
-  Lock, 
-  Mail, 
-  User, 
-  Phone, 
-  DollarSign, 
-  Calendar, 
-  AlertCircle, 
-  ArrowRight, 
-  ArrowLeft, 
-  ShieldCheck, 
-  CheckCircle2, 
-  RotateCw, 
-  KeyRound, 
+import {
+  Lock,
+  Mail,
+  User,
+  Phone,
+  DollarSign,
+  Calendar,
+  AlertCircle,
+  ArrowRight,
+  ArrowLeft,
+  ShieldCheck,
+  CheckCircle2,
+  RotateCw,
+  KeyRound,
   Send,
   Eye,
   EyeOff,
   Check,
-  X 
+  X
 } from 'lucide-react';
 
 export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = true }) => {
@@ -254,25 +254,25 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
             {/* Cabecera del Modal */}
             <div style={{ textAlign: 'center', marginBottom: '1.5rem', position: 'relative' }}>
               <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                <span style={{ 
-                  width: '10px', 
-                  height: '10px', 
-                  borderRadius: '50%', 
+                <span style={{
+                  width: '10px',
+                  height: '10px',
+                  borderRadius: '50%',
                   backgroundColor: 'var(--text-primary)',
-                  boxShadow: '0 0 12px var(--text-primary)' 
+                  boxShadow: '0 0 12px var(--text-primary)'
                 }} />
-                <span style={{ 
-                  fontFamily: 'var(--font-display)', 
-                  fontSize: '1.75rem', 
-                  fontWeight: '800', 
-                  letterSpacing: '-0.04em' 
+                <span style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.75rem',
+                  fontWeight: '800',
+                  letterSpacing: '-0.04em'
                 }}>
                   getloss
                 </span>
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
-                {isLogin 
-                  ? 'Inicia sesión para gestionar tus finanzas quincenales y mensuales' 
+                {isLogin
+                  ? 'Inicia sesión para gestionar tus finanzas quincenales y mensuales'
                   : 'Crea tu cuenta y verifica tu correo para comenzar'}
               </p>
             </div>
@@ -398,10 +398,10 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                     Contraseña *
                   </label>
                   {!isLogin && formData.password && (
-                    <span style={{ 
-                      fontSize: '0.72rem', 
-                      fontWeight: '700', 
-                      color: passedChecks >= 4 ? '#22c55e' : passedChecks >= 2 ? '#eab308' : '#ef4444' 
+                    <span style={{
+                      fontSize: '0.72rem',
+                      fontWeight: '700',
+                      color: passedChecks >= 4 ? '#22c55e' : passedChecks >= 2 ? '#eab308' : '#ef4444'
                     }}>
                       {passedChecks >= 5 ? 'Muy Fuerte' : passedChecks >= 4 ? 'Segura' : passedChecks >= 2 ? 'Media' : 'Débil'}
                     </span>
@@ -466,8 +466,8 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                             flex: 1,
                             height: '4px',
                             borderRadius: 'var(--radius-full)',
-                            background: passedChecks >= level 
-                              ? (passedChecks >= 4 ? '#22c55e' : passedChecks >= 2 ? '#eab308' : '#ef4444') 
+                            background: passedChecks >= level
+                              ? (passedChecks >= 4 ? '#22c55e' : passedChecks >= 2 ? '#eab308' : '#ef4444')
                               : 'var(--border-medium)',
                             transition: 'background 0.3s ease'
                           }}
@@ -597,10 +597,10 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                 className="btn-primary"
                 style={{ width: '100%', marginTop: '0.5rem', padding: '0.85rem' }}
               >
-                {isLoading 
-                  ? 'Enviando código...' 
-                  : isLogin 
-                    ? 'Ingresar a getloss' 
+                {isLoading
+                  ? 'Enviando código...'
+                  : isLogin
+                    ? 'Ingresar a getloss'
                     : 'Enviar Código de Verificación al Correo'}
                 <ArrowRight size={16} />
               </button>
@@ -662,7 +662,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
 
             {/* Inputs de PIN (6 dígitos) */}
             <form onSubmit={handleVerifyAndRegister}>
-              <div 
+              <div
                 onPaste={handlePinPaste}
                 style={{
                   display: 'flex',
@@ -734,8 +734,8 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
               >
                 <RotateCw size={14} className={isLoading ? 'spin' : ''} />
                 <span>
-                  {resendTimer > 0 
-                    ? `Reenviar nuevo código al correo en ${resendTimer}s` 
+                  {resendTimer > 0
+                    ? `Reenviar nuevo código al correo en ${resendTimer}s`
                     : 'Reenviar código a mi correo'}
                 </span>
               </button>
