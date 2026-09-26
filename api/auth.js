@@ -27,18 +27,22 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'Faltan campos obligatorios para el registro.' });
       }
 
+      const cleanEmail = email.trim().toLowerCase();
       const users = await CloudStore.getUsers();
-      const existing = users.find(u => u.email.toLowerCase() === email.trim().toLowerCase());
+      const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
 
       if (existing) {
         return res.status(409).json({ success: false, error: 'Ya existe una cuenta registrada con este correo electrónico.' });
       }
 
+      const cleanId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;
+
       const newUser = {
-        id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        email: email.trim().toLowerCase(),
+        id: cleanId,
+        email: cleanEmail,
         fullName: fullName.trim(),
         passwordHash: password,
+        password: password,
         phone: phone || '',
         avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(fullName.trim())}`,
         currency: currency || 'USD',
@@ -53,6 +57,13 @@ export default async function handler(req, res) {
       users.push(newUser);
       await CloudStore.saveUsers(users);
 
+      // Inicializar finanzas vacías en la nube
+      await CloudStore.saveUserFinances(newUser.id, {
+        transactions: [],
+        fixedExpenses: [],
+        lastSync: new Date().toISOString()
+      });
+
       return res.status(201).json({ success: true, user: newUser });
     }
 
@@ -64,9 +75,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ success: false, error: 'Ingresa tu correo y contraseña.' });
       }
 
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPassword = password.trim();
+
       const users = await CloudStore.getUsers();
       const user = users.find(
-        u => u.email.toLowerCase() === email.trim().toLowerCase() && u.passwordHash === password
+        u => u.email.toLowerCase() === cleanEmail && (u.passwordHash === cleanPassword || u.password === cleanPassword)
       );
 
       if (!user) {

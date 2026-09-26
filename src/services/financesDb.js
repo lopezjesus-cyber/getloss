@@ -1,10 +1,11 @@
 /**
- * getloss - Base de Datos Financiera de Clientes con Sincronización en la Nube
- * Gestiona transacciones, categorías con vectores, gastos fijos indispensables y reportes
- * con soporte directo para selección entre Modo Quincenal o Modo Mensual y sincronización entre PC y Celular.
+ * getloss - Base de Datos Financiera de Clientes con Sincronización Global en la Nube
+ * Gestiona transacciones, categorías, gastos fijos indispensables, cálculos de balance y reportes
+ * con sincronización automática e instantánea entre PC, Mac y Dispositivos Móviles.
  */
 
 import { CloudSync } from './cloudSync';
+import { FirebaseService } from './firebaseService';
 
 const FINANCES_STORAGE_KEY = 'getloss_finances_db_v1';
 
@@ -47,7 +48,7 @@ export const FinancesDB = {
       }
       return JSON.parse(data);
     } catch (e) {
-      console.error('Error al cargar base de datos financiera:', e);
+      console.error('Error al cargar base de datos financiera local:', e);
       return getCleanDatabase();
     }
   },
@@ -55,11 +56,15 @@ export const FinancesDB = {
   _saveDatabase: (db, userIdToSync = null) => {
     localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(db));
 
-    // Si se pasa un userId, sincronizar en segundo plano con la nube
+    // Si se especifica un userId, guardar de inmediato en la Nube Global
     if (userIdToSync) {
       const userFixed = (db.fixedExpenses || []).filter(f => f.userId === userIdToSync);
       const userTxs = (db.transactions || []).filter(t => t.userId === userIdToSync);
-      CloudSync.pushFinancesToCloud(userIdToSync, userFixed, userTxs).catch(() => {});
+      
+      CloudSync.pushFinancesToCloud(userIdToSync, userFixed, userTxs).catch(err => {
+        console.warn('Sync aviso:', err.message);
+      });
+      FirebaseService.saveFinances(userIdToSync, userFixed, userTxs).catch(() => {});
     }
   },
 
@@ -92,16 +97,53 @@ export const FinancesDB = {
     localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(db));
   },
 
-  syncWithCloud: async (userId) => {
-    if (!userId) return;
-    try {
-      const cloudData = await CloudSync.pullFinancesFromCloud(userId);
-      if (cloudData) {
-        FinancesDB.injectCloudData(userId, cloudData);
+  // Suscribirse a cambios en vivo desde la Nube (Multi-dispositivo en tiempo real)
+  subscribeLiveUpdates: (userId, onUpdateCallback) => {
+    if (!userId) return () => {};
+
+    const checkAndSync = async () => {
+      try {
+        const finances = await CloudSync.pullFinancesFromCloud(userId);
+        if (finances && (Array.isArray(finances.transactions) || Array.isArray(finances.fixedExpenses))) {
+          const db = FinancesDB.getRawDatabase();
+          const currentTxs = (db.transactions || []).filter(t => t.userId === userId);
+          const currentFixed = (db.fixedExpenses || []).filter(f => f.userId === userId);
+
+          // Comprobar si hay diferencias
+          const hasTxDiff = JSON.stringify(currentTxs) !== JSON.stringify(finances.transactions || []);
+          const hasFixedDiff = JSON.stringify(currentFixed) !== JSON.stringify(finances.fixedExpenses || []);
+
+          if (hasTxDiff || hasFixedDiff) {
+            FinancesDB.injectCloudData(userId, finances);
+            if (typeof onUpdateCallback === 'function') {
+              onUpdateCallback();
+            }
+          }
+        }
+      } catch {}
+    };
+
+    // 1. Polling cada 8 segundos
+    const interval = setInterval(checkAndSync, 8000);
+
+    // 2. Sincronizar inmediatamente al enfocar la pestaña o pantalla
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkAndSync();
       }
-    } catch (e) {
-      console.warn('Error al sincronizar finanzas con la nube:', e);
-    }
+    };
+    const onFocus = () => {
+      checkAndSync();
+    };
+
+    window.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('focus', onFocus);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('focus', onFocus);
+    };
   },
 
   // --------------------------------------------------------------------------
@@ -181,7 +223,7 @@ export const FinancesDB = {
     if (!db.fixedExpenses) db.fixedExpenses = [];
 
     const newFixed = {
-      id: `fix-${Date.now()}`,
+      id: `fix-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
       userId,
       categoryId: data.categoryId,
       name: data.name.trim(),

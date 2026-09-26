@@ -1,16 +1,17 @@
 /**
- * getloss - Base de Datos de Usuarios y Autenticación con Sincronización en la Nube
- * Administra la seguridad, registros, contraseñas, sesiones y sincronización entre PC y Celulares.
+ * getloss - Base de Datos de Usuarios y Autenticación Global en la Nube
+ * Administra seguridad, contraseñas, sesiones y sincronización en tiempo real entre PC y Celulares.
  */
 
-import { CloudSync } from './cloudSync';
+import { CloudSync, getDeterministicUserId, getDirectCloudData } from './cloudSync';
+import { FirebaseService } from './firebaseService';
 import { FinancesDB } from './financesDb';
 
 const USERS_STORAGE_KEY = 'getloss_users_db_v1';
 const SESSION_STORAGE_KEY = 'getloss_active_session_v1';
 
 export const UsersDB = {
-  // Obtener todos los usuarios registrados en local cache
+  // Obtener todos los usuarios registrados en caché local
   getAllUsers: () => {
     try {
       const data = localStorage.getItem(USERS_STORAGE_KEY);
@@ -20,7 +21,7 @@ export const UsersDB = {
       }
       return JSON.parse(data);
     } catch (e) {
-      console.error('Error al leer Base de Datos de Usuarios:', e);
+      console.error('Error al leer Base de Datos de Usuarios local:', e);
       return [];
     }
   },
@@ -30,24 +31,50 @@ export const UsersDB = {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   },
 
-  // Registrar nuevo usuario (Nube + Local)
+  // Obtener usuarios directamente de la nube
+  fetchCloudUsers: async () => {
+    try {
+      const cloudData = await getDirectCloudData();
+      if (cloudData && Array.isArray(cloudData.users)) {
+        UsersDB._saveUsers(cloudData.users);
+        return cloudData.users;
+      }
+    } catch (e) {
+      console.warn('Error al obtener usuarios de la nube:', e);
+    }
+    return UsersDB.getAllUsers();
+  },
+
+  // Registrar nuevo usuario (Guarda permanentemente en la Nube Global y en local)
   register: async (userData) => {
-    // 1. Intentar registrar en la Nube Serverless
+    const cleanEmail = userData.email.trim().toLowerCase();
+    const userId = userData.id || getDeterministicUserId(cleanEmail);
+
+    const completeUserData = {
+      ...userData,
+      id: userId,
+      email: cleanEmail
+    };
+
+    // 1. Guardar permanentemente en la Base de Datos en la Nube
     let cloudUser = null;
     try {
-      cloudUser = await CloudSync.registerInCloud(userData);
+      cloudUser = await CloudSync.registerInCloud(completeUserData);
     } catch (err) {
-      console.warn('Registro en la nube no disponible, guardando local:', err);
+      console.warn('[UsersDB] Error al guardar en nube:', err.message);
     }
 
-    const users = UsersDB.getAllUsers();
-    const existingIndex = users.findIndex(u => u.email.toLowerCase() === userData.email.toLowerCase());
+    // 2. Guardar en Firebase si hay credenciales configuradas
+    try {
+      await FirebaseService.registerUser(completeUserData);
+    } catch {}
 
-    const newUser = cloudUser || {
-      id: `usr-${Date.now()}`,
-      email: userData.email.trim().toLowerCase(),
+    const registeredUser = cloudUser || {
+      id: userId,
+      email: cleanEmail,
       fullName: userData.fullName.trim(),
       passwordHash: userData.password,
+      password: userData.password,
       phone: userData.phone || '',
       avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.fullName)}`,
       currency: userData.currency || 'USD',
@@ -59,28 +86,33 @@ export const UsersDB = {
       createdAt: new Date().toISOString()
     };
 
+    // 3. Guardar en caché local
+    const users = UsersDB.getAllUsers();
+    const existingIndex = users.findIndex(u => u.email.toLowerCase() === cleanEmail);
     if (existingIndex >= 0) {
-      users[existingIndex] = newUser;
+      users[existingIndex] = registeredUser;
     } else {
-      users.push(newUser);
+      users.push(registeredUser);
     }
-
     UsersDB._saveUsers(users);
-    UsersDB.setActiveSession(newUser);
-    return newUser;
+
+    // 4. Establecer sesión activa
+    UsersDB.setActiveSession(registeredUser);
+    return registeredUser;
   },
 
-  // Iniciar sesión (Primero en la Nube para traer datos de Celular a PC, luego Local)
+  // Iniciar sesión global (Autentica contra la Base de Datos Central en tiempo real)
   login: async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
 
-    // 1. Intentar autenticar con la Nube Serverless
+    // 1. Autenticar directamente contra la Base de Datos Global en la Nube
     try {
-      const cloudResult = await CloudSync.loginInCloud(cleanEmail, password);
+      const cloudResult = await CloudSync.loginInCloud(cleanEmail, cleanPassword);
       if (cloudResult && cloudResult.success && cloudResult.user) {
         const cloudUser = cloudResult.user;
 
-        // Guardar usuario en caché local
+        // Actualizar caché local de usuarios
         const users = UsersDB.getAllUsers();
         const index = users.findIndex(u => u.email.toLowerCase() === cleanEmail);
         if (index >= 0) {
@@ -90,7 +122,7 @@ export const UsersDB = {
         }
         UsersDB._saveUsers(users);
 
-        // Si la nube devolvió finanzas asociadas, inyectarlas en FinancesDB
+        // Inyectar finanzas de la nube directamente a la base de datos local
         if (cloudResult.finances && FinancesDB && FinancesDB.injectCloudData) {
           FinancesDB.injectCloudData(cloudUser.id, cloudResult.finances);
         }
@@ -99,17 +131,41 @@ export const UsersDB = {
         return cloudUser;
       }
     } catch (e) {
-      console.warn('Verificación en la nube omitida:', e.message);
+      console.warn('[UsersDB] Error al consultar autenticación en nube:', e.message);
     }
 
-    // 2. Fallback a caché local (Offline)
+    // 2. Intentar autenticar con Firebase si estuviera configurado
+    try {
+      const firebaseResult = await FirebaseService.loginUser(cleanEmail, cleanPassword);
+      if (firebaseResult && firebaseResult.success && firebaseResult.user) {
+        const cloudUser = firebaseResult.user;
+        const users = UsersDB.getAllUsers();
+        const index = users.findIndex(u => u.email.toLowerCase() === cleanEmail);
+        if (index >= 0) {
+          users[index] = cloudUser;
+        } else {
+          users.push(cloudUser);
+        }
+        UsersDB._saveUsers(users);
+
+        if (firebaseResult.finances && FinancesDB && FinancesDB.injectCloudData) {
+          FinancesDB.injectCloudData(cloudUser.id, firebaseResult.finances);
+        }
+
+        UsersDB.setActiveSession(cloudUser);
+        return cloudUser;
+      }
+    } catch {}
+
+    // 3. Fallback a caché local si no hay conexión a internet
     const users = UsersDB.getAllUsers();
     const user = users.find(
-      u => u.email.toLowerCase() === cleanEmail && u.passwordHash === password
+      u => u.email.toLowerCase() === cleanEmail && 
+      (u.passwordHash === cleanPassword || u.password === cleanPassword)
     );
 
     if (!user) {
-      throw new Error('Credenciales inválidas. Verifica tu correo y contraseña.');
+      throw new Error('No encontramos una cuenta con este correo y contraseña. Verifica tus datos o regístrate si es tu primera vez.');
     }
 
     UsersDB.setActiveSession(user);
@@ -123,7 +179,7 @@ export const UsersDB = {
       if (!session) return null;
       const user = JSON.parse(session);
       const users = UsersDB.getAllUsers();
-      return users.find(u => u.id === user.id) || user;
+      return users.find(u => u.id === user.id || u.email.toLowerCase() === user.email.toLowerCase()) || user;
     } catch {
       return null;
     }
@@ -143,20 +199,20 @@ export const UsersDB = {
   updateProfile: async (userId, updates) => {
     const users = UsersDB.getAllUsers();
     const index = users.findIndex(u => u.id === userId);
-    if (index === -1) throw new Error('Usuario no encontrado');
-
-    users[index] = { ...users[index], ...updates };
-    UsersDB._saveUsers(users);
-
-    const active = UsersDB.getActiveSession();
-    if (active && active.id === userId) {
-      UsersDB.setActiveSession(users[index]);
+    if (index !== -1) {
+      users[index] = { ...users[index], ...updates };
+      UsersDB._saveUsers(users);
+      const active = UsersDB.getActiveSession();
+      if (active && (active.id === userId || active.email === users[index].email)) {
+        UsersDB.setActiveSession(users[index]);
+      }
     }
 
-    // Sincronizar actualización en la nube en segundo plano
+    // Sincronizar en la Nube en segundo plano
     CloudSync.updateProfileInCloud(userId, updates).catch(() => {});
+    FirebaseService.updateProfile(userId, updates).catch(() => {});
 
-    return users[index];
+    return users[index] || updates;
   },
 
   // Eliminar Cuenta de Usuario
@@ -170,8 +226,9 @@ export const UsersDB = {
       UsersDB.logout();
     }
 
-    // Eliminar en la nube
+    // Eliminar en la Nube
     CloudSync.deleteAccountInCloud(userId).catch(() => {});
+    FirebaseService.deleteAccount(userId).catch(() => {});
 
     return true;
   },

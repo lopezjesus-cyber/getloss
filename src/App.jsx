@@ -25,6 +25,7 @@ import { AuthModal } from './components/Auth/AuthModal';
 import { AddTransactionModal } from './components/Transactions/AddTransactionModal';
 import { ProfileModal } from './components/Profile/ProfileModal';
 import { InstallAppModal } from './components/Common/InstallAppModal';
+import { FirebaseConfigModal } from './components/Firebase/FirebaseConfigModal';
 
 export default function App() {
   // Detección precisa de dispositivo (PC vs Celular)
@@ -55,6 +56,7 @@ export default function App() {
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
+  const [isFirebaseOpen, setIsFirebaseOpen] = useState(false);
 
   // Control de Tema (Dark por defecto / Light)
   const [theme, setTheme] = useState(() => {
@@ -96,6 +98,17 @@ export default function App() {
       console.warn('Auto-sync notice:', e.message);
     }
   }, []);
+
+  // Sincronización en Tiempo Real Multi-Dispositivo con Firebase
+  useEffect(() => {
+    if (!currentUser) return;
+    const unsubscribe = FinancesDB.subscribeLiveUpdates(currentUser.id, () => {
+      handleDataChanged();
+    });
+    return () => {
+      if (typeof unsubscribe === 'function') unsubscribe();
+    };
+  }, [currentUser]);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
@@ -179,6 +192,7 @@ export default function App() {
           onLogout={handleLogout}
           onOpenProfile={() => setIsProfileOpen(true)}
           onOpenAddTx={() => setIsAddTxOpen(true)}
+          onOpenDatabase={() => setIsFirebaseOpen(true)}
           isMobile={isMobile}
         />
 
@@ -306,6 +320,7 @@ export default function App() {
         isOpen={isProfileOpen}
         onClose={() => setIsProfileOpen(false)}
         user={currentUser}
+        onOpenFirebase={() => setIsFirebaseOpen(true)}
         onProfileUpdated={(updated) => {
           setCurrentUser(updated);
           handleDataChanged();
@@ -321,6 +336,11 @@ export default function App() {
         isOpen={isInstallModalOpen}
         onClose={() => setIsInstallModalOpen(false)}
         pwaInstall={pwaInstall}
+      />
+
+      <FirebaseConfigModal
+        isOpen={isFirebaseOpen}
+        onClose={() => setIsFirebaseOpen(false)}
       />
     </div>
   );

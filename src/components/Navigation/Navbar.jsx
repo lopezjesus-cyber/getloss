@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, LogIn, LogOut, User, Plus, Shield } from 'lucide-react';
+import { Sun, Moon, LogIn, LogOut, Database, Cloud } from 'lucide-react';
 import { BrandLogo } from '../Common/BrandLogo';
 
 export const Navbar = ({
@@ -9,7 +9,8 @@ export const Navbar = ({
   onOpenAuth,
   onLogout,
   onOpenProfile,
-  onOpenAddTx
+  onOpenAddTx,
+  onOpenDatabase
 }) => {
   return (
     <header className="top-navbar">
@@ -23,6 +24,40 @@ export const Navbar = ({
 
       {/* Controles del Lado Derecho */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+
+        {/* Estado de Base de Datos Global en la Nube */}
+        <button
+          onClick={onOpenDatabase}
+          className="cloud-status-pill"
+          title="Base de Datos Global en la Nube (Sincronización PC & Celular)"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.38rem',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: '9999px',
+            padding: '0.28rem 0.65rem',
+            fontSize: '0.72rem',
+            fontWeight: '600',
+            color: 'var(--text-secondary)',
+            cursor: 'pointer',
+            transition: 'var(--transition)'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border-medium)'; }}
+        >
+          <span style={{
+            width: '7px',
+            height: '7px',
+            borderRadius: '50%',
+            background: '#22c55e',
+            boxShadow: '0 0 6px rgba(34, 197, 94, 0.8)',
+            display: 'inline-block'
+          }} />
+          <Cloud size={13} style={{ color: 'var(--text-muted)' }} />
+          <span style={{ display: 'inline-block' }}>Nube</span>
+        </button>
 
         {/* Alternador de Tema Oscuro / Claro */}
         <button

@@ -206,9 +206,39 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated, onDelete
           </div>
         </form>
 
+        {/* Sección de Conexión a Base de Datos en la Nube */}
+        {onOpenFirebase && (
+          <div style={{
+            marginTop: '1.25rem',
+            paddingTop: '1rem',
+            borderTop: '1px solid var(--border-subtle)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.825rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', display: 'inline-block' }} />
+                <span>Base de Datos Firebase (Google Cloud)</span>
+              </div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '0.15rem 0 0' }}>
+                Sincronización global activa entre PC y Celular.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { onClose(); onOpenFirebase(); }}
+              className="btn-secondary"
+              style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem' }}
+            >
+              <span>Ver Estado</span>
+            </button>
+          </div>
+        )}
+
         {/* Zona de Peligro: Eliminar Cuenta */}
         <div style={{
-          marginTop: '1.75rem',
+          marginTop: '1.25rem',
           paddingTop: '1.25rem',
           borderTop: '1px solid var(--border-medium)'
         }}>

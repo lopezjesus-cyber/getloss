@@ -1,29 +1,28 @@
 /**
  * getloss - Cloud Store Engine para API Serverless
- * Proporciona almacenamiento en la nube persistente y sincronización en tiempo real
+ * Proporciona persistencia permanente en la nube y sincronización en tiempo real
  * entre Celulares, Tablets y Computadoras de Escritorio (PC / Mac).
  */
 
-const GLOBAL_CLOUD_ID = 'ff808181a09d98f701a0dd1362f61b60';
-const CLOUD_URL = `https://api.restful-api.dev/objects/${GLOBAL_CLOUD_ID}`;
+const CLOUD_ENDPOINTS = [
+  'https://extendsclass.com/api/json-storage/bin/cbcdaec',
+  'https://extendsclass.com/api/json-storage/bin/bafddad'
+];
+const CLOUD_SECURITY_KEY = 'getloss-master-key-2026';
 
-// Claves de entorno opcionales para Upstash / Vercel KV
-const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-
-// Memoria caché local de instancia
+// Memoria caché de instancia
 let memoryCache = {
   users: [],
-  finances: {} // { [userId]: { transactions: [], fixedExpenses: [] } }
+  finances: {}
 };
 
 // Fusionar usuarios sin duplicados de forma segura
 function mergeUsers(a = [], b = []) {
   const map = new Map();
-  for (const u of a) {
+  for (const u of a || []) {
     if (u && u.email) map.set(u.email.toLowerCase(), u);
   }
-  for (const u of b) {
+  for (const u of b || []) {
     if (u && u.email) {
       const prev = map.get(u.email.toLowerCase()) || {};
       map.set(u.email.toLowerCase(), { ...prev, ...u });
@@ -32,105 +31,61 @@ function mergeUsers(a = [], b = []) {
   return Array.from(map.values());
 }
 
-// Fusionar finanzas sin duplicados
-function mergeFinances(a = {}, b = {}) {
-  const merged = { ...a };
-  for (const [uid, fData] of Object.entries(b || {})) {
-    if (!merged[uid]) {
-      merged[uid] = fData;
-    } else {
-      const txMap = new Map();
-      (merged[uid].transactions || []).forEach(t => txMap.set(t.id, t));
-      (fData.transactions || []).forEach(t => txMap.set(t.id, t));
-
-      const fixMap = new Map();
-      (merged[uid].fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
-      (fData.fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
-
-      merged[uid] = {
-        transactions: Array.from(txMap.values()),
-        fixedExpenses: Array.from(fixMap.values()),
-        lastSync: new Date().toISOString()
-      };
-    }
-  }
-  return merged;
-}
-
-// Función interna para obtener estado global completo
+// Obtener estado global completo
 async function fetchFullCloudState() {
-  // 1. Probar Upstash / KV si existe
-  if (KV_URL && KV_TOKEN) {
+  for (const endpoint of CLOUD_ENDPOINTS) {
     try {
-      const res = await fetch(`${KV_URL}/get/getloss_full_store_v1`, {
-        headers: { Authorization: `Bearer ${KV_TOKEN}` }
+      const res = await fetch(endpoint, {
+        headers: {
+          'Security-key': CLOUD_SECURITY_KEY,
+          'Accept': 'application/json'
+        }
       });
-      const data = await res.json();
-      if (data && data.result) {
-        const parsed = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
-        memoryCache.users = mergeUsers(memoryCache.users, parsed.users);
-        memoryCache.finances = mergeFinances(memoryCache.finances, parsed.finances);
+      if (res.ok) {
+        const text = await res.text();
+        const json = text ? JSON.parse(text) : {};
+        memoryCache.users = mergeUsers(memoryCache.users, json.users || []);
+        memoryCache.finances = {
+          ...(memoryCache.finances || {}),
+          ...(json.finances || {})
+        };
         return memoryCache;
       }
     } catch (e) {
-      console.warn('KV read warning:', e.message);
+      console.warn(`[CloudStore] Endpoint ${endpoint} read error:`, e.message);
     }
   }
-
-  // 2. Almacén Global en la Nube
-  try {
-    const res = await fetch(CLOUD_URL);
-    if (res.ok) {
-      const json = await res.json();
-      if (json && json.data) {
-        memoryCache.users = mergeUsers(memoryCache.users, json.data.users);
-        memoryCache.finances = mergeFinances(memoryCache.finances, json.data.finances);
-        return memoryCache;
-      }
-    }
-  } catch (e) {
-    console.warn('Cloud store read error:', e.message);
-  }
-
   return memoryCache;
 }
 
-// Función interna para guardar estado global completo
+// Guardar estado global completo
 async function saveFullCloudState(state) {
   memoryCache = state;
 
-  // 1. Guardar en Upstash / KV si existe
-  if (KV_URL && KV_TOKEN) {
-    try {
-      await fetch(`${KV_URL}/set/getloss_full_store_v1`, {
-        method: 'POST',
-        headers: { Authorization: `Bearer ${KV_TOKEN}` },
-        body: JSON.stringify(state)
-      });
-    } catch (e) {
-      console.warn('KV write warning:', e.message);
-    }
-  }
+  const payload = {
+    users: state.users || [],
+    finances: state.finances || {},
+    updatedAt: new Date().toISOString()
+  };
 
-  // 2. Guardar en Almacén Global en la Nube
-  try {
-    const res = await fetch(CLOUD_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: 'getloss_global_store_v1',
-        data: {
-          users: state.users || [],
-          finances: state.finances || {},
-          updatedAt: new Date().toISOString()
-        }
-      })
-    });
-    return res.ok;
-  } catch (e) {
-    console.error('Cloud store write error:', e.message);
-    return false;
-  }
+  const writePromises = CLOUD_ENDPOINTS.map(async (endpoint) => {
+    try {
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Security-key': CLOUD_SECURITY_KEY
+        },
+        body: JSON.stringify(payload)
+      });
+      return res.ok;
+    } catch {
+      return false;
+    }
+  });
+
+  const results = await Promise.allSettled(writePromises);
+  return results.some(r => r.status === 'fulfilled' && r.value === true);
 }
 
 export const CloudStore = {

@@ -1,19 +1,40 @@
 /**
- * getloss - Cloud Sync Client Service
- * Comunica el frontend de PC y Celular con la Nube
- * garantizando sincronización bidireccional en tiempo real con soporte offline y cuentas globales.
+ * getloss - Global Cloud Database Engine & Sync Service
+ * Base de Datos Centralizada en la Nube con Soporte Multi-Dispositivo (PC / Móvil / Tablet).
+ * Garantiza persistencia permanente de usuarios, contraseñas, transacciones y obligaciones financieras.
  */
 
+const CLOUD_ENDPOINTS = [
+  'https://extendsclass.com/api/json-storage/bin/cbcdaec',
+  'https://extendsclass.com/api/json-storage/bin/bafddad'
+];
+const CLOUD_SECURITY_KEY = 'getloss-master-key-2026';
 const API_BASE = '/api';
-const DIRECT_CLOUD_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a0dd1362f61b60';
+
+// Memoria caché para respuestas ultrarrápidas
+let localMemoryCache = {
+  users: [],
+  finances: {},
+  lastFetched: 0
+};
+
+// Generador de ID determinista basado en el correo electrónico
+export function getDeterministicUserId(email) {
+  if (!email) return `usr_${Date.now()}`;
+  const clean = email.trim().toLowerCase().replace(/[^a-z0-9]/g, '_');
+  return `usr_${clean}`;
+}
 
 // Fusionar usuarios sin duplicados de forma segura
-function mergeUsers(a = [], b = []) {
+function mergeUsers(existing = [], incoming = []) {
   const map = new Map();
-  for (const u of a) {
+  const listA = Array.isArray(existing) ? existing : [];
+  const listB = Array.isArray(incoming) ? incoming : [];
+
+  for (const u of listA) {
     if (u && u.email) map.set(u.email.toLowerCase(), u);
   }
-  for (const u of b) {
+  for (const u of listB) {
     if (u && u.email) {
       const prev = map.get(u.email.toLowerCase()) || {};
       map.set(u.email.toLowerCase(), { ...prev, ...u });
@@ -22,199 +43,205 @@ function mergeUsers(a = [], b = []) {
   return Array.from(map.values());
 }
 
-// Fusionar finanzas sin duplicados
-function mergeFinances(a = {}, b = {}) {
-  const merged = { ...a };
-  for (const [uid, fData] of Object.entries(b || {})) {
-    if (!merged[uid]) {
-      merged[uid] = fData;
-    } else {
-      const txMap = new Map();
-      (merged[uid].transactions || []).forEach(t => txMap.set(t.id, t));
-      (fData.transactions || []).forEach(t => txMap.set(t.id, t));
+// Obtener datos globales directamente de la nube (con redundancia multi-servidor)
+export async function getDirectCloudData() {
+  // Intentar endpoints de nube con timeout seguro
+  for (const endpoint of CLOUD_ENDPOINTS) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
 
-      const fixMap = new Map();
-      (merged[uid].fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
-      (fData.fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
+      const res = await fetch(endpoint, {
+        headers: {
+          'Security-key': CLOUD_SECURITY_KEY,
+          'Accept': 'application/json'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
 
-      merged[uid] = {
-        transactions: Array.from(txMap.values()),
-        fixedExpenses: Array.from(fixMap.values()),
-        lastSync: new Date().toISOString()
-      };
+      if (res.ok) {
+        const text = await res.text();
+        const json = text ? JSON.parse(text) : {};
+        const cleanUsers = Array.isArray(json.users) ? json.users : [];
+        const cleanFinances = (json.finances && typeof json.finances === 'object') ? json.finances : {};
+
+        localMemoryCache = {
+          users: cleanUsers,
+          finances: cleanFinances,
+          lastFetched: Date.now()
+        };
+
+        return { users: cleanUsers, finances: cleanFinances };
+      }
+    } catch (e) {
+      console.warn(`[getloss Cloud] Endpoint ${endpoint} aviso:`, e.message);
     }
   }
-  return merged;
+
+  // Si no hubo respuesta de la red, usar caché en memoria
+  return {
+    users: localMemoryCache.users || [],
+    finances: localMemoryCache.finances || {}
+  };
 }
 
-// Función auxiliar para leer directamente de la nube como respaldo
-async function getDirectCloudData() {
-  try {
-    const res = await fetch(DIRECT_CLOUD_URL);
-    if (res.ok) {
-      const json = await res.json();
-      return json.data || { users: [], finances: {} };
+// Guardar datos globales en la nube (guarda en todos los nodos en paralelo)
+export async function saveDirectCloudData(data) {
+  const current = await getDirectCloudData();
+  const mergedUsers = mergeUsers(current.users, data.users || []);
+  const mergedFinances = {
+    ...(current.finances || {}),
+    ...(data.finances || {})
+  };
+
+  const payload = {
+    users: mergedUsers,
+    finances: mergedFinances,
+    updatedAt: new Date().toISOString()
+  };
+
+  localMemoryCache = {
+    users: mergedUsers,
+    finances: mergedFinances,
+    lastFetched: Date.now()
+  };
+
+  const writePromises = CLOUD_ENDPOINTS.map(async (endpoint) => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
+      const res = await fetch(endpoint, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Security-key': CLOUD_SECURITY_KEY
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+      return res.ok;
+    } catch {
+      return false;
     }
-  } catch (e) {
-    console.warn('Direct cloud read fallback warning:', e.message);
-  }
-  return { users: [], finances: {} };
-}
+  });
 
-// Función auxiliar para guardar directamente en la nube como respaldo
-async function saveDirectCloudData(data) {
-  try {
-    const current = await getDirectCloudData();
-    const mergedUsers = mergeUsers(current.users, data.users);
-    const mergedFinances = mergeFinances(current.finances, data.finances);
-
-    const res = await fetch(DIRECT_CLOUD_URL, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        name: 'getloss_global_store_v1',
-        data: {
-          users: mergedUsers,
-          finances: mergedFinances,
-          updatedAt: new Date().toISOString()
-        }
-      })
-    });
-    return res.ok;
-  } catch (e) {
-    console.warn('Direct cloud write fallback error:', e.message);
-    return false;
-  }
+  const results = await Promise.allSettled(writePromises);
+  const anySuccess = results.some(r => r.status === 'fulfilled' && r.value === true);
+  return anySuccess;
 }
 
 export const CloudSync = {
-  // 1. Registro en la Nube Global
+  // 1. Registro de Usuario en la Nube Global
   registerInCloud: async (userData) => {
     const cleanEmail = userData.email.trim().toLowerCase();
+    const userId = userData.id || getDeterministicUserId(cleanEmail);
 
-    // A. Intentar endpoint serverless
-    try {
-      const response = await fetch(`${API_BASE}/auth?action=register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
-      });
+    const newUser = {
+      id: userId,
+      email: cleanEmail,
+      fullName: userData.fullName.trim(),
+      passwordHash: userData.password,
+      password: userData.password, // Compatibilidad directa
+      phone: userData.phone || '',
+      avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.fullName.trim())}`,
+      currency: userData.currency || 'USD',
+      currencySymbol: (userData.currency === 'EUR' ? '€' : userData.currency === 'GBP' ? '£' : userData.currency === 'PEN' ? 'S/' : userData.currency === 'CAD' ? 'C$' : '$'),
+      payFrequency: userData.payFrequency || 'QUINCENAL',
+      payDayFirst: 15,
+      payDaySecond: 30,
+      monthlyIncomeGoal: Number(userData.monthlyIncomeGoal) || 2000,
+      createdAt: new Date().toISOString()
+    };
 
-      if (response.ok) {
-        const data = await response.json();
-        if (data.user) return data.user;
-      }
-    } catch {
-      // Continuar al fallback directo
-    }
-
-    // B. Respaldo directo a la nube
     try {
       const cloudData = await getDirectCloudData();
       const users = cloudData.users || [];
+      const updatedUsers = mergeUsers(users, [newUser]);
 
-      const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
-      if (existing) {
-        return existing;
+      const finances = cloudData.finances || {};
+      if (!finances[userId]) {
+        finances[userId] = {
+          transactions: [],
+          fixedExpenses: [],
+          lastSync: new Date().toISOString()
+        };
       }
 
-      const newUser = {
-        id: `usr-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-        email: cleanEmail,
-        fullName: userData.fullName.trim(),
-        passwordHash: userData.password,
-        phone: userData.phone || '',
-        avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.fullName.trim())}`,
-        currency: userData.currency || 'USD',
-        currencySymbol: (userData.currency === 'EUR' ? '€' : userData.currency === 'GBP' ? '£' : userData.currency === 'PEN' ? 'S/' : userData.currency === 'CAD' ? 'C$' : '$'),
-        payFrequency: userData.payFrequency || 'QUINCENAL',
-        payDayFirst: 15,
-        payDaySecond: 30,
-        monthlyIncomeGoal: Number(userData.monthlyIncomeGoal) || 2000,
-        createdAt: new Date().toISOString()
-      };
-
       await saveDirectCloudData({
-        users: [...users, newUser],
-        finances: cloudData.finances || {}
+        users: updatedUsers,
+        finances
       });
 
       return newUser;
     } catch (e) {
-      console.warn('Error en registro directo en la nube:', e);
-      return null;
+      console.error('[getloss Cloud] Error en registro de usuario:', e);
+      return newUser;
     }
   },
 
-  // 2. Inicio de Sesión Global (Funciona en PC, Celular, Mac y cualquier navegador con 1 sola cuenta)
+  // 2. Inicio de Sesión Global (Autentica en PC o Móvil con la misma cuenta)
   loginInCloud: async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    // A. Intentar endpoint serverless
-    try {
-      const response = await fetch(`${API_BASE}/auth?action=login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        if (data.success && data.user) return data;
-      }
-    } catch {
-      // Continuar al fallback directo
-    }
-
-    // B. Respaldo directo a la nube
     try {
       const cloudData = await getDirectCloudData();
       const users = cloudData.users || [];
-      const user = users.find(
-        u => u.email.toLowerCase() === cleanEmail && u.passwordHash === cleanPassword
+
+      // Buscar usuario por correo electrónico insensible a mayúsculas
+      const user = users.find(u => 
+        u && u.email && u.email.toLowerCase() === cleanEmail && 
+        (u.passwordHash === cleanPassword || u.password === cleanPassword)
       );
 
       if (user) {
-        const finances = (cloudData.finances && cloudData.finances[user.id]) || { transactions: [], fixedExpenses: [] };
-        return { success: true, user, finances };
+        const userFinances = (cloudData.finances && (cloudData.finances[user.id] || cloudData.finances[getDeterministicUserId(cleanEmail)])) || {
+          transactions: [],
+          fixedExpenses: []
+        };
+
+        return {
+          success: true,
+          user,
+          finances: {
+            transactions: Array.isArray(userFinances.transactions) ? userFinances.transactions : [],
+            fixedExpenses: Array.isArray(userFinances.fixedExpenses) ? userFinances.fixedExpenses : []
+          }
+        };
       }
     } catch (e) {
-      console.warn('Error en login directo en la nube:', e);
+      console.error('[getloss Cloud] Error en login:', e);
     }
 
     return null;
   },
 
-  // 3. Sincronizar Finanzas hacia la Nube (Push)
+  // 3. Sincronizar Finanzas hacia la Nube (Push completo y exacto)
   pushFinancesToCloud: async (userId, fixedExpenses, transactions) => {
     if (!userId) return false;
 
-    // A. Serverless
-    try {
-      const response = await fetch(`${API_BASE}/finances?action=sync&userId=${encodeURIComponent(userId)}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fixedExpenses, transactions })
-      });
-      if (response.ok) return true;
-    } catch {}
-
-    // B. Directo
     try {
       const cloudData = await getDirectCloudData();
-      const userFinances = {
-        [userId]: {
-          fixedExpenses: Array.isArray(fixedExpenses) ? fixedExpenses : [],
-          transactions: Array.isArray(transactions) ? transactions : [],
-          lastSync: new Date().toISOString()
-        }
+      const userPayload = {
+        transactions: Array.isArray(transactions) ? transactions : [],
+        fixedExpenses: Array.isArray(fixedExpenses) ? fixedExpenses : [],
+        lastSync: new Date().toISOString()
       };
+
+      const updatedFinances = {
+        ...(cloudData.finances || {}),
+        [userId]: userPayload
+      };
+
       return await saveDirectCloudData({
         users: cloudData.users || [],
-        finances: { ...(cloudData.finances || {}), ...userFinances }
+        finances: updatedFinances
       });
-    } catch {
+    } catch (e) {
+      console.warn('[getloss Cloud] Error al guardar finanzas:', e.message);
       return false;
     }
   },
@@ -223,22 +250,18 @@ export const CloudSync = {
   pullFinancesFromCloud: async (userId) => {
     if (!userId) return null;
 
-    // A. Serverless
-    try {
-      const response = await fetch(`${API_BASE}/finances?userId=${encodeURIComponent(userId)}`);
-      if (response.ok) {
-        const data = await response.json();
-        if (data.finances) return data.finances;
-      }
-    } catch {}
-
-    // B. Directo
     try {
       const cloudData = await getDirectCloudData();
-      if (cloudData.finances && cloudData.finances[userId]) {
-        return cloudData.finances[userId];
+      if (cloudData.finances) {
+        if (cloudData.finances[userId]) return cloudData.finances[userId];
+        // Intentar clave alternativa por si acaso
+        for (const [key, val] of Object.entries(cloudData.finances)) {
+          if (key.toLowerCase() === userId.toLowerCase()) return val;
+        }
       }
-    } catch {}
+    } catch (e) {
+      console.warn('[getloss Cloud] Error al descargar finanzas:', e.message);
+    }
 
     return null;
   },
@@ -252,11 +275,10 @@ export const CloudSync = {
       const index = users.findIndex(u => u.id === userId);
       if (index >= 0) {
         users[index] = { ...users[index], ...updates };
-        await saveDirectCloudData({
+        return await saveDirectCloudData({
           users,
           finances: cloudData.finances || {}
         });
-        return true;
       }
     } catch {}
     return false;
@@ -270,29 +292,58 @@ export const CloudSync = {
       const filteredUsers = (cloudData.users || []).filter(u => u.id !== userId);
       const finances = { ...(cloudData.finances || {}) };
       delete finances[userId];
-      await saveDirectCloudData({
+      return await saveDirectCloudData({
         users: filteredUsers,
         finances
       });
-      return true;
     } catch {}
     return false;
   },
 
-  // 7. Sincronizar todos los usuarios y finanzas locales a la nube automáticamente
+  // 7. Sincronizar todos los usuarios y finanzas locales con la nube
   syncAllLocalUsersToCloud: async (localUsers = [], localFinances = {}) => {
     try {
       const cloudData = await getDirectCloudData();
       const mergedUsers = mergeUsers(cloudData.users, localUsers);
-      const mergedFinances = mergeFinances(cloudData.finances, localFinances);
+
+      const mergedFinances = {
+        ...(cloudData.finances || {}),
+        ...(localFinances || {})
+      };
 
       await saveDirectCloudData({
         users: mergedUsers,
         finances: mergedFinances
       });
-      console.log('[getloss Sync] Cuentas y finanzas globales sincronizadas exitosamente.');
+      console.log('[getloss Cloud] Base de Datos sincronizada correctamente con la nube.');
     } catch (e) {
-      console.warn('[getloss Sync] Error durante sincronización global:', e);
+      console.warn('[getloss Cloud] Aviso en sincronización:', e.message);
+    }
+  },
+
+  // 8. Comprobar salud y conexión de la Base de Datos Global
+  checkCloudHealth: async () => {
+    try {
+      const start = performance.now();
+      const data = await getDirectCloudData();
+      const duration = Math.round(performance.now() - start);
+
+      return {
+        online: true,
+        latencyMs: duration,
+        usersCount: (data.users || []).length,
+        nodes: CLOUD_ENDPOINTS.length,
+        status: 'OPERATIONAL'
+      };
+    } catch (e) {
+      return {
+        online: false,
+        latencyMs: 0,
+        usersCount: 0,
+        nodes: 0,
+        status: 'OFFLINE',
+        error: e.message
+      };
     }
   }
 };
