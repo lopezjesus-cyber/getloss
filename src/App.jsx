@@ -152,6 +152,26 @@ export default function App() {
           {/* Área de Contenido Principal */}
           <main className="main-wrapper">
             <div className="content-container">
+              {/* Botón de Atrás si no está en Dashboard */}
+              {activeTab !== 'dashboard' && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <button
+                    onClick={() => setActiveTab('dashboard')}
+                    className="btn-secondary"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      padding: '0.45rem 0.9rem',
+                      fontSize: '0.825rem',
+                      borderRadius: 'var(--radius-md)'
+                    }}
+                  >
+                    <span>← Atrás / Volver al Panel</span>
+                  </button>
+                </div>
+              )}
+
               {/* Selector de Periodo Quincenal / Mensual */}
               <PeriodSelector
                 currentPeriod={currentPeriod}

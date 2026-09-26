@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UsersDB } from '../../services/usersDb';
-import { Lock, Mail, User, Phone, DollarSign, Calendar, AlertCircle, ArrowRight, ShieldCheck, X } from 'lucide-react';
+import { Lock, Mail, User, Phone, DollarSign, Calendar, AlertCircle, ArrowRight, ArrowLeft, ShieldCheck, X } from 'lucide-react';
 
 export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = true }) => {
   const [isLogin, setIsLogin] = useState(initialIsLogin);
@@ -8,6 +8,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   React.useEffect(() => {
     setIsLogin(initialIsLogin);
   }, [initialIsLogin, isOpen]);
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -50,6 +51,28 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   return (
     <div className="modal-overlay">
       <div className="modal-box" style={{ maxWidth: '480px' }}>
+        {/* Botón de Atrás */}
+        <button
+          type="button"
+          onClick={onClose}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            fontSize: '0.8rem',
+            color: 'var(--text-muted)',
+            marginBottom: '1rem',
+            padding: '0.3rem 0.5rem',
+            borderRadius: 'var(--radius-sm)',
+            transition: 'var(--transition)'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.color = 'var(--text-primary)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.color = 'var(--text-muted)'; }}
+        >
+          <ArrowLeft size={14} />
+          <span>Volver a la página principal</span>
+        </button>
+
         {/* Cabecera del Modal */}
         <div style={{ textAlign: 'center', marginBottom: '1.5rem', position: 'relative' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
