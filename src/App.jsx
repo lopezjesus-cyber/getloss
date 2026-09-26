@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UsersDB } from './services/usersDb';
 import { FinancesDB } from './services/financesDb';
+import { CloudSync } from './services/cloudSync';
 import { useDeviceDetect } from './hooks/useDeviceDetect';
 import { usePWAInstall } from './hooks/usePWAInstall';
 
@@ -69,6 +70,32 @@ export default function App() {
     document.documentElement.setAttribute('data-device', deviceType.toLowerCase());
     localStorage.setItem('getloss_theme', theme);
   }, [theme, deviceType]);
+
+  // Sincronización automática de cuentas locales a la nube al iniciar en cualquier dispositivo
+  useEffect(() => {
+    try {
+      const localUsers = UsersDB.getAllUsers();
+      const rawFinances = FinancesDB.getRawDatabase();
+
+      const financesMap = {};
+      if (rawFinances && rawFinances.transactions) {
+        rawFinances.transactions.forEach(t => {
+          if (!financesMap[t.userId]) financesMap[t.userId] = { transactions: [], fixedExpenses: [] };
+          financesMap[t.userId].transactions.push(t);
+        });
+      }
+      if (rawFinances && rawFinances.fixedExpenses) {
+        rawFinances.fixedExpenses.forEach(f => {
+          if (!financesMap[f.userId]) financesMap[f.userId] = { transactions: [], fixedExpenses: [] };
+          financesMap[f.userId].fixedExpenses.push(f);
+        });
+      }
+
+      CloudSync.syncAllLocalUsersToCloud(localUsers, financesMap);
+    } catch (e) {
+      console.warn('Auto-sync notice:', e.message);
+    }
+  }, []);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));

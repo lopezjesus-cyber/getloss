@@ -221,5 +221,41 @@ export const CloudSync = {
       return true;
     } catch {}
     return false;
+  },
+
+  // 7. Sincronizar todos los usuarios y finanzas locales a la nube automáticamente
+  syncAllLocalUsersToCloud: async (localUsers = [], localFinances = {}) => {
+    try {
+      const cloudData = await getDirectCloudData();
+      let changed = false;
+      const cloudUsers = cloudData.users || [];
+
+      for (const lu of localUsers) {
+        if (!lu || !lu.email) continue;
+        const exists = cloudUsers.some(cu => cu.email.toLowerCase() === lu.email.toLowerCase());
+        if (!exists) {
+          cloudUsers.push(lu);
+          changed = true;
+        }
+      }
+
+      if (localFinances) {
+        if (!cloudData.finances) cloudData.finances = {};
+        for (const [uid, fData] of Object.entries(localFinances)) {
+          if (!cloudData.finances[uid] || (fData.transactions && fData.transactions.length > (cloudData.finances[uid].transactions?.length || 0))) {
+            cloudData.finances[uid] = fData;
+            changed = true;
+          }
+        }
+      }
+
+      if (changed) {
+        cloudData.users = cloudUsers;
+        await saveDirectCloudData(cloudData);
+        console.log('[getloss Sync] Cuentas locales sincronizadas a la nube con éxito.');
+      }
+    } catch (e) {
+      console.warn('[getloss Sync] Error durante auto-migración a la nube:', e);
+    }
   }
 };
