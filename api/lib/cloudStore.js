@@ -81,10 +81,6 @@ async function fetchFullCloudState() {
 
         memoryCache.users = mergeUsers(memoryCache.users, endpointUsers);
         memoryCache.finances = mergeFinances(memoryCache.finances, endpointFinances);
-
-        if (endpointUsers.length > 0 || Object.keys(endpointFinances).length > 0) {
-          return memoryCache;
-        }
       }
     } catch (e) {
       console.warn(`[CloudStore] Endpoint ${endpoint} lectura aviso:`, e.message);
