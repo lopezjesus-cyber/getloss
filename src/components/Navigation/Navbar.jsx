@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sun, Moon, LogIn, LogOut, User, Plus, Shield, Download } from 'lucide-react';
+import { Sun, Moon, LogIn, LogOut, User, Plus, Shield } from 'lucide-react';
 import { BrandLogo } from '../Common/BrandLogo';
 
 export const Navbar = ({
@@ -9,8 +9,7 @@ export const Navbar = ({
   onOpenAuth,
   onLogout,
   onOpenProfile,
-  onOpenAddTx,
-  onOpenInstall
+  onOpenAddTx
 }) => {
   return (
     <header className="top-navbar">
@@ -24,25 +23,6 @@ export const Navbar = ({
 
       {/* Controles del Lado Derecho */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-        {/* Botón Descargar / Instalar App */}
-        {onOpenInstall && (
-          <button
-            onClick={onOpenInstall}
-            className="btn-secondary"
-            title="Descargar o instalar getloss en tu dispositivo"
-            style={{
-              fontSize: '0.75rem',
-              padding: '0.4rem 0.75rem',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '0.35rem',
-              borderRadius: 'var(--radius-full)'
-            }}
-          >
-            <Download size={14} />
-            <span className="hide-on-mobile">Instalar App</span>
-          </button>
-        )}
 
         {/* Alternador de Tema Oscuro / Claro */}
         <button

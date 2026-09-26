@@ -152,7 +152,6 @@ export default function App() {
           onLogout={handleLogout}
           onOpenProfile={() => setIsProfileOpen(true)}
           onOpenAddTx={() => setIsAddTxOpen(true)}
-          onOpenInstall={() => setIsInstallModalOpen(true)}
           isMobile={isMobile}
         />
 
