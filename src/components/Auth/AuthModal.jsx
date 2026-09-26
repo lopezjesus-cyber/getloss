@@ -89,7 +89,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
     if (isLogin) {
       setIsLoading(true);
       try {
-        const user = UsersDB.login(formData.email, formData.password);
+        const user = await UsersDB.login(formData.email, formData.password);
         onAuthSuccess(user);
         onClose();
       } catch (err) {
@@ -178,7 +178,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   };
 
   // Confirmar verificación y registrar cuenta
-  const handleVerifyAndRegister = (e) => {
+  const handleVerifyAndRegister = async (e) => {
     if (e) e.preventDefault();
     setError('');
     const fullCode = pin.join('');
@@ -189,29 +189,27 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
     }
 
     setIsLoading(true);
-    setTimeout(() => {
-      const verification = EmailService.verifyCode(formData.email, fullCode);
+    const verification = EmailService.verifyCode(formData.email, fullCode);
 
-      if (!verification.valid) {
-        setError(verification.message || 'Código incorrecto.');
-        setIsLoading(false);
-        return;
-      }
+    if (!verification.valid) {
+      setError(verification.message || 'Código incorrecto.');
+      setIsLoading(false);
+      return;
+    }
 
-      try {
-        const newUser = UsersDB.register(formData);
-        setStep('SUCCESS');
-        setIsLoading(false);
+    try {
+      const newUser = await UsersDB.register(formData);
+      setStep('SUCCESS');
+      setIsLoading(false);
 
-        setTimeout(() => {
-          onAuthSuccess(newUser);
-          onClose();
-        }, 1000);
-      } catch (err) {
-        setError(err.message || 'Error al completar el registro.');
-        setIsLoading(false);
-      }
-    }, 400);
+      setTimeout(() => {
+        onAuthSuccess(newUser);
+        onClose();
+      }, 1000);
+    } catch (err) {
+      setError(err.message || 'Error al completar el registro.');
+      setIsLoading(false);
+    }
   };
 
   return (

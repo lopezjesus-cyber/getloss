@@ -1,8 +1,10 @@
 /**
- * getloss - Base de Datos Financiera de Clientes (getloss_finances_db)
+ * getloss - Base de Datos Financiera de Clientes con Sincronización en la Nube
  * Gestiona transacciones, categorías con vectores, gastos fijos indispensables y reportes
- * con soporte directo para selección entre Modo Quincenal o Modo Mensual.
+ * con soporte directo para selección entre Modo Quincenal o Modo Mensual y sincronización entre PC y Celular.
  */
+
+import { CloudSync } from './cloudSync';
 
 const FINANCES_STORAGE_KEY = 'getloss_finances_db_v1';
 
@@ -50,8 +52,15 @@ export const FinancesDB = {
     }
   },
 
-  _saveDatabase: (db) => {
+  _saveDatabase: (db, userIdToSync = null) => {
     localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(db));
+
+    // Si se pasa un userId, sincronizar en segundo plano con la nube
+    if (userIdToSync) {
+      const userFixed = (db.fixedExpenses || []).filter(f => f.userId === userIdToSync);
+      const userTxs = (db.transactions || []).filter(t => t.userId === userIdToSync);
+      CloudSync.pushFinancesToCloud(userIdToSync, userFixed, userTxs).catch(() => {});
+    }
   },
 
   getCategories: () => DEFAULT_CATEGORIES,
@@ -65,6 +74,34 @@ export const FinancesDB = {
       isIndispensable: false,
       color: '#71717a'
     };
+  },
+
+  // --------------------------------------------------------------------------
+  // INYECCIÓN Y SINCRONIZACIÓN EN LA NUBE
+  // --------------------------------------------------------------------------
+  injectCloudData: (userId, cloudData) => {
+    if (!userId || !cloudData) return;
+    const db = FinancesDB.getRawDatabase();
+
+    const otherTransactions = (db.transactions || []).filter(t => t.userId !== userId);
+    const otherFixed = (db.fixedExpenses || []).filter(f => f.userId !== userId);
+
+    db.transactions = [...otherTransactions, ...(cloudData.transactions || [])];
+    db.fixedExpenses = [...otherFixed, ...(cloudData.fixedExpenses || [])];
+
+    localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(db));
+  },
+
+  syncWithCloud: async (userId) => {
+    if (!userId) return;
+    try {
+      const cloudData = await CloudSync.pullFinancesFromCloud(userId);
+      if (cloudData) {
+        FinancesDB.injectCloudData(userId, cloudData);
+      }
+    } catch (e) {
+      console.warn('Error al sincronizar finanzas con la nube:', e);
+    }
   },
 
   // --------------------------------------------------------------------------
@@ -117,14 +154,17 @@ export const FinancesDB = {
     };
 
     db.transactions.unshift(newTx);
-    FinancesDB._saveDatabase(db);
+    FinancesDB._saveDatabase(db, userId);
     return newTx;
   },
 
   deleteTransaction: (txId) => {
     const db = FinancesDB.getRawDatabase();
+    const item = (db.transactions || []).find(t => t.id === txId);
+    const userId = item ? item.userId : null;
+
     db.transactions = (db.transactions || []).filter(t => t.id !== txId);
-    FinancesDB._saveDatabase(db);
+    FinancesDB._saveDatabase(db, userId);
     return true;
   },
 
@@ -154,7 +194,7 @@ export const FinancesDB = {
     };
 
     db.fixedExpenses.push(newFixed);
-    FinancesDB._saveDatabase(db);
+    FinancesDB._saveDatabase(db, userId);
     return newFixed;
   },
 
@@ -172,14 +212,17 @@ export const FinancesDB = {
       item.paidPeriods = [...(item.paidPeriods || []), periodKey];
     }
 
-    FinancesDB._saveDatabase(db);
+    FinancesDB._saveDatabase(db, item.userId);
     return !isPaid;
   },
 
   deleteFixedExpense: (fixedId) => {
     const db = FinancesDB.getRawDatabase();
+    const item = (db.fixedExpenses || []).find(f => f.id === fixedId);
+    const userId = item ? item.userId : null;
+
     db.fixedExpenses = (db.fixedExpenses || []).filter(f => f.id !== fixedId);
-    FinancesDB._saveDatabase(db);
+    FinancesDB._saveDatabase(db, userId);
     return true;
   },
 
@@ -190,10 +233,10 @@ export const FinancesDB = {
     const txs = FinancesDB.getTransactions(userId, { year, month });
     const fixed = FinancesDB.getFixedExpenses(userId);
 
-    // Filtrar transacciones según el modo si aplica o calcular el total
-    const filteredTxs = mode === 'MENSUAL'
-      ? txs
-      : txs.filter(t => t.periodMode === 'QUINCENAL' || !t.periodMode);
+    const filteredTxs = txs.filter(t => {
+      if (mode === 'MENSUAL') return true;
+      return t.periodMode === 'QUINCENAL' || !t.periodMode;
+    });
 
     const totalIncome = filteredTxs
       .filter(t => t.type === 'INCOME')
@@ -269,7 +312,7 @@ export const FinancesDB = {
     const db = FinancesDB.getRawDatabase();
     db.transactions = (db.transactions || []).filter(t => t.userId !== userId);
     db.fixedExpenses = (db.fixedExpenses || []).filter(f => f.userId !== userId);
-    FinancesDB._saveDatabase(db);
+    FinancesDB._saveDatabase(db, userId);
     return true;
   },
 
