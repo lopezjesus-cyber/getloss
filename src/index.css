@@ -425,7 +425,112 @@ button {
   color: #ffffff;
 }
 
-/* Animaciones */
+/* ==========================================================================
+   Apple-Grade Design System & Animations
+   ========================================================================== */
+
+@keyframes appleFloat {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes applePulseGlow {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes appleFadeScale {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes appleShimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes appleSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Apple Bento Card */
+.apple-bento-card {
+  background: rgba(18, 18, 21, 0.7);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 28px;
+  padding: 2.25rem 2rem;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.7);
+}
+
+.apple-bento-card:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 24px 60px -12px rgba(0, 0, 0, 0.85), 0 0 32px rgba(255, 255, 255, 0.05);
+}
+
+/* Apple Pill Selector */
+.apple-segmented-control {
+  display: inline-flex;
+  background: rgba(24, 24, 27, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 0.35rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  gap: 0.25rem;
+}
+
+.apple-pill-btn {
+  padding: 0.6rem 1.35rem;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Apple Floating Hero Element */
+.apple-hardware-wrapper {
+  animation: appleFloat 6s ease-in-out infinite;
+}
+
+/* Animaciones Estándar */
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -439,3 +544,4 @@ button {
 .animate-fade-in {
   animation: fadeIn 0.3s ease-in-out;
 }
+
