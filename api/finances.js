@@ -30,7 +30,14 @@ export default async function handler(req, res) {
 
     // 2. SINCRONIZAR TODA LA BASE DE DATOS DEL USUARIO (PUSH SYNC)
     if (req.method === 'POST' && action === 'sync') {
-      const { userId: bodyUserId, fixedExpenses, transactions } = req.body || {};
+      let bodyData = {};
+      try {
+        bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+      } catch {
+        bodyData = req.body || {};
+      }
+
+      const { userId: bodyUserId, fixedExpenses, transactions } = bodyData;
       const targetUserId = userId || bodyUserId;
 
       if (!targetUserId) {

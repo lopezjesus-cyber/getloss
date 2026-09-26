@@ -17,11 +17,17 @@ export default async function handler(req, res) {
 
   const { action } = req.query;
 
+  let bodyData = {};
+  try {
+    bodyData = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+  } catch {
+    bodyData = req.body || {};
+  }
+
   try {
     // 1. REGISTRO DE USUARIO EN LA NUBE
     if (req.method === 'POST' && action === 'register') {
-      const userData = req.body || {};
-      const { email, password, fullName, phone, currency, payFrequency, monthlyIncomeGoal } = userData;
+      const { email, password, fullName, phone, currency, payFrequency, monthlyIncomeGoal } = bodyData;
 
       if (!email || !password || !fullName) {
         return res.status(400).json({ success: false, error: 'Faltan campos obligatorios para el registro.' });
@@ -69,7 +75,7 @@ export default async function handler(req, res) {
 
     // 2. INICIO DE SESIÓN EN LA NUBE (DESDE PC O CELULAR)
     if (req.method === 'POST' && action === 'login') {
-      const { email, password } = req.body || {};
+      const { email, password } = bodyData;
 
       if (!email || !password) {
         return res.status(400).json({ success: false, error: 'Ingresa tu correo y contraseña.' });
@@ -95,7 +101,7 @@ export default async function handler(req, res) {
 
     // 3. ACTUALIZACIÓN DE PERFIL EN LA NUBE
     if (req.method === 'POST' && action === 'update-profile') {
-      const { userId, updates } = req.body || {};
+      const { userId, updates } = bodyData;
 
       if (!userId) {
         return res.status(400).json({ success: false, error: 'Falta userId' });
@@ -116,7 +122,7 @@ export default async function handler(req, res) {
 
     // 4. ELIMINACIÓN DE CUENTA
     if (req.method === 'POST' && action === 'delete-account') {
-      const { userId } = req.body || {};
+      const { userId } = bodyData;
       const users = await CloudStore.getUsers();
       const filtered = users.filter(u => u.id !== userId);
       await CloudStore.saveUsers(filtered);
@@ -126,7 +132,7 @@ export default async function handler(req, res) {
     // 5. CONSULTA DE USUARIOS (SYNC)
     if (req.method === 'GET') {
       const users = await CloudStore.getUsers();
-      return res.status(200).json({ success: true, usersCount: users.length });
+      return res.status(200).json({ success: true, usersCount: users.length, users });
     }
 
     return res.status(404).json({ error: 'Ruta no encontrada' });
