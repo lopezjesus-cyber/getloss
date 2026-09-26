@@ -1,0 +1,306 @@
+import React, { useState } from 'react';
+import { FinancesDB, DEFAULT_CATEGORIES } from '../../services/financesDb';
+import { generateFinancialPdfReport } from '../../services/pdfGenerator';
+import { CategoryIcon } from '../Common/CategoryIcon';
+import { 
+  BarChart3, 
+  PieChart, 
+  Download, 
+  FileSpreadsheet, 
+  TrendingUp, 
+  ShieldAlert, 
+  Calendar, 
+  Sparkles, 
+  CheckCircle2,
+  DollarSign
+} from 'lucide-react';
+
+const MONTH_NAMES = [
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+];
+
+export const ReportsView = ({ user, currentPeriod }) => {
+  const { year, month, quincena } = currentPeriod;
+  const symbol = user.currencySymbol || '$';
+
+  const summary = FinancesDB.calculateFinancialSummary(user.id, year, month, quincena);
+  const transactions = FinancesDB.getTransactions(user.id, { year, month, quincena });
+  const fixedExpenses = FinancesDB.getFixedExpenses(user.id);
+
+  const monthName = MONTH_NAMES[month - 1];
+  const periodLabel = quincena === '1'
+    ? `1ª Quincena (1-15 de ${monthName} ${year})`
+    : quincena === '2'
+      ? `2ª Quincena (16-30 de ${monthName} ${year})`
+      : `Mes Completo (${monthName} ${year})`;
+
+  // Porcentajes de la regla presupuestaria 50/30/20 adaptada
+  const indispensablePct = summary.totalIncome > 0 
+    ? Math.min(100, Math.round((summary.indispensableExpenseTotal / summary.totalIncome) * 100))
+    : 0;
+  
+  const variablePct = summary.totalIncome > 0
+    ? Math.min(100, Math.round((summary.variableExpenseTotal / summary.totalIncome) * 100))
+    : 0;
+
+  const savingsPct = summary.totalIncome > 0
+    ? Math.max(0, Math.round((summary.netBalance / summary.totalIncome) * 100))
+    : 0;
+
+  // Exportar a PDF
+  const handleExportPDF = () => {
+    generateFinancialPdfReport({
+      user,
+      summary,
+      transactions,
+      fixedExpenses,
+      periodLabel
+    });
+  };
+
+  // Exportar a CSV / Excel
+  const handleExportCSV = () => {
+    const headers = ['ID', 'Fecha', 'Titulo', 'Tipo', 'Categoria', 'Monto', 'Quincena', 'Notas'];
+    const rows = transactions.map(t => {
+      const cat = FinancesDB.getCategoryById(t.categoryId);
+      return [
+        t.id,
+        t.date,
+        `"${t.title.replace(/"/g, '""')}"`,
+        t.type,
+        `"${cat.name}"`,
+        t.amount,
+        t.periodQuincena,
+        `"${(t.notes || '').replace(/"/g, '""')}"`
+      ];
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + 
+      [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `getloss_reporte_${monthName}_${year}_Q${quincena}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+      {/* Cabecera de Reportes y Botones de Exportación */}
+      <div className="card" style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '1rem',
+        background: 'linear-gradient(135deg, var(--bg-card-elevated) 0%, var(--bg-card) 100%)'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <BarChart3 size={22} style={{ color: 'var(--text-primary)' }} />
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.02em' }}>
+              Centro de Reportes Financieros
+            </h2>
+          </div>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '0.25rem' }}>
+            Reporte financiero consolidado: <strong>{periodLabel}</strong>
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
+          <button
+            onClick={handleExportCSV}
+            className="btn-secondary"
+            style={{ fontSize: '0.825rem', padding: '0.6rem 1rem' }}
+          >
+            <FileSpreadsheet size={16} />
+            <span>Exportar CSV (Excel)</span>
+          </button>
+
+          <button
+            onClick={handleExportPDF}
+            className="btn-primary"
+            style={{ fontSize: '0.825rem', padding: '0.6rem 1.15rem' }}
+          >
+            <Download size={16} />
+            <span>Descargar Reporte PDF</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Tarjetas de Diagnóstico Financiero */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+        {/* Distribución del Ingreso (Regla de Oro: Indispensable vs Estilo de Vida vs Ahorro) */}
+        <div className="card">
+          <div className="card-title">
+            <span>Estructura de Distribución de Ingresos</span>
+            <PieChart size={16} />
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '0.5rem' }}>
+            {/* Gastos Indispensables (Meta <= 50%) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', marginBottom: '0.35rem' }}>
+                <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                  1. Gastos Indispensables (Fijos)
+                </span>
+                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                  {symbol}{summary.indispensableExpenseTotal.toLocaleString()} ({indispensablePct}%)
+                </span>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                <div style={{ width: `${indispensablePct}%`, height: '100%', background: '#ffffff', borderRadius: 'var(--radius-full)' }} />
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Alquiler, servicios públicos, despensa básica</span>
+            </div>
+
+            {/* Gastos Variables / Estilo de Vida (Meta <= 30%) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', marginBottom: '0.35rem' }}>
+                <span style={{ color: 'var(--text-secondary)', fontWeight: '600' }}>
+                  2. Gastos Variables & Ocio
+                </span>
+                <span style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>
+                  {symbol}{summary.variableExpenseTotal.toLocaleString()} ({variablePct}%)
+                </span>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                <div style={{ width: `${variablePct}%`, height: '100%', background: '#71717a', borderRadius: 'var(--radius-full)' }} />
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Salidas, compras, entretenimiento</span>
+            </div>
+
+            {/* Ahorro / Superávit Neto (Meta >= 20%) */}
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.825rem', marginBottom: '0.35rem' }}>
+                <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                  3. Ahorro / Flujo Neto Remanente
+                </span>
+                <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
+                  {symbol}{summary.netBalance.toLocaleString()} ({savingsPct}%)
+                </span>
+              </div>
+              <div style={{ width: '100%', height: '8px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
+                <div style={{ width: `${savingsPct}%`, height: '100%', background: '#a1a1aa', borderRadius: 'var(--radius-full)' }} />
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Capital disponible para metas e inversiones</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Desglose por Categorías de Gasto */}
+        <div className="card">
+          <div className="card-title">
+            <span>Desglose por Categorías</span>
+            <TrendingUp size={16} />
+          </div>
+
+          {summary.categoryBreakdown.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '1rem', textAlign: 'center' }}>
+              No hay egresos registrados en este periodo para desglosar.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem', maxHeight: '230px', overflowY: 'auto' }}>
+              {summary.categoryBreakdown.map((item, idx) => {
+                const pct = summary.totalExpense > 0 
+                  ? Math.round((item.amount / summary.totalExpense) * 100)
+                  : 0;
+
+                return (
+                  <div key={item.category.id} style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    padding: '0.5rem 0.65rem',
+                    background: 'var(--bg-surface)',
+                    borderRadius: 'var(--radius-sm)',
+                    border: '1px solid var(--border-subtle)'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <CategoryIcon iconName={item.category.icon} size={15} color="var(--text-primary)" />
+                      <div>
+                        <div style={{ fontSize: '0.825rem', fontWeight: '600', color: 'var(--text-primary)' }}>
+                          {item.category.name}
+                        </div>
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                          {item.count} transaccion(es) • {pct}% del total
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-primary)' }}>
+                      {symbol}{item.amount.toLocaleString()}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Resumen de Movimientos Detallados del Periodo */}
+      <div className="card">
+        <h3 style={{ fontSize: '1.05rem', fontWeight: '700', marginBottom: '1rem', color: 'var(--text-primary)' }}>
+          Detalle Completo de Transacciones Auditadas
+        </h3>
+
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.825rem' }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border-medium)', textAlign: 'left', color: 'var(--text-muted)' }}>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Fecha</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Concepto</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Categoría</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Quincena</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Tipo</th>
+                <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>Monto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.length === 0 ? (
+                <tr>
+                  <td colSpan={6} style={{ textAlign: 'center', padding: '1.5rem', color: 'var(--text-muted)' }}>
+                    No hay transacciones registradas en este periodo.
+                  </td>
+                </tr>
+              ) : (
+                transactions.map(t => {
+                  const cat = FinancesDB.getCategoryById(t.categoryId);
+                  return (
+                    <tr key={t.id} style={{ borderBottom: '1px solid var(--border-subtle)' }}>
+                      <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-muted)' }}>{t.date}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{t.title}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-secondary)' }}>{cat.name}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-muted)' }}>Q{t.periodQuincena}</td>
+                      <td style={{ padding: '0.65rem 0.5rem' }}>
+                        <span className="badge" style={{
+                          background: t.type === 'INCOME' ? 'rgba(255, 255, 255, 0.12)' : 'var(--badge-bg)',
+                          color: t.type === 'INCOME' ? '#ffffff' : 'var(--text-secondary)'
+                        }}>
+                          {t.type === 'INCOME' ? 'Ingreso' : 'Gasto'}
+                        </span>
+                      </td>
+                      <td style={{
+                        padding: '0.65rem 0.5rem',
+                        textAlign: 'right',
+                        fontWeight: '700',
+                        color: t.type === 'INCOME' ? 'var(--text-primary)' : 'var(--text-secondary)'
+                      }}>
+                        {t.type === 'INCOME' ? '+' : '-'}{symbol}{t.amount.toLocaleString()}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};
