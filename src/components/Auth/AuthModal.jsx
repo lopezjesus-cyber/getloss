@@ -16,6 +16,9 @@ import {
   RotateCw, 
   KeyRound, 
   Send,
+  Eye,
+  EyeOff,
+  Check,
   X 
 } from 'lucide-react';
 
@@ -40,6 +43,8 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
     monthlyIncomeGoal: 2000,
   });
 
+  const [showPassword, setShowPassword] = useState(false);
+
   // Estado para el PIN de 6 dígitos
   const [pin, setPin] = useState(['', '', '', '', '', '']);
   const pinInputRefs = useRef([]);
@@ -48,6 +53,18 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   const [showBackupCode, setShowBackupCode] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Validación de requisitos de contraseña en tiempo real
+  const passwordChecks = {
+    minLength: formData.password.length >= 8,
+    hasUpper: /[A-Z]/.test(formData.password),
+    hasLower: /[a-z]/.test(formData.password),
+    hasNumber: /[0-9]/.test(formData.password),
+    hasSpecial: /[^A-Za-z0-9]/.test(formData.password),
+  };
+
+  const passedChecks = Object.values(passwordChecks).filter(Boolean).length;
+  const isPasswordValid = passwordChecks.minLength && passwordChecks.hasUpper && passwordChecks.hasLower && passwordChecks.hasNumber;
 
   // Temporizador para reenvío de código
   useEffect(() => {
@@ -84,6 +101,12 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
       // Registro: Validar y enviar código de verificación al correo real
       if (!formData.fullName.trim() || !formData.email.trim() || !formData.password) {
         setError('Por favor completa todos los campos obligatorios.');
+        return;
+      }
+
+      // Validar requisitos de contraseña
+      if (!isPasswordValid) {
+        setError('La contraseña no cumple con los requisitos de seguridad (mínimo 8 caracteres, mayúscula, minúscula y número).');
         return;
       }
 
@@ -370,20 +393,32 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '0.35rem' }}>
-                  Contraseña *
-                </label>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                    Contraseña *
+                  </label>
+                  {!isLogin && formData.password && (
+                    <span style={{ 
+                      fontSize: '0.72rem', 
+                      fontWeight: '700', 
+                      color: passedChecks >= 4 ? '#22c55e' : passedChecks >= 2 ? '#eab308' : '#ef4444' 
+                    }}>
+                      {passedChecks >= 5 ? 'Muy Fuerte' : passedChecks >= 4 ? 'Segura' : passedChecks >= 2 ? 'Media' : 'Débil'}
+                    </span>
+                  )}
+                </div>
+
                 <div style={{ position: 'relative' }}>
                   <Lock size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                   <input
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     required
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '0.75rem 0.75rem 0.75rem 2.4rem',
+                      padding: '0.75rem 2.4rem 0.75rem 2.4rem',
                       borderRadius: 'var(--radius-md)',
                       border: '1px solid var(--border-medium)',
                       background: 'var(--bg-card)',
@@ -391,7 +426,87 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                       fontSize: '0.9rem'
                     }}
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(prev => !prev)}
+                    style={{
+                      position: 'absolute',
+                      right: '10px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      padding: '4px'
+                    }}
+                    title={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
+
+                {/* Requisitos de Contraseña en Tiempo Real (Solo Registro) */}
+                {!isLogin && (
+                  <div style={{
+                    marginTop: '0.75rem',
+                    padding: '0.75rem',
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border-subtle)',
+                    borderRadius: 'var(--radius-md)'
+                  }}>
+                    {/* Barra de Fuerza */}
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '0.65rem' }}>
+                      {[1, 2, 3, 4, 5].map((level) => (
+                        <div
+                          key={level}
+                          style={{
+                            flex: 1,
+                            height: '4px',
+                            borderRadius: 'var(--radius-full)',
+                            background: passedChecks >= level 
+                              ? (passedChecks >= 4 ? '#22c55e' : passedChecks >= 2 ? '#eab308' : '#ef4444') 
+                              : 'var(--border-medium)',
+                            transition: 'background 0.3s ease'
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    <div style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '0.4rem' }}>
+                      Requisitos de Seguridad:
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.35rem 0.65rem', fontSize: '0.75rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: passwordChecks.minLength ? '#22c55e' : 'var(--text-muted)' }}>
+                        {passwordChecks.minLength ? <Check size={12} strokeWidth={3} /> : <span style={{ width: '12px', textAlign: 'center' }}>•</span>}
+                        <span>Mínimo 8 caracteres</span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: passwordChecks.hasUpper ? '#22c55e' : 'var(--text-muted)' }}>
+                        {passwordChecks.hasUpper ? <Check size={12} strokeWidth={3} /> : <span style={{ width: '12px', textAlign: 'center' }}>•</span>}
+                        <span>Una mayúscula (A-Z)</span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: passwordChecks.hasLower ? '#22c55e' : 'var(--text-muted)' }}>
+                        {passwordChecks.hasLower ? <Check size={12} strokeWidth={3} /> : <span style={{ width: '12px', textAlign: 'center' }}>•</span>}
+                        <span>Una minúscula (a-z)</span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', color: passwordChecks.hasNumber ? '#22c55e' : 'var(--text-muted)' }}>
+                        {passwordChecks.hasNumber ? <Check size={12} strokeWidth={3} /> : <span style={{ width: '12px', textAlign: 'center' }}>•</span>}
+                        <span>Un número (0-9)</span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: '0.75rem', marginTop: '0.35rem', color: passwordChecks.hasSpecial ? '#22c55e' : 'var(--text-muted)' }}>
+                      {passwordChecks.hasSpecial ? <Check size={12} strokeWidth={3} /> : <span style={{ width: '12px', textAlign: 'center' }}>•</span>}
+                      <span>Un símbolo especial (!@#$%) (opcional)</span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {!isLogin && (
