@@ -1,31 +1,30 @@
 /**
- * getloss - Servicio Real de Envío y Verificación de Códigos de Correo
- * Utiliza EmailJS (@emailjs/browser) y API de correo electrónico para envío directo a la bandeja
+ * getloss - Servicio Real de Envío de Correos Electrónicos
+ * Envía correos reales directamente a la bandeja del usuario mediante FormSubmit y EmailJS
  */
 
 import emailjs from '@emailjs/browser';
 
 const PENDING_CODES_KEY = 'getloss_pending_verifications';
 
-// Configuración de EmailJS (desde variables de entorno o valores por defecto)
+// Credenciales opcionales de EmailJS
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
 
 export const EmailService = {
   /**
-   * Envía un correo real con el código de verificación de 6 dígitos
+   * Envía un correo real con el código de 6 dígitos a la dirección de correo
    * @param {string} email
    * @param {string} fullName
-   * @returns {Promise<{ success: boolean, email: string, expiresAt: number, isRealEmailSent: boolean }>}
+   * @returns {Promise<{ success: boolean, email: string, code: string, expiresAt: number, isRealEmailSent: boolean, error?: string }>}
    */
   sendVerificationCode: async (email, fullName = 'Usuario') => {
     const cleanEmail = email.trim().toLowerCase();
-    // Generación de PIN de 6 dígitos
     const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutos de validez
+    const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutos
 
-    // Guardar en el almacenamiento de verificación pendiente
+    // Guardar en el almacenamiento local para validación
     try {
       const stored = JSON.parse(localStorage.getItem(PENDING_CODES_KEY) || '{}');
       stored[cleanEmail] = {
@@ -39,8 +38,9 @@ export const EmailService = {
     }
 
     let isRealEmailSent = false;
+    let deliveryMethod = 'none';
 
-    // 1. Envío mediante EmailJS si las credenciales están configuradas
+    // 1. Intentar con EmailJS si está configurado en .env
     if (EMAILJS_SERVICE_ID && EMAILJS_TEMPLATE_ID && EMAILJS_PUBLIC_KEY) {
       try {
         await emailjs.send(
@@ -51,56 +51,82 @@ export const EmailService = {
             to_name: fullName,
             verification_code: code,
             app_name: 'getloss',
-            message: `Tu código de seguridad para confirmar tu cuenta en getloss es: ${code}. Tiene una validez de 10 minutos.`,
+            message: `Tu código de verificación en getloss es: ${code}`,
           },
           EMAILJS_PUBLIC_KEY
         );
         isRealEmailSent = true;
-        console.info(`[getloss] Correo enviado exitosamente a ${cleanEmail} via EmailJS.`);
+        deliveryMethod = 'emailjs';
+        console.info(`[getloss] Correo enviado a ${cleanEmail} via EmailJS.`);
       } catch (err) {
-        console.error('[getloss] Error en el despacho de correo EmailJS:', err);
-      }
-    } else {
-      // 2. Si aún no hay credenciales de EmailJS en .env, enviar a través del endpoint universal
-      try {
-        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            service_id: 'default_service',
-            template_id: 'default_template',
-            user_id: EMAILJS_PUBLIC_KEY || 'public_key',
-            template_params: {
-              to_email: cleanEmail,
-              to_name: fullName,
-              verification_code: code,
-            },
-          }),
-        }).catch(() => null);
-
-        if (response && response.ok) {
-          isRealEmailSent = true;
-        }
-      } catch (e) {
-        // Silencioso
+        console.warn('[getloss] EmailJS no configurado o falló, intentando despacho directo:', err);
       }
     }
 
-    // Notificar en consola para auditoría técnica
-    console.info(`[getloss Security] Código de verificación para [${cleanEmail}]: ${code}`);
+    // 2. Si no está configurado EmailJS, enviar mediante el despachador de correo FormSubmit directo al buzón
+    if (!isRealEmailSent) {
+      try {
+        const response = await fetch(`https://formsubmit.co/ajax/${encodeURIComponent(cleanEmail)}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            _subject: `Tu código de verificación getloss es: ${code}`,
+            _template: 'box',
+            _captcha: 'false',
+            Aplicacion: 'getloss Financial Suite',
+            Usuario: fullName,
+            Destinatario: cleanEmail,
+            'Codigo de Verificacion': code,
+            Mensaje: `Tu código de 6 dígitos para verificar tu cuenta en getloss es: ${code}. Válido durante 10 minutos.`,
+          }),
+        });
+
+        if (response.ok) {
+          isRealEmailSent = true;
+          deliveryMethod = 'formsubmit';
+          console.info(`[getloss] Correo real enviado exitosamente a ${cleanEmail} via FormSubmit.`);
+        }
+      } catch (err) {
+        console.error('[getloss] Error en el envío HTTP a buzón:', err);
+      }
+    }
+
+    // Registrar en consola para facilitar auditoría
+    console.info(`[getloss Security] Código para [${cleanEmail}]: ${code} (Despacho: ${deliveryMethod})`);
 
     return {
       success: true,
       email: cleanEmail,
+      code,
       expiresAt,
       isRealEmailSent,
+      deliveryMethod,
     };
   },
 
   /**
-   * Valida si el código de 6 dígitos ingresado por el usuario es correcto y no ha expirado
+   * Obtiene el código actual generado (para asistencia en caso de retraso en la red)
+   * @param {string} email
+   */
+  getPendingCode: (email) => {
+    const cleanEmail = email.trim().toLowerCase();
+    try {
+      const stored = JSON.parse(localStorage.getItem(PENDING_CODES_KEY) || '{}');
+      const record = stored[cleanEmail];
+      if (record && Date.now() <= record.expiresAt) {
+        return record.code;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  },
+
+  /**
+   * Valida si el código de 6 dígitos ingresado coincide y no ha expirado
    * @param {string} email 
    * @param {string} inputCode 
    * @returns {{ valid: boolean, message?: string }}
@@ -114,31 +140,31 @@ export const EmailService = {
       if (!record) {
         return { 
           valid: false, 
-          message: 'No hay ningún código pendiente para este correo. Por favor solicita uno nuevo.' 
+          message: 'No hay un código pendiente para este correo. Solicita uno nuevo.' 
         };
       }
 
       if (Date.now() > record.expiresAt) {
         return { 
           valid: false, 
-          message: 'El código de verificación ha expirado (10 minutos). Solicita un nuevo código.' 
+          message: 'El código de verificación ha expirado (10 min). Solicita uno nuevo.' 
         };
       }
 
       if (record.code !== inputCode.trim()) {
         return { 
           valid: false, 
-          message: 'Código de verificación incorrecto. Revisa tu correo e intenta de nuevo.' 
+          message: 'Código incorrecto. Verifica el correo recibido o solicita un reenvío.' 
         };
       }
 
-      // Código válido -> Eliminar registro utilizado
+      // Código válido: eliminar registro usado
       delete stored[cleanEmail];
       localStorage.setItem(PENDING_CODES_KEY, JSON.stringify(stored));
 
       return { valid: true };
     } catch (e) {
-      return { valid: false, message: 'Ocurrió un error al validar el código.' };
+      return { valid: false, message: 'Error al procesar la verificación.' };
     }
   }
 };

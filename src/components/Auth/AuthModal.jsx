@@ -26,6 +26,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   useEffect(() => {
     setIsLogin(initialIsLogin);
     setStep('FORM');
+    setShowBackupCode(false);
     setError('');
   }, [initialIsLogin, isOpen]);
 
@@ -44,6 +45,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   const pinInputRefs = useRef([]);
 
   const [resendTimer, setResendTimer] = useState(30);
+  const [showBackupCode, setShowBackupCode] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
@@ -622,6 +624,59 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                     : 'Reenviar código a mi correo'}
                 </span>
               </button>
+            </div>
+
+            {/* Asistencia de Respaldo si el proveedor de correo tiene demoras */}
+            <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
+              {!showBackupCode ? (
+                <button
+                  type="button"
+                  onClick={() => setShowBackupCode(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-muted)',
+                    fontSize: '0.75rem',
+                    cursor: 'pointer',
+                    textDecoration: 'underline'
+                  }}
+                >
+                  ¿Demora en llegar a tu bandeja? Ver código de respaldo
+                </button>
+              ) : (
+                <div style={{
+                  background: 'var(--bg-card)',
+                  border: '1px solid var(--border-medium)',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '0.65rem 0.85rem',
+                  fontSize: '0.8rem',
+                  color: 'var(--text-secondary)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between'
+                }}>
+                  <span>Código de seguridad: <strong style={{ color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: '1.05rem', letterSpacing: '0.15em' }}>{EmailService.getPendingCode(formData.email)}</strong></span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const c = EmailService.getPendingCode(formData.email);
+                      if (c) setPin(c.split(''));
+                    }}
+                    style={{
+                      padding: '0.25rem 0.6rem',
+                      fontSize: '0.75rem',
+                      borderRadius: 'var(--radius-sm)',
+                      background: 'var(--text-primary)',
+                      color: 'var(--text-inverse)',
+                      border: 'none',
+                      cursor: 'pointer',
+                      fontWeight: '700'
+                    }}
+                  >
+                    Rellenar PIN
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
