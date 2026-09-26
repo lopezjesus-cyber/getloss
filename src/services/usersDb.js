@@ -32,17 +32,30 @@ export const UsersDB = {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   },
 
-  // Obtener usuarios directamente de la nube y sincronizar con SQL y caché local
+  // Obtener usuarios directamente de la nube y sincronizar con SQL y caché local sin pérdida de cuentas
   fetchCloudUsers: async () => {
     try {
       const cloudData = await getDirectCloudData();
       if (cloudData && Array.isArray(cloudData.users) && cloudData.users.length > 0) {
-        UsersDB._saveUsers(cloudData.users);
-        // Poblar e indexar en la Base de Datos Relacional SQL
+        const local = UsersDB.getAllUsers();
+        const map = new Map();
+        for (const u of local) {
+          if (u && u.email) map.set(u.email.toLowerCase(), u);
+        }
         for (const u of cloudData.users) {
+          if (u && u.email) {
+            const existing = map.get(u.email.toLowerCase()) || {};
+            map.set(u.email.toLowerCase(), { ...existing, ...u });
+          }
+        }
+        const merged = Array.from(map.values());
+        UsersDB._saveUsers(merged);
+
+        // Poblar e indexar en la Base de Datos Relacional SQL
+        for (const u of merged) {
           SqlDatabase.sqlInsertUser(u).catch(() => {});
         }
-        return cloudData.users;
+        return merged;
       }
     } catch (e) {
       console.warn('Error al obtener usuarios de la nube:', e);
@@ -192,11 +205,30 @@ export const UsersDB = {
       console.warn('[SQL DB] Consulta SQL aviso:', e.message);
     }
 
-    // 4. Fallback a caché local si no hay conexión a internet
+    // 4. Intentar refrescar cuentas desde la nube en caso de registro reciente en otro dispositivo
+    try {
+      const refreshedUsers = await UsersDB.fetchCloudUsers();
+      const freshUser = (refreshedUsers || []).find(
+        u => (u.email || '').toLowerCase() === cleanEmail &&
+        ((u.passwordHash && u.passwordHash === cleanPassword) || (u.password && u.password === cleanPassword))
+      );
+      if (freshUser) {
+        UsersDB.setActiveSession(freshUser);
+        try {
+          const liveFinances = await CloudSync.pullFinancesFromCloud(freshUser.id);
+          if (liveFinances && FinancesDB && FinancesDB.injectCloudData) {
+            FinancesDB.injectCloudData(freshUser.id, liveFinances);
+          }
+        } catch {}
+        return freshUser;
+      }
+    } catch {}
+
+    // 5. Fallback a caché local si no hay conexión a internet
     const users = UsersDB.getAllUsers();
     const user = users.find(
-      u => u.email.toLowerCase() === cleanEmail && 
-      (u.passwordHash === cleanPassword || u.password === cleanPassword)
+      u => (u.email || '').toLowerCase() === cleanEmail && 
+      ((u.passwordHash && u.passwordHash === cleanPassword) || (u.password && u.password === cleanPassword))
     );
 
     if (!user) {

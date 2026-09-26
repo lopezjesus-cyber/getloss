@@ -48,16 +48,15 @@ function mergeFinances(a = {}, b = {}) {
   return merged;
 }
 
-// Obtener estado global completo consultando y reconciliando los nodos de la nube
+// Obtener estado global completo consultando y reconciliando los nodos de la nube en paralelo
 async function fetchFullCloudState() {
-  for (const endpoint of CLOUD_ENDPOINTS) {
+  const fetchPromises = CLOUD_ENDPOINTS.map(async (endpoint) => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const res = await fetch(endpoint, {
         headers: {
-          'Security-key': CLOUD_SECURITY_KEY,
           'Accept': 'application/json'
         },
         signal: controller.signal
@@ -71,25 +70,36 @@ async function fetchFullCloudState() {
           json = text ? JSON.parse(text) : {};
         } catch {}
 
-        // En caso de que extendsclass devuelva { status: 0, data: "..." }
-        if (json && json.data && typeof json.data === 'string') {
-          try { json = JSON.parse(json.data); } catch {}
+        // En caso de que extendsclass devuelva { status: 0, data: "..." } o { status: 0, data: {...} }
+        if (json && json.data) {
+          try {
+            json = typeof json.data === 'string' ? JSON.parse(json.data) : json.data;
+          } catch {}
         }
 
         const endpointUsers = Array.isArray(json.users) ? json.users : [];
         const endpointFinances = (json.finances && typeof json.finances === 'object') ? json.finances : {};
 
-        memoryCache.users = mergeUsers(memoryCache.users, endpointUsers);
-        memoryCache.finances = mergeFinances(memoryCache.finances, endpointFinances);
+        return { users: endpointUsers, finances: endpointFinances };
       }
     } catch (e) {
       console.warn(`[CloudStore] Endpoint ${endpoint} lectura aviso:`, e.message);
     }
+    return null;
+  });
+
+  const results = await Promise.allSettled(fetchPromises);
+  for (const r of results) {
+    if (r.status === 'fulfilled' && r.value) {
+      memoryCache.users = mergeUsers(memoryCache.users, r.value.users);
+      memoryCache.finances = mergeFinances(memoryCache.finances, r.value.finances);
+    }
   }
+
   return memoryCache;
 }
 
-// Guardar estado global completo en todos los nodos de la nube
+// Guardar estado global completo en todos los nodos de la nube en paralelo
 async function saveFullCloudState(state) {
   memoryCache = state;
 
@@ -102,7 +112,7 @@ async function saveFullCloudState(state) {
   const writePromises = CLOUD_ENDPOINTS.map(async (endpoint) => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
 
       const res = await fetch(endpoint, {
         method: 'PUT',

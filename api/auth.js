@@ -38,10 +38,32 @@ export default async function handler(req, res) {
 
       const cleanEmail = email.trim().toLowerCase();
       const users = await CloudStore.getUsers();
-      const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
+      const existingIndex = users.findIndex(u => (u.email || '').toLowerCase() === cleanEmail);
 
-      if (existing) {
-        return res.status(409).json({ success: false, error: 'Ya existe una cuenta registrada con este correo electrónico.' });
+      if (existingIndex >= 0) {
+        const existing = users[existingIndex];
+        // Si la contraseña coincide, actualizar datos y devolver usuario existente
+        if (existing.passwordHash === password || existing.password === password) {
+          const updatedUser = {
+            ...existing,
+            fullName: fullName ? fullName.trim() : existing.fullName,
+            phone: phone !== undefined ? phone : existing.phone,
+            currency: currency || existing.currency || 'USD',
+            currencySymbol: (currency === 'EUR' ? '€' : currency === 'GBP' ? '£' : currency === 'PEN' ? 'S/' : currency === 'CAD' ? 'C$' : (existing.currencySymbol || '$')),
+            payFrequency: payFrequency || existing.payFrequency || 'QUINCENAL',
+            monthlyIncomeGoal: Number(monthlyIncomeGoal) || existing.monthlyIncomeGoal || 2000,
+            updatedAt: new Date().toISOString()
+          };
+          users[existingIndex] = updatedUser;
+          await CloudStore.saveUsers(users);
+          const finances = await CloudStore.getUserFinances(updatedUser.id);
+          return res.status(200).json({ success: true, user: updatedUser, finances });
+        }
+
+        return res.status(409).json({
+          success: false,
+          error: 'Ya existe una cuenta registrada con este correo electrónico. Inicia sesión con tu contraseña.'
+        });
       }
 
       const cleanId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_')}`;

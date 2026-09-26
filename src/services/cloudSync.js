@@ -4,18 +4,28 @@
  * Garantiza persistencia permanente de usuarios, contraseñas, transacciones y obligaciones financieras.
  */
 
-// URL de la API Global de Producción en Vercel
-const PROD_API_BASE = 'https://getloss.vercel.app/api';
-export const API_BASE = (typeof window !== 'undefined' && window.location.hostname === 'getloss.vercel.app')
-  ? '/api'
-  : PROD_API_BASE;
+// Nodos de almacenamiento redundantes directos
+export const DIRECT_STORAGE_NODES = [
+  'https://extendsclass.com/api/json-storage/bin/bafddad',
+  'https://extendsclass.com/api/json-storage/bin/cbcdaec'
+];
 
-// Memoria caché para respuestas instantáneas
-let localMemoryCache = {
-  users: [],
-  finances: {},
-  lastFetched: 0
+// URL de la API Global de Producción en Vercel
+export const PROD_API_BASE = 'https://getloss.vercel.app/api';
+
+// Obtener la URL base adecuada según el entorno
+export const getApiBase = () => {
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    // Si estamos en localhost o en cualquier dominio de Vercel, usar /api relativo
+    if (host === 'localhost' || host === '127.0.0.1' || host.includes('vercel.app')) {
+      return '/api';
+    }
+  }
+  return PROD_API_BASE;
 };
+
+export const API_BASE = getApiBase();
 
 // Generador de ID determinista basado en el correo electrónico
 export function getDeterministicUserId(email) {
@@ -24,15 +34,51 @@ export function getDeterministicUserId(email) {
   return `usr_${clean}`;
 }
 
-// Obtener datos globales de la nube
+// Obtener datos globales de la nube (con fallback multi-nodo para celulares y PCs)
 export async function getDirectCloudData() {
-  try {
-    const res = await fetch(`${API_BASE}/auth`);
-    if (res.ok) {
-      const data = await res.json();
-      return { users: data.users || [], finances: {} };
-    }
-  } catch {}
+  const apiBase = getApiBase();
+  const endpoints = [
+    `${apiBase}/auth`,
+    ...(apiBase !== PROD_API_BASE ? [`${PROD_API_BASE}/auth`] : [])
+  ];
+
+  // 1. Intentar endpoints serverless de la API
+  for (const url of endpoints) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+      const res = await fetch(url, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && Array.isArray(data.users) && data.users.length > 0) {
+          return { users: data.users, finances: {} };
+        }
+      }
+    } catch {}
+  }
+
+  // 2. Fallback DIRECTO a los nodos de almacenamiento en la nube sin preflight CORS
+  for (const node of DIRECT_STORAGE_NODES) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3000);
+      const res = await fetch(node, { signal: controller.signal });
+      clearTimeout(timeout);
+      if (res.ok) {
+        const text = await res.text();
+        let json = {};
+        try { json = JSON.parse(text); } catch {}
+        if (json && json.data) {
+          try { json = typeof json.data === 'string' ? JSON.parse(json.data) : json.data; } catch {}
+        }
+        if (json && Array.isArray(json.users) && json.users.length > 0) {
+          return { users: json.users, finances: json.finances || {} };
+        }
+      }
+    } catch {}
+  }
+
   return { users: [], finances: {} };
 }
 
@@ -48,37 +94,34 @@ export const CloudSync = {
       email: cleanEmail
     };
 
-    // A. Intentar endpoint serverless global (con CORS universal habilitado)
-    try {
-      const response = await fetch(`${API_BASE}/auth?action=register`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
+    const apiBase = getApiBase();
+    const endpointsToTry = [
+      `${apiBase}/auth?action=register`,
+      ...(apiBase !== PROD_API_BASE ? [`${PROD_API_BASE}/auth?action=register`] : [])
+    ];
 
-      const contentType = response.headers.get('content-type');
-      if (response.ok && contentType && contentType.includes('application/json')) {
-        const data = await response.json();
-        if (data && data.user) {
-          console.log('[getloss Cloud] Usuario registrado en la nube con éxito:', data.user.email);
-          return data.user;
-        }
-      } else {
-        // Si no devuelve JSON, intentar directo con la URL absoluta de producción
-        if (API_BASE !== PROD_API_BASE) {
-          const directRes = await fetch(`${PROD_API_BASE}/auth?action=register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-          });
-          if (directRes.ok) {
-            const data = await directRes.json();
-            if (data && data.user) return data.user;
+    for (const url of endpointsToTry) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 6000);
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data && data.user) {
+            console.log('[getloss Cloud] Usuario registrado en la nube con éxito:', data.user.email);
+            return data.user;
           }
         }
+      } catch (e) {
+        console.warn(`[getloss Cloud] Aviso en llamada a register API (${url}):`, e.message);
       }
-    } catch (e) {
-      console.warn('[getloss Cloud] Error en llamada a register API:', e.message);
     }
 
     return {
@@ -87,6 +130,8 @@ export const CloudSync = {
       fullName: userData.fullName.trim(),
       passwordHash: userData.password,
       password: userData.password,
+      phone: userData.phone || '',
+      avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.fullName.trim())}`,
       currency: userData.currency || 'USD',
       currencySymbol: (userData.currency === 'EUR' ? '€' : userData.currency === 'GBP' ? '£' : userData.currency === 'PEN' ? 'S/' : userData.currency === 'CAD' ? 'C$' : '$'),
       payFrequency: userData.payFrequency || 'QUINCENAL',
@@ -102,22 +147,26 @@ export const CloudSync = {
     const cleanEmail = email.trim().toLowerCase();
     const cleanPassword = password.trim();
 
-    // Intentar con endpoint primario y fallback directo a producción si es necesario
+    const apiBase = getApiBase();
     const endpointsToTry = [
-      `${API_BASE}/auth?action=login`,
-      ...(API_BASE !== PROD_API_BASE ? [`${PROD_API_BASE}/auth?action=login`] : [])
+      `${apiBase}/auth?action=login`,
+      ...(apiBase !== PROD_API_BASE ? [`${PROD_API_BASE}/auth?action=login`] : [])
     ];
 
+    // Paso A: Intentar APIs serverless
     for (const url of endpointsToTry) {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4500);
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
+          body: JSON.stringify({ email: cleanEmail, password: cleanPassword }),
+          signal: controller.signal
         });
+        clearTimeout(timeout);
 
-        const contentType = response.headers.get('content-type');
-        if (response.ok && contentType && contentType.includes('application/json')) {
+        if (response.ok) {
           const data = await response.json();
           if (data && data.success && data.user) {
             console.log('[getloss Cloud] Inicio de sesión exitoso desde la nube:', data.user.email);
@@ -129,7 +178,42 @@ export const CloudSync = {
           }
         }
       } catch (e) {
-        console.warn(`[getloss Cloud] Error en consulta a ${url}:`, e.message);
+        console.warn(`[getloss Cloud] Aviso en consulta login a ${url}:`, e.message);
+      }
+    }
+
+    // Paso B: Fallback de Alta Disponibilidad DIRECTO a los nodos de la nube
+    // (Garantiza que cualquier celular o PC pueda entrar de inmediato)
+    for (const node of DIRECT_STORAGE_NODES) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3500);
+        const res = await fetch(node, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (res.ok) {
+          const text = await res.text();
+          let json = {};
+          try { json = JSON.parse(text); } catch {}
+          if (json && json.data) {
+            try { json = typeof json.data === 'string' ? JSON.parse(json.data) : json.data; } catch {}
+          }
+          const users = Array.isArray(json.users) ? json.users : [];
+          const matchedUser = users.find(u => 
+            u && (u.email || '').toLowerCase() === cleanEmail &&
+            ((u.passwordHash && u.passwordHash === cleanPassword) || (u.password && u.password === cleanPassword))
+          );
+          if (matchedUser) {
+            const finances = (json.finances && json.finances[matchedUser.id]) || { transactions: [], fixedExpenses: [] };
+            console.log('[getloss Cloud] Inicio de sesión exitoso desde nodo espejo directo:', matchedUser.email);
+            return {
+              success: true,
+              user: matchedUser,
+              finances
+            };
+          }
+        }
+      } catch (e) {
+        console.warn(`[getloss Cloud] Error en nodo directo:`, e.message);
       }
     }
 
@@ -146,20 +230,24 @@ export const CloudSync = {
       transactions: Array.isArray(transactions) ? transactions : []
     };
 
+    const apiBase = getApiBase();
     const endpointsToTry = [
-      `${API_BASE}/finances?action=sync&userId=${encodeURIComponent(userId)}`,
-      ...(API_BASE !== PROD_API_BASE ? [`${PROD_API_BASE}/finances?action=sync&userId=${encodeURIComponent(userId)}`] : [])
+      `${apiBase}/finances?action=sync&userId=${encodeURIComponent(userId)}`,
+      ...(apiBase !== PROD_API_BASE ? [`${PROD_API_BASE}/finances?action=sync&userId=${encodeURIComponent(userId)}`] : [])
     ];
 
     for (const url of endpointsToTry) {
       try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
         const response = await fetch(url, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
-        const contentType = response.headers.get('content-type');
-        if (response.ok && contentType && contentType.includes('application/json')) {
+        clearTimeout(timeout);
+        if (response.ok) {
           return true;
         }
       } catch {}
@@ -171,16 +259,19 @@ export const CloudSync = {
   pullFinancesFromCloud: async (userId) => {
     if (!userId) return null;
 
+    const apiBase = getApiBase();
     const endpointsToTry = [
-      `${API_BASE}/finances?userId=${encodeURIComponent(userId)}`,
-      ...(API_BASE !== PROD_API_BASE ? [`${PROD_API_BASE}/finances?userId=${encodeURIComponent(userId)}`] : [])
+      `${apiBase}/finances?userId=${encodeURIComponent(userId)}`,
+      ...(apiBase !== PROD_API_BASE ? [`${PROD_API_BASE}/finances?userId=${encodeURIComponent(userId)}`] : [])
     ];
 
     for (const url of endpointsToTry) {
       try {
-        const response = await fetch(url);
-        const contentType = response.headers.get('content-type');
-        if (response.ok && contentType && contentType.includes('application/json')) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 4000);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (response.ok) {
           const data = await response.json();
           if (data && data.finances) {
             return data.finances;
@@ -188,6 +279,28 @@ export const CloudSync = {
         }
       } catch {}
     }
+
+    // Fallback directo a nodos
+    for (const node of DIRECT_STORAGE_NODES) {
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        const res = await fetch(node, { signal: controller.signal });
+        clearTimeout(timeout);
+        if (res.ok) {
+          const text = await res.text();
+          let json = {};
+          try { json = JSON.parse(text); } catch {}
+          if (json && json.data) {
+            try { json = typeof json.data === 'string' ? JSON.parse(json.data) : json.data; } catch {}
+          }
+          if (json && json.finances && json.finances[userId]) {
+            return json.finances[userId];
+          }
+        }
+      } catch {}
+    }
+
     return null;
   },
 
@@ -195,8 +308,9 @@ export const CloudSync = {
   updateProfileInCloud: async (userId, updates) => {
     if (!userId) return false;
 
+    const apiBase = getApiBase();
     try {
-      const response = await fetch(`${API_BASE}/auth?action=update-profile`, {
+      const response = await fetch(`${apiBase}/auth?action=update-profile`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, updates })
@@ -211,8 +325,9 @@ export const CloudSync = {
   deleteAccountInCloud: async (userId) => {
     if (!userId) return false;
 
+    const apiBase = getApiBase();
     try {
-      const response = await fetch(`${API_BASE}/auth?action=delete-account`, {
+      const response = await fetch(`${apiBase}/auth?action=delete-account`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
@@ -228,7 +343,7 @@ export const CloudSync = {
     if (!Array.isArray(localUsers) || localUsers.length === 0) return;
 
     for (const u of localUsers) {
-      if (u && u.email && u.passwordHash) {
+      if (u && u.email && (u.passwordHash || u.password)) {
         try {
           await CloudSync.registerInCloud({
             ...u,
@@ -245,9 +360,10 @@ export const CloudSync = {
 
   // 8. Comprobar salud y conexión de la Base de Datos Global
   checkCloudHealth: async () => {
+    const apiBase = getApiBase();
     try {
       const start = performance.now();
-      const response = await fetch(`${API_BASE}/auth`);
+      const response = await fetch(`${apiBase}/auth`);
       const duration = Math.round(performance.now() - start);
 
       if (response.ok) {
@@ -256,6 +372,27 @@ export const CloudSync = {
           online: true,
           latencyMs: duration,
           usersCount: data.usersCount || 0,
+          status: 'OPERATIONAL'
+        };
+      }
+    } catch {}
+
+    // Probar nodo directo
+    try {
+      const start = performance.now();
+      const res = await fetch(DIRECT_STORAGE_NODES[0]);
+      const duration = Math.round(performance.now() - start);
+      if (res.ok) {
+        const text = await res.text();
+        let json = {};
+        try { json = JSON.parse(text); } catch {}
+        if (json && json.data) {
+          try { json = typeof json.data === 'string' ? JSON.parse(json.data) : json.data; } catch {}
+        }
+        return {
+          online: true,
+          latencyMs: duration,
+          usersCount: Array.isArray(json.users) ? json.users.length : 'Sincronizado',
           status: 'OPERATIONAL'
         };
       }

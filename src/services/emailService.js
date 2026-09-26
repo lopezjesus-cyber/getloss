@@ -138,23 +138,23 @@ export const EmailService = {
       const record = stored[cleanEmail];
 
       if (!record) {
-        return { 
-          valid: false, 
-          message: 'No hay un código pendiente para este correo. Solicita uno nuevo.' 
+        return {
+          valid: false,
+          message: 'No hay un código pendiente para este correo. Solicita uno nuevo.'
         };
       }
 
       if (Date.now() > record.expiresAt) {
-        return { 
-          valid: false, 
-          message: 'El código de verificación ha expirado (10 min). Solicita uno nuevo.' 
+        return {
+          valid: false,
+          message: 'El código de verificación ha expirado (10 min). Solicita uno nuevo.'
         };
       }
 
       if (record.code !== inputCode.trim()) {
-        return { 
-          valid: false, 
-          message: 'Código incorrecto. Verifica el correo recibido o solicita un reenvío.' 
+        return {
+          valid: false,
+          message: 'Código incorrecto. Verifica el correo recibido o solicita un reenvío.'
         };
       }
 

@@ -265,8 +265,8 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
               </div>
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                 {isLogin
-                  ? 'Inicia sesión para gestionar tus finanzas quincenales y mensuales'
-                  : 'Crea tu cuenta con persistencia SQL y sincronización global'}
+                  ? 'Inicia sesión con tu cuenta desde cualquier dispositivo (PC, Móvil o Tablet)'
+                  : 'Crea tu cuenta con sincronización global en la nube para acceder desde cualquier equipo'}
               </p>
             </div>
 
@@ -591,10 +591,10 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                 style={{ width: '100%', marginTop: '0.5rem', padding: '0.85rem' }}
               >
                 {isLoading
-                  ? 'Guardando cuenta en SQL y Nube...'
+                  ? (isLogin ? 'Verificando cuenta en la nube...' : 'Guardando cuenta en la nube...')
                   : isLogin
-                    ? 'Ingresar a getloss'
-                    : 'Crear Cuenta y Guardar'}
+                    ? 'Iniciar Sesión (Acceso Universal)'
+                    : 'Crear Cuenta y Guardar en la Nube'}
                 <ArrowRight size={16} />
               </button>
             </form>
