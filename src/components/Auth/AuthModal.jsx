@@ -2,8 +2,12 @@ import React, { useState } from 'react';
 import { UsersDB } from '../../services/usersDb';
 import { Lock, Mail, User, Phone, DollarSign, Calendar, AlertCircle, ArrowRight, ShieldCheck, X } from 'lucide-react';
 
-export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
-  const [isLogin, setIsLogin] = useState(true);
+export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = true }) => {
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
+
+  React.useEffect(() => {
+    setIsLogin(initialIsLogin);
+  }, [initialIsLogin, isOpen]);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
