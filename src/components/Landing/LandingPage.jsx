@@ -21,7 +21,11 @@ import {
   CheckCircle2,
   Lock,
   PieChart,
-  DollarSign
+  DollarSign,
+  X,
+  CreditCard,
+  Calendar,
+  Check
 } from 'lucide-react';
 import { formatMoney } from '../../utils/formatters';
 import { useDeviceDetect } from '../../hooks/useDeviceDetect';
@@ -44,6 +48,19 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
   const [simPeriod, setSimPeriod] = useState('QUINCENAL');
   const [activeFaq, setActiveFaq] = useState(null);
 
+  // Estado interactivo dentro del simulador móvil
+  const [mobileActiveTab, setMobileActiveTab] = useState('dashboard');
+  const [isDynamicIslandExpanded, setIsDynamicIslandExpanded] = useState(false);
+  const [isMobileQuickAddOpen, setIsMobileQuickAddOpen] = useState(false);
+  const [paidObligations, setPaidObligations] = useState({ 0: true, 1: true, 2: true, 3: true });
+
+  const toggleObligation = (idx) => {
+    setPaidObligations(prev => ({
+      ...prev,
+      [idx]: !prev[idx]
+    }));
+  };
+
   // Datos simulados para demostración en vivo en la landing
   const simData = {
     QUINCENAL: {
@@ -53,9 +70,9 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
       savingsRate: '31.4%',
       obligationsPaid: '3 de 3 Pagadas',
       obligations: [
-        { name: 'Arriendo / Vivienda (15 Días)', amount: 425, due: 'Día 5', status: 'Pagado', icon: Home, cat: 'Vivienda' },
-        { name: 'Servicios Básicos (Luz & Agua)', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap, cat: 'Servicios' },
-        { name: 'Supermercado Quincenal', amount: 220, due: 'Día 3', status: 'Pagado', icon: ShoppingCart, cat: 'Alimentación' }
+        { name: 'Arriendo / Vivienda (15 Días)', amount: 425, due: 'Día 5', icon: Home, cat: 'Vivienda' },
+        { name: 'Servicios Básicos (Luz & Agua)', amount: 110, due: 'Día 12', icon: Zap, cat: 'Servicios' },
+        { name: 'Supermercado Quincenal', amount: 220, due: 'Día 3', icon: ShoppingCart, cat: 'Alimentación' }
       ],
       recentTxs: [
         { title: 'Pago Quincena Nómina', amount: 1400, type: 'INCOME', date: '15 Sep', icon: TrendingUp },
@@ -70,10 +87,10 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
       savingsRate: '48.0%',
       obligationsPaid: '4 de 4 Pagadas',
       obligations: [
-        { name: 'Arriendo Apartamento Mensual', amount: 850, due: 'Día 5', status: 'Pagado', icon: Home, cat: 'Vivienda' },
-        { name: 'Factura Luz, Agua & Gas', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap, cat: 'Servicios' },
-        { name: 'Mercado Mensual Integral', amount: 440, due: 'Día 15', status: 'Pagado', icon: ShoppingCart, cat: 'Alimentación' },
-        { name: 'Internet Fibra Óptica 500MB', amount: 45, due: 'Día 18', status: 'Pagado', icon: Zap, cat: 'Servicios' }
+        { name: 'Arriendo Apartamento Mensual', amount: 850, due: 'Día 5', icon: Home, cat: 'Vivienda' },
+        { name: 'Factura Luz, Agua & Gas', amount: 110, due: 'Día 12', icon: Zap, cat: 'Servicios' },
+        { name: 'Mercado Mensual Integral', amount: 440, due: 'Día 15', icon: ShoppingCart, cat: 'Alimentación' },
+        { name: 'Internet Fibra Óptica 500MB', amount: 45, due: 'Día 18', icon: Zap, cat: 'Servicios' }
       ],
       recentTxs: [
         { title: 'Sueldo Mensual Completo', amount: 2800, type: 'INCOME', date: '30 Sep', icon: TrendingUp },
@@ -691,7 +708,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                                   </div>
                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                                     <span style={{ fontSize: '0.825rem', fontWeight: '700', color: '#ffffff' }}>{formatMoney(item.amount, 'USD')}</span>
-                                    <span style={{ fontSize: '0.65rem', fontWeight: '700', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', padding: '0.15rem 0.45rem', borderRadius: '9999px' }}>{item.status}</span>
+                                    <span style={{ fontSize: '0.65rem', fontWeight: '700', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', padding: '0.15rem 0.45rem', borderRadius: '9999px' }}>{item.status || 'Pagado'}</span>
                                   </div>
                                 </div>
                               );
@@ -734,206 +751,557 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           )}
 
           {/* ============================================================= */}
-          {/* MOCKUP 2: IPHONE 16 PRO TITANIUM (CELULAR / SMARTPHONE)       */}
+          {/* MOCKUP 2: IPHONE 16 PRO TITANIUM HIPERREALISTA & INTERACTIVO  */}
           {/* ============================================================= */}
           {activeDevice === 'MOBILE' && (
-            <div className="apple-hardware-wrapper" style={{
+            <div style={{
               width: '100%',
-              maxWidth: '380px',
-              margin: '0 auto',
-              zIndex: 2,
-              animation: 'appleFadeScale 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative',
+              padding: '1rem 0'
             }}>
-              {/* Marco iPhone 16 Pro Titanium */}
+              {/* Tarjeta Flotante Izquierda (Desktop Callout) */}
               <div style={{
-                background: 'linear-gradient(135deg, #3f3f46 0%, #18181b 50%, #27272a 100%)',
-                border: '1px solid rgba(255, 255, 255, 0.28)',
-                borderRadius: '52px',
-                padding: '10px',
-                boxShadow: '0 35px 90px -15px rgba(0, 0, 0, 0.95), 0 0 35px rgba(255, 255, 255, 0.08), inset 0 1px 2px rgba(255, 255, 255, 0.3)',
+                position: 'absolute',
+                left: '2%',
+                top: '28%',
+                maxWidth: '220px',
+                background: 'rgba(18, 18, 21, 0.85)',
+                border: '1px solid rgba(255, 255, 255, 0.14)',
+                borderRadius: '20px',
+                padding: '1.15rem',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+                textAlign: 'left',
+                display: 'none',
+                zIndex: 3
+              }} className="hide-on-mobile">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.45rem' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#ffffff', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Zap size={15} />
+                  </div>
+                  <span style={{ fontSize: '0.825rem', fontWeight: '700', color: '#ffffff' }}>Modo 1 Mano</span>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: '1.45', margin: 0 }}>
+                  Navegación al alcance de tu pulgar y botón flotante (+) para registrar gastos en 3 segundos.
+                </p>
+              </div>
+
+              {/* Tarjeta Flotante Derecha (Desktop Callout) */}
+              <div style={{
+                position: 'absolute',
+                right: '2%',
+                top: '42%',
+                maxWidth: '220px',
+                background: 'rgba(18, 18, 21, 0.85)',
+                border: '1px solid rgba(255, 255, 255, 0.14)',
+                borderRadius: '20px',
+                padding: '1.15rem',
+                backdropFilter: 'blur(20px)',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+                textAlign: 'left',
+                display: 'none',
+                zIndex: 3
+              }} className="hide-on-mobile">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.45rem' }}>
+                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <ShieldCheck size={16} />
+                  </div>
+                  <span style={{ fontSize: '0.825rem', fontWeight: '700', color: '#ffffff' }}>Check Táctil</span>
+                </div>
+                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: '1.45', margin: 0 }}>
+                  Toca las obligaciones en pantalla para marcarlas como pagadas y ver el balance reaccionar en vivo.
+                </p>
+              </div>
+
+              {/* CHASIS FÍSICO IPHONE 16 PRO TITANIUM */}
+              <div className="apple-hardware-wrapper" style={{
                 position: 'relative',
-                textAlign: 'left'
+                width: '100%',
+                maxWidth: '390px',
+                zIndex: 2,
+                animation: 'appleFadeScale 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
               }}>
-                {/* Pantalla Super Retina XDR */}
+                {/* Botones Físicos Izquierdos (Action Button, Vol +, Vol -) */}
+                <div style={{ position: 'absolute', left: '-3px', top: '105px', width: '4px', height: '28px', background: 'linear-gradient(180deg, #d4d4d8, #71717a)', borderRadius: '3px 0 0 3px', boxShadow: 'inset 0 0 1px #000' }} />
+                <div style={{ position: 'absolute', left: '-3px', top: '150px', width: '4px', height: '52px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '3px 0 0 3px' }} />
+                <div style={{ position: 'absolute', left: '-3px', top: '215px', width: '4px', height: '52px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '3px 0 0 3px' }} />
+
+                {/* Botones Físicos Derechos (Power & Camera Control) */}
+                <div style={{ position: 'absolute', right: '-3px', top: '165px', width: '4px', height: '72px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '0 3px 3px 0' }} />
+                <div style={{ position: 'absolute', right: '-3px', top: '295px', width: '3px', height: '46px', background: 'linear-gradient(180deg, #3f3f46, #27272a)', borderRadius: '0 2px 2px 0' }} />
+
+                {/* Chasis Exterior de Titanio Cepillado */}
                 <div style={{
-                  background: '#09090b',
-                  borderRadius: '42px',
-                  padding: '1rem 0.9rem 0.8rem 0.9rem',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  minHeight: '540px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
+                  background: 'linear-gradient(145deg, #71717a 0%, #27272a 30%, #3f3f46 60%, #18181b 100%)',
+                  borderRadius: '56px',
+                  padding: '11px',
+                  boxShadow: '0 40px 100px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.45)',
                   position: 'relative'
                 }}>
-                  {/* Dynamic Island Pill */}
+                  {/* Bisel Negro OLED Uniforme */}
                   <div style={{
-                    width: '115px',
-                    height: '26px',
                     background: '#000000',
-                    borderRadius: '9999px',
-                    margin: '0 auto 0.6rem auto',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0 8px',
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.8)'
+                    borderRadius: '46px',
+                    padding: '3px',
+                    boxShadow: 'inset 0 0 4px rgba(0,0,0,0.9)'
                   }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#1c1c20' }} />
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#22c55e' }} />
-                      <span style={{ fontSize: '0.55rem', color: '#a1a1aa', fontWeight: '700' }}>getloss</span>
-                    </div>
-                  </div>
-
-                  {/* Barra de Estado iOS */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.5rem 0.6rem 0.5rem', fontSize: '0.72rem', color: '#a1a1aa' }}>
-                    <span style={{ fontWeight: '700', color: '#ffffff' }}>9:41</span>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Wifi size={13} />
-                      <Battery size={14} />
-                    </div>
-                  </div>
-
-                  {/* Contenido Móvil */}
-                  <div>
-                    {/* Header App Móvil */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                        <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ffffff' }} />
-                        <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '0.95rem' }}>getloss</span>
-                      </div>
-                      <span style={{ fontSize: '0.65rem', fontWeight: '700', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.5rem', borderRadius: '9999px', color: '#ffffff' }}>
-                        {simPeriod}
-                      </span>
-                    </div>
-
-                    {/* Tarjeta Principal Balance */}
+                    {/* Pantalla Super Retina XDR OLED */}
                     <div style={{
-                      background: 'linear-gradient(145deg, #1f1f23 0%, #18181b 100%)',
-                      border: '1px solid rgba(255, 255, 255, 0.16)',
-                      borderRadius: '18px',
-                      padding: '1.15rem',
-                      marginBottom: '0.85rem',
-                      boxShadow: '0 8px 24px rgba(0, 0, 0, 0.5)'
+                      background: '#09090b',
+                      borderRadius: '43px',
+                      padding: '0.9rem 0.95rem 0.75rem 0.95rem',
+                      minHeight: '585px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      position: 'relative',
+                      overflow: 'hidden',
+                      textAlign: 'left'
                     }}>
-                      <div style={{ fontSize: '0.7rem', color: '#86868b', fontWeight: '700', textTransform: 'uppercase' }}>
-                        Balance Disponible
-                      </div>
-                      <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#ffffff', margin: '0.2rem 0' }}>
-                        {formatMoney(currentSim.balance, 'USD')}
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.6rem', fontSize: '0.72rem', color: '#a1a1aa', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.5rem' }}>
-                        <span>Entradas: +{formatMoney(currentSim.income, 'USD')}</span>
-                        <span style={{ color: '#22c55e' }}>{currentSim.savingsRate} Ahorro</span>
-                      </div>
-                    </div>
+                      {/* Reflejo de Cristal Superior (Glare Sheen) */}
+                      <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        height: '160px',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 50%, transparent 100%)',
+                        pointerEvents: 'none',
+                        zIndex: 15
+                      }} />
 
-                    {/* Lista Compacta Obligaciones */}
-                    <div style={{ marginBottom: '0.85rem' }}>
-                      <div style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', color: '#86868b', marginBottom: '0.45rem' }}>
-                        Obligaciones ({currentSim.obligations.length})
+                      {/* Dynamic Island Expandible */}
+                      <div style={{ position: 'relative', zIndex: 25 }}>
+                        <div
+                          onClick={() => setIsDynamicIslandExpanded(prev => !prev)}
+                          onMouseEnter={() => setIsDynamicIslandExpanded(true)}
+                          onMouseLeave={() => setIsDynamicIslandExpanded(false)}
+                          style={{
+                            width: isDynamicIslandExpanded ? '230px' : '122px',
+                            height: isDynamicIslandExpanded ? '38px' : '28px',
+                            background: '#000000',
+                            borderRadius: '9999px',
+                            margin: '0 auto 0.5rem auto',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: isDynamicIslandExpanded ? '0 12px' : '0 8px',
+                            boxShadow: '0 4px 14px rgba(0,0,0,0.9), inset 0 0 2px rgba(255,255,255,0.1)',
+                            transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                            cursor: 'pointer'
+                          }}
+                          title="Dynamic Island Interactiva"
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1c1c20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#09090b' }} />
+                            </div>
+                            {isDynamicIslandExpanded && (
+                              <span style={{ fontSize: '0.68rem', fontWeight: '700', color: '#ffffff' }}>getloss Live</span>
+                            )}
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                            {isDynamicIslandExpanded ? (
+                              <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#4ade80' }}>+{formatMoney(currentSim.balance, 'USD')}</span>
+                            ) : (
+                              <span style={{ fontSize: '0.6rem', color: '#a1a1aa', fontWeight: '700' }}>{simPeriod}</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Barra de Estado Nativa iOS */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.5rem 0.6rem 0.5rem', fontSize: '0.75rem', color: '#a1a1aa' }}>
+                          <span style={{ fontWeight: '700', color: '#ffffff' }}>9:41</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#a1a1aa' }}>5G</span>
+                            <Wifi size={13} color="#ffffff" />
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
+                              <div style={{ width: '18px', height: '10px', border: '1px solid #ffffff', borderRadius: '3px', padding: '1px', display: 'flex', alignItems: 'center' }}>
+                                <div style={{ width: '100%', height: '100%', background: '#ffffff', borderRadius: '1.5px' }} />
+                              </div>
+                              <div style={{ width: '1.5px', height: '4px', background: '#ffffff', borderRadius: '0 1px 1px 0' }} />
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                        {currentSim.obligations.map((item, idx) => {
-                          const Icon = item.icon;
-                          return (
-                            <div key={idx} style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '0.55rem 0.7rem',
-                              background: 'rgba(255, 255, 255, 0.04)',
-                              borderRadius: '10px',
-                              border: '1px solid rgba(255, 255, 255, 0.06)'
-                            }}>
+
+                      {/* ===================================================== */}
+                      {/* CONTENIDO DE PANTALLA MÓVIL SEGÚN PESTAÑA             */}
+                      {/* ===================================================== */}
+                      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '0.5rem' }}>
+                        {/* PESTAÑA 1: DASHBOARD */}
+                        {mobileActiveTab === 'dashboard' && (
+                          <div style={{ animation: 'fadeIn 0.2s ease-in' }}>
+                            {/* Saludo y Avatar */}
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
-                                <div style={{ width: '26px', height: '26px', borderRadius: '6px', background: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                  <Icon size={13} color="#ffffff" />
+                                <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #27272a, #3f3f46)', border: '1px solid rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '0.75rem', color: '#ffffff' }}>
+                                  JL
                                 </div>
                                 <div>
-                                  <div style={{ fontSize: '0.76rem', fontWeight: '600', color: '#ffffff' }}>{item.name}</div>
-                                  <div style={{ fontSize: '0.65rem', color: '#71717a' }}>{item.due}</div>
+                                  <div style={{ fontSize: '0.72rem', color: '#86868b' }}>Hola de nuevo 👋</div>
+                                  <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ffffff' }}>Jesús López</div>
                                 </div>
                               </div>
-                              <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '0.78rem', fontWeight: '700', color: '#ffffff' }}>{formatMoney(item.amount, 'USD')}</div>
-                                <span style={{ fontSize: '0.58rem', color: '#4ade80' }}>✓ Pagado</span>
+                              <span style={{ fontSize: '0.65rem', fontWeight: '700', background: 'rgba(255,255,255,0.1)', padding: '0.2rem 0.55rem', borderRadius: '9999px', color: '#ffffff', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                {simPeriod === 'QUINCENAL' ? '🗓️ 15 Días' : '📅 Mensual'}
+                              </span>
+                            </div>
+
+                            {/* Tarjeta Principal Balance Apple */}
+                            <div style={{
+                              background: 'linear-gradient(145deg, #18181b 0%, #121215 100%)',
+                              border: '1px solid rgba(255, 255, 255, 0.18)',
+                              borderRadius: '20px',
+                              padding: '1.25rem',
+                              marginBottom: '0.85rem',
+                              boxShadow: '0 12px 28px rgba(0, 0, 0, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.15)'
+                            }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '0.7rem', color: '#86868b', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                  Balance Libre
+                                </span>
+                                <span style={{ fontSize: '0.65rem', color: '#22c55e', background: 'rgba(34, 197, 94, 0.12)', padding: '0.15rem 0.45rem', borderRadius: '9999px', fontWeight: '700' }}>
+                                  {currentSim.savingsRate} Ahorro
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff', margin: '0.35rem 0 0.15rem 0', letterSpacing: '-0.03em' }}>
+                                {formatMoney(currentSim.balance, 'USD')}
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.75rem', fontSize: '0.72rem', color: '#a1a1aa', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.6rem' }}>
+                                <span>Ingresos: +{formatMoney(currentSim.income, 'USD')}</span>
+                                <span>Egresos: -{formatMoney(currentSim.expenses, 'USD')}</span>
                               </div>
                             </div>
-                          );
-                        })}
+
+                            {/* Lista Interactiva de Obligaciones */}
+                            <div style={{ marginBottom: '0.85rem' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem' }}>
+                                <span style={{ fontSize: '0.72rem', fontWeight: '700', textTransform: 'uppercase', color: '#86868b' }}>
+                                  Obligaciones ({currentSim.obligations.length})
+                                </span>
+                                <span style={{ fontSize: '0.65rem', color: '#71717a' }}>Toca para alternar</span>
+                              </div>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                                {currentSim.obligations.map((item, idx) => {
+                                  const Icon = item.icon;
+                                  const isPaid = paidObligations[idx] !== false;
+                                  return (
+                                    <div
+                                      key={idx}
+                                      onClick={() => toggleObligation(idx)}
+                                      style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        padding: '0.6rem 0.75rem',
+                                        background: isPaid ? 'rgba(255, 255, 255, 0.04)' : 'rgba(239, 68, 68, 0.08)',
+                                        borderRadius: '12px',
+                                        border: isPaid ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(239, 68, 68, 0.3)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.2s ease'
+                                      }}
+                                    >
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                        <div style={{
+                                          width: '28px',
+                                          height: '28px',
+                                          borderRadius: '8px',
+                                          background: isPaid ? 'rgba(255, 255, 255, 0.08)' : 'rgba(239, 68, 68, 0.2)',
+                                          color: isPaid ? '#ffffff' : '#f87171',
+                                          display: 'flex',
+                                          alignItems: 'center',
+                                          justifyContent: 'center'
+                                        }}>
+                                          <Icon size={14} />
+                                        </div>
+                                        <div>
+                                          <div style={{ fontSize: '0.78rem', fontWeight: '600', color: '#ffffff' }}>{item.name}</div>
+                                          <div style={{ fontSize: '0.65rem', color: '#71717a' }}>{item.due}</div>
+                                        </div>
+                                      </div>
+                                      <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#ffffff' }}>{formatMoney(item.amount, 'USD')}</div>
+                                        <span style={{ fontSize: '0.6rem', fontWeight: '700', color: isPaid ? '#4ade80' : '#f87171' }}>
+                                          {isPaid ? '✓ Pagado' : '⏳ Pendiente'}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* PESTAÑA 2: GASTOS FIJOS */}
+                        {mobileActiveTab === 'fixed' && (
+                          <div style={{ animation: 'fadeIn 0.2s ease-in' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.35rem' }}>
+                              Obligaciones Indispensables
+                            </div>
+                            <p style={{ fontSize: '0.72rem', color: '#86868b', marginBottom: '0.75rem' }}>
+                              Compromisos fijos blindados del periodo {simPeriod}.
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                              {currentSim.obligations.map((item, idx) => {
+                                const Icon = item.icon;
+                                const isPaid = paidObligations[idx] !== false;
+                                return (
+                                  <div key={idx} style={{ padding: '0.75rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '14px', border: '1px solid rgba(255, 255, 255, 0.08)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.35rem' }}>
+                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <Icon size={15} color="#ffffff" />
+                                        <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#ffffff' }}>{item.name}</span>
+                                      </div>
+                                      <span style={{ fontSize: '0.825rem', fontWeight: '800', color: '#ffffff' }}>{formatMoney(item.amount, 'USD')}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.68rem', color: '#a1a1aa' }}>
+                                      <span>Categoría: {item.cat}</span>
+                                      <span style={{ color: isPaid ? '#4ade80' : '#f87171', fontWeight: '700' }}>{isPaid ? 'Pagado' : 'Pendiente'}</span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* PESTAÑA 3: MOVIMIENTOS */}
+                        {mobileActiveTab === 'transactions' && (
+                          <div style={{ animation: 'fadeIn 0.2s ease-in' }}>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.35rem' }}>
+                              Flujo de Movimientos
+                            </div>
+                            <p style={{ fontSize: '0.72rem', color: '#86868b', marginBottom: '0.75rem' }}>
+                              Historial de ingresos y compras recientes.
+                            </p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                              {currentSim.recentTxs.map((tx, idx) => {
+                                const Icon = tx.icon;
+                                const isInc = tx.type === 'INCOME';
+                                return (
+                                  <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.65rem 0.75rem', background: 'rgba(255, 255, 255, 0.04)', borderRadius: '12px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                      <Icon size={15} color={isInc ? '#ffffff' : '#86868b'} />
+                                      <div>
+                                        <div style={{ fontSize: '0.78rem', fontWeight: '600', color: '#ffffff' }}>{tx.title}</div>
+                                        <div style={{ fontSize: '0.65rem', color: '#71717a' }}>{tx.date}</div>
+                                      </div>
+                                    </div>
+                                    <span style={{ fontSize: '0.825rem', fontWeight: '700', color: isInc ? '#ffffff' : '#a1a1aa' }}>
+                                      {isInc ? '+' : '-'}{formatMoney(tx.amount, 'USD')}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* PESTAÑA 4: REPORTES */}
+                        {mobileActiveTab === 'reports' && (
+                          <div style={{ animation: 'fadeIn 0.2s ease-in', textAlign: 'center', padding: '1rem 0' }}>
+                            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.08)', margin: '0 auto 0.75rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Download size={20} color="#ffffff" />
+                            </div>
+                            <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.35rem' }}>
+                              Reporte Financiero PDF
+                            </div>
+                            <p style={{ fontSize: '0.72rem', color: '#86868b', marginBottom: '1rem' }}>
+                              Listo para exportar con balance de {formatMoney(currentSim.balance, 'USD')}.
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => onOpenAuth(false)}
+                              style={{
+                                padding: '0.55rem 1.25rem',
+                                borderRadius: '9999px',
+                                background: '#ffffff',
+                                color: '#000000',
+                                fontWeight: '700',
+                                fontSize: '0.75rem',
+                                border: 'none',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              Descargar Demo
+                            </button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Mini Drawer Flotante de Registro Rápido al presionar (+) */}
+                      {isMobileQuickAddOpen && (
+                        <div style={{
+                          position: 'absolute',
+                          bottom: '68px',
+                          left: '12px',
+                          right: '12px',
+                          background: '#18181b',
+                          border: '1px solid rgba(255, 255, 255, 0.25)',
+                          borderRadius: '20px',
+                          padding: '1rem',
+                          boxShadow: '0 20px 40px rgba(0,0,0,0.9)',
+                          zIndex: 30,
+                          animation: 'slideUpMobile 0.2s ease-out'
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: '800', color: '#ffffff' }}>⚡ Nuevo Movimiento</span>
+                            <button type="button" onClick={() => setIsMobileQuickAddOpen(false)} style={{ color: '#86868b' }}>
+                              <X size={15} />
+                            </button>
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#a1a1aa', marginBottom: '0.75rem' }}>
+                            Registra gastos al instante con auto-cálculo quincenal.
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsMobileQuickAddOpen(false);
+                              onOpenAuth(false);
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '0.55rem',
+                              borderRadius: '10px',
+                              background: '#ffffff',
+                              color: '#000000',
+                              fontWeight: '700',
+                              fontSize: '0.75rem',
+                              border: 'none',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Probar en la App Completa
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Barra de Navegación Inferior Ergonómica con Botón Flotante Apple */}
+                      <div style={{ position: 'relative', zIndex: 20 }}>
+                        {/* Botón Central Flotante (+) */}
+                        <button
+                          type="button"
+                          onClick={() => setIsMobileQuickAddOpen(prev => !prev)}
+                          style={{
+                            position: 'absolute',
+                            top: '-24px',
+                            left: '50%',
+                            transform: 'translateX(-50%)',
+                            width: '46px',
+                            height: '46px',
+                            borderRadius: '50%',
+                            background: isMobileQuickAddOpen ? '#27272a' : '#ffffff',
+                            color: isMobileQuickAddOpen ? '#ffffff' : '#000000',
+                            border: 'none',
+                            boxShadow: '0 4px 20px rgba(255, 255, 255, 0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            zIndex: 25,
+                            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
+                          }}
+                          title="Toca para registrar"
+                        >
+                          <Plus size={22} strokeWidth={2.8} style={{ transform: isMobileQuickAddOpen ? 'rotate(45deg)' : 'none', transition: 'transform 0.2s ease' }} />
+                        </button>
+
+                        <div style={{
+                          background: 'rgba(24, 24, 27, 0.95)',
+                          border: '1px solid rgba(255, 255, 255, 0.14)',
+                          borderRadius: '18px',
+                          padding: '0.55rem 0.4rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-around',
+                          fontSize: '0.625rem',
+                          color: '#71717a',
+                          backdropFilter: 'blur(16px)'
+                        }}>
+                          <button
+                            type="button"
+                            onClick={() => setMobileActiveTab('dashboard')}
+                            style={{
+                              textAlign: 'center',
+                              color: mobileActiveTab === 'dashboard' ? '#ffffff' : '#71717a',
+                              fontWeight: mobileActiveTab === 'dashboard' ? '700' : '500',
+                              border: 'none',
+                              background: 'none',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <LayoutDashboard size={15} style={{ margin: '0 auto 2px auto' }} />
+                            <span>Inicio</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setMobileActiveTab('fixed')}
+                            style={{
+                              textAlign: 'center',
+                              color: mobileActiveTab === 'fixed' ? '#ffffff' : '#71717a',
+                              fontWeight: mobileActiveTab === 'fixed' ? '700' : '500',
+                              border: 'none',
+                              background: 'none',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <ShieldCheck size={15} style={{ margin: '0 auto 2px auto' }} />
+                            <span>Fijos</span>
+                          </button>
+
+                          <div style={{ width: '36px' }} />
+
+                          <button
+                            type="button"
+                            onClick={() => setMobileActiveTab('transactions')}
+                            style={{
+                              textAlign: 'center',
+                              color: mobileActiveTab === 'transactions' ? '#ffffff' : '#71717a',
+                              fontWeight: mobileActiveTab === 'transactions' ? '700' : '500',
+                              border: 'none',
+                              background: 'none',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Receipt size={15} style={{ margin: '0 auto 2px auto' }} />
+                            <span>Movs</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => setMobileActiveTab('reports')}
+                            style={{
+                              textAlign: 'center',
+                              color: mobileActiveTab === 'reports' ? '#ffffff' : '#71717a',
+                              fontWeight: mobileActiveTab === 'reports' ? '700' : '500',
+                              border: 'none',
+                              background: 'none',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            <Download size={15} style={{ margin: '0 auto 2px auto' }} />
+                            <span>PDF</span>
+                          </button>
+                        </div>
+
+                        {/* iOS Home Indicator Bar */}
+                        <div style={{
+                          width: '124px',
+                          height: '4px',
+                          background: 'rgba(255, 255, 255, 0.45)',
+                          borderRadius: '9999px',
+                          margin: '0.65rem auto 0 auto'
+                        }} />
                       </div>
                     </div>
-                  </div>
-
-                  {/* Barra de Navegación Inferior con Botón Flotante Apple */}
-                  <div style={{ position: 'relative' }}>
-                    {/* Botón Flotante Central (+) */}
-                    <button
-                      type="button"
-                      onClick={() => onOpenAuth(false)}
-                      style={{
-                        position: 'absolute',
-                        top: '-22px',
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '50%',
-                        background: '#ffffff',
-                        color: '#000000',
-                        border: 'none',
-                        boxShadow: '0 4px 18px rgba(255, 255, 255, 0.45)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        zIndex: 10
-                      }}
-                      title="Registrar Movimiento"
-                    >
-                      <Plus size={22} strokeWidth={2.6} />
-                    </button>
-
-                    <div style={{
-                      background: '#18181b',
-                      border: '1px solid rgba(255, 255, 255, 0.12)',
-                      borderRadius: '16px',
-                      padding: '0.5rem 0.4rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-around',
-                      fontSize: '0.625rem',
-                      color: '#71717a'
-                    }}>
-                      <div style={{ textAlign: 'center', color: '#ffffff', fontWeight: '700' }}>
-                        <LayoutDashboard size={14} style={{ margin: '0 auto 2px auto' }} />
-                        <span>Inicio</span>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <ShieldCheck size={14} style={{ margin: '0 auto 2px auto' }} />
-                        <span>Fijos</span>
-                      </div>
-                      <div style={{ width: '32px' }} />
-                      <div style={{ textAlign: 'center' }}>
-                        <Receipt size={14} style={{ margin: '0 auto 2px auto' }} />
-                        <span>Movs</span>
-                      </div>
-                      <div style={{ textAlign: 'center' }}>
-                        <Download size={14} style={{ margin: '0 auto 2px auto' }} />
-                        <span>PDF</span>
-                      </div>
-                    </div>
-
-                    {/* iOS Home Indicator Bar */}
-                    <div style={{
-                      width: '120px',
-                      height: '4px',
-                      background: 'rgba(255, 255, 255, 0.4)',
-                      borderRadius: '9999px',
-                      margin: '0.6rem auto 0 auto'
-                    }} />
                   </div>
                 </div>
               </div>
