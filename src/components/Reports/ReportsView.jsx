@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { FinancesDB, DEFAULT_CATEGORIES } from '../../services/financesDb';
 import { generateFinancialPdfReport } from '../../services/pdfGenerator';
+import { generateFinancialExcelReport } from '../../services/excelGenerator';
 import { CategoryIcon } from '../Common/CategoryIcon';
 import { formatMoney } from '../../utils/formatters';
 import { 
@@ -13,7 +14,8 @@ import {
   Calendar, 
   Sparkles, 
   CheckCircle2,
-  DollarSign
+  DollarSign,
+  Check
 } from 'lucide-react';
 
 const MONTH_NAMES = [
@@ -24,6 +26,7 @@ const MONTH_NAMES = [
 export const ReportsView = ({ user, currentPeriod }) => {
   const { year, month, mode = 'QUINCENAL' } = currentPeriod;
   const currency = user?.currency || 'USD';
+  const [downloadSuccess, setDownloadSuccess] = useState(null);
 
   const summary = FinancesDB.calculateFinancialSummary(user.id, year, month, mode);
   const transactions = FinancesDB.getTransactions(user.id, { year, month });
@@ -56,35 +59,21 @@ export const ReportsView = ({ user, currentPeriod }) => {
       fixedExpenses,
       periodLabel
     });
+    setDownloadSuccess('PDF');
+    setTimeout(() => setDownloadSuccess(null), 2500);
   };
 
-  // Exportar a CSV / Excel
+  // Exportar a Excel / CSV estructurado
   const handleExportCSV = () => {
-    const headers = ['ID', 'Fecha', 'Titulo', 'Tipo', 'Categoria', 'Monto', 'Modo', 'Notas'];
-    const rows = transactions.map(t => {
-      const cat = FinancesDB.getCategoryById(t.categoryId);
-      return [
-        t.id,
-        t.date,
-        `"${t.title.replace(/"/g, '""')}"`,
-        t.type,
-        `"${cat.name}"`,
-        t.amount,
-        t.periodMode || 'QUINCENAL',
-        `"${(t.notes || '').replace(/"/g, '""')}"`
-      ];
+    generateFinancialExcelReport({
+      user,
+      summary,
+      transactions,
+      fixedExpenses,
+      periodLabel
     });
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + 
-      [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `getloss_reporte_${monthName}_${year}_${mode}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    setDownloadSuccess('EXCEL');
+    setTimeout(() => setDownloadSuccess(null), 2500);
   };
 
   return (
@@ -112,21 +101,41 @@ export const ReportsView = ({ user, currentPeriod }) => {
 
         <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
           <button
+            type="button"
             onClick={handleExportCSV}
             className="btn-secondary"
             style={{ fontSize: '0.825rem', padding: '0.6rem 1rem' }}
           >
-            <FileSpreadsheet size={16} />
-            <span>Exportar CSV (Excel)</span>
+            {downloadSuccess === 'EXCEL' ? (
+              <>
+                <Check size={16} style={{ color: '#22c55e' }} />
+                <span style={{ color: '#22c55e', fontWeight: '700' }}>¡Excel Descargado!</span>
+              </>
+            ) : (
+              <>
+                <FileSpreadsheet size={16} />
+                <span>Exportar CSV (Excel)</span>
+              </>
+            )}
           </button>
 
           <button
+            type="button"
             onClick={handleExportPDF}
             className="btn-primary"
             style={{ fontSize: '0.825rem', padding: '0.6rem 1.15rem' }}
           >
-            <Download size={16} />
-            <span>Descargar Reporte PDF</span>
+            {downloadSuccess === 'PDF' ? (
+              <>
+                <Check size={16} style={{ color: '#22c55e' }} />
+                <span>¡PDF Descargado!</span>
+              </>
+            ) : (
+              <>
+                <Download size={16} />
+                <span>Descargar Reporte PDF</span>
+              </>
+            )}
           </button>
         </div>
       </div>

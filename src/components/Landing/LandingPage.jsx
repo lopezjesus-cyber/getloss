@@ -38,6 +38,8 @@ import {
 } from 'lucide-react';
 import { formatMoney } from '../../utils/formatters';
 import { useDeviceDetect } from '../../hooks/useDeviceDetect';
+import { generateFinancialPdfReport } from '../../services/pdfGenerator';
+import { generateFinancialExcelReport } from '../../services/excelGenerator';
 
 export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
   // Detección automática del dispositivo real del usuario
@@ -125,6 +127,107 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
   };
 
   const currentSim = simData[simPeriod];
+  const [downloadFeedback, setDownloadFeedback] = useState(null);
+
+  // Cálculos reactivos para la demo interactiva
+  const totalObligationsSum = currentSim.obligations.reduce((acc, curr) => acc + curr.amount, 0);
+  const pendingObligationsSum = currentSim.obligations
+    .filter((_, idx) => paidObligations[idx] === false)
+    .reduce((acc, curr) => acc + curr.amount, 0);
+  const dynamicBalance = currentSim.income - currentSim.expenses + pendingObligationsSum;
+  const savingsPercent = Math.max(0, Math.round((dynamicBalance / currentSim.income) * 100));
+
+  const handleDownloadPdfDemo = () => {
+    const periodLabel = simPeriod === 'QUINCENAL' 
+      ? `Reporte Quincenal (15 Días • Septiembre ${new Date().getFullYear()})` 
+      : `Reporte Mensual (Mes Completo • Septiembre ${new Date().getFullYear()})`;
+
+    generateFinancialPdfReport({
+      user: { fullName: 'Jesús López (Demo)', currency: 'USD' },
+      summary: {
+        totalIncome: currentSim.income,
+        totalExpense: currentSim.expenses,
+        netBalance: dynamicBalance,
+        indispensableExpenseTotal: totalObligationsSum,
+        variableExpenseTotal: Math.max(0, currentSim.expenses - totalObligationsSum),
+        savingsRate: savingsPercent,
+        categoryBreakdown: [
+          { category: { id: 'vivienda', name: 'Vivienda & Residencia', icon: 'Home' }, amount: currentSim.obligations[0]?.amount || 425, count: 1 },
+          { category: { id: 'servicios', name: 'Servicios Básicos', icon: 'Zap' }, amount: currentSim.obligations[1]?.amount || 110, count: 1 },
+          { category: { id: 'alimentacion', name: 'Alimentación & Despensa', icon: 'ShoppingCart' }, amount: currentSim.obligations[2]?.amount || 220, count: 1 }
+        ]
+      },
+      transactions: currentSim.recentTxs.map((t, idx) => ({
+        id: `demo-tx-${idx}`,
+        title: t.title,
+        amount: t.amount,
+        type: t.type,
+        categoryId: t.type === 'INCOME' ? 'Nómina Fija' : 'Servicios Básicos',
+        periodMode: simPeriod,
+        date: t.date,
+        notes: 'Comprobante verificado con éxito'
+      })),
+      fixedExpenses: currentSim.obligations.map((o, idx) => ({
+        id: `demo-fix-${idx}`,
+        name: o.name,
+        amount: o.amount,
+        targetMode: simPeriod,
+        dueDay: o.due.replace(/\D/g, '') || '5',
+        isIndispensable: true,
+        paidPeriods: paidObligations[idx] !== false ? [simPeriod] : []
+      })),
+      periodLabel
+    });
+
+    setDownloadFeedback('PDF');
+    setTimeout(() => setDownloadFeedback(null), 2500);
+  };
+
+  const handleDownloadExcelDemo = () => {
+    const periodLabel = simPeriod === 'QUINCENAL' 
+      ? `Reporte Quincenal (15 Días • Septiembre ${new Date().getFullYear()})` 
+      : `Reporte Mensual (Mes Completo • Septiembre ${new Date().getFullYear()})`;
+
+    generateFinancialExcelReport({
+      user: { fullName: 'Jesús López (Demo)', currency: 'USD' },
+      summary: {
+        totalIncome: currentSim.income,
+        totalExpense: currentSim.expenses,
+        netBalance: dynamicBalance,
+        indispensableExpenseTotal: totalObligationsSum,
+        variableExpenseTotal: Math.max(0, currentSim.expenses - totalObligationsSum),
+        savingsRate: savingsPercent,
+        categoryBreakdown: [
+          { category: { id: 'vivienda', name: 'Vivienda & Residencia' }, amount: currentSim.obligations[0]?.amount || 425, count: 1 },
+          { category: { id: 'servicios', name: 'Servicios Básicos' }, amount: currentSim.obligations[1]?.amount || 110, count: 1 },
+          { category: { id: 'alimentacion', name: 'Alimentación & Despensa' }, amount: currentSim.obligations[2]?.amount || 220, count: 1 }
+        ]
+      },
+      transactions: currentSim.recentTxs.map((t, idx) => ({
+        id: `demo-tx-${idx}`,
+        title: t.title,
+        amount: t.amount,
+        type: t.type,
+        categoryId: t.type === 'INCOME' ? 'Nómina Fija' : 'Servicios Básicos',
+        periodMode: simPeriod,
+        date: t.date,
+        notes: 'Comprobante verificado con éxito'
+      })),
+      fixedExpenses: currentSim.obligations.map((o, idx) => ({
+        id: `demo-fix-${idx}`,
+        name: o.name,
+        amount: o.amount,
+        targetMode: simPeriod,
+        dueDay: o.due.replace(/\D/g, '') || '5',
+        isIndispensable: true,
+        paidPeriods: paidObligations[idx] !== false ? [simPeriod] : []
+      })),
+      periodLabel
+    });
+
+    setDownloadFeedback('EXCEL');
+    setTimeout(() => setDownloadFeedback(null), 2500);
+  };
 
   const faqs = [
     {
@@ -1530,43 +1633,45 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                                 <div style={{ display: 'flex', gap: '0.65rem' }}>
                                   <button
                                     type="button"
-                                    onClick={() => onOpenAuth(false)}
+                                    onClick={handleDownloadPdfDemo}
                                     style={{
                                       padding: '0.5rem 1rem',
                                       borderRadius: '8px',
-                                      background: '#ffffff',
-                                      color: '#000000',
+                                      background: downloadFeedback === 'PDF' ? '#22c55e' : '#ffffff',
+                                      color: downloadFeedback === 'PDF' ? '#ffffff' : '#000000',
                                       fontWeight: '700',
                                       fontSize: '0.75rem',
                                       border: 'none',
                                       cursor: 'pointer',
                                       display: 'flex',
                                       alignItems: 'center',
-                                      gap: '0.4rem'
+                                      gap: '0.4rem',
+                                      transition: 'all 0.2s ease'
                                     }}
                                   >
-                                    <Download size={14} />
-                                    <span>Descargar PDF</span>
+                                    {downloadFeedback === 'PDF' ? <Check size={14} /> : <Download size={14} />}
+                                    <span>{downloadFeedback === 'PDF' ? '¡PDF Descargado!' : 'Descargar PDF'}</span>
                                   </button>
                                   <button
                                     type="button"
-                                    onClick={() => onOpenAuth(false)}
+                                    onClick={handleDownloadExcelDemo}
                                     style={{
                                       padding: '0.5rem 1rem',
                                       borderRadius: '8px',
-                                      background: 'rgba(255,255,255,0.08)',
-                                      color: '#ffffff',
+                                      background: downloadFeedback === 'EXCEL' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.08)',
+                                      color: downloadFeedback === 'EXCEL' ? '#4ade80' : '#ffffff',
                                       fontWeight: '600',
                                       fontSize: '0.75rem',
-                                      border: '1px solid rgba(255,255,255,0.15)',
+                                      border: downloadFeedback === 'EXCEL' ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
                                       cursor: 'pointer',
                                       display: 'flex',
                                       alignItems: 'center',
-                                      gap: '0.4rem'
+                                      gap: '0.4rem',
+                                      transition: 'all 0.2s ease'
                                     }}
                                   >
-                                    <FileSpreadsheet size={14} />
-                                    <span>Exportar CSV</span>
+                                    {downloadFeedback === 'EXCEL' ? <Check size={14} /> : <FileSpreadsheet size={14} />}
+                                    <span>{downloadFeedback === 'EXCEL' ? '¡Excel Descargado!' : 'Exportar CSV'}</span>
                                   </button>
                                 </div>
                               </div>
@@ -2020,32 +2125,65 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
 
                         {/* PESTAÑA 4: REPORTES */}
                         {activeScreenTab === 'reports' && (
-                          <div style={{ animation: 'fadeIn 0.2s ease-in', textAlign: 'center', padding: '1rem 0' }}>
-                            <div style={{ width: '44px', height: '44px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.08)', margin: '0 auto 0.75rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <Download size={20} color="#ffffff" />
+                          <div style={{ animation: 'fadeIn 0.2s ease-in', textAlign: 'center', padding: '0.85rem 0' }}>
+                            <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(255, 255, 255, 0.08)', margin: '0 auto 0.65rem auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <Download size={18} color="#ffffff" />
                             </div>
-                            <div style={{ fontSize: '0.9rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.35rem' }}>
-                              Reporte Financiero PDF
+                            <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#ffffff', marginBottom: '0.25rem' }}>
+                              Reportes Ejecutivos
                             </div>
-                            <p style={{ fontSize: '0.72rem', color: '#86868b', marginBottom: '1rem' }}>
-                              Listo para exportar con balance de {formatMoney(currentSim.balance, 'USD')}.
+                            <p style={{ fontSize: '0.7rem', color: '#86868b', marginBottom: '0.85rem', lineHeight: '1.4' }}>
+                              Exporta el balance de {formatMoney(dynamicBalance, 'USD')} en formato PDF o Excel.
                             </p>
-                            <button
-                              type="button"
-                              onClick={() => onOpenAuth(false)}
-                              style={{
-                                padding: '0.55rem 1.25rem',
-                                borderRadius: '9999px',
-                                background: '#ffffff',
-                                color: '#000000',
-                                fontWeight: '700',
-                                fontSize: '0.75rem',
-                                border: 'none',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Descargar Demo
-                            </button>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                              <button
+                                type="button"
+                                onClick={handleDownloadPdfDemo}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.55rem',
+                                  borderRadius: '9999px',
+                                  background: downloadFeedback === 'PDF' ? '#22c55e' : '#ffffff',
+                                  color: downloadFeedback === 'PDF' ? '#ffffff' : '#000000',
+                                  fontWeight: '700',
+                                  fontSize: '0.75rem',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '0.4rem',
+                                  transition: 'all 0.2s ease'
+                                }}
+                              >
+                                {downloadFeedback === 'PDF' ? <Check size={14} /> : <Download size={14} />}
+                                <span>{downloadFeedback === 'PDF' ? '¡PDF Descargado!' : 'Descargar Reporte PDF'}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={handleDownloadExcelDemo}
+                                style={{
+                                  width: '100%',
+                                  padding: '0.55rem',
+                                  borderRadius: '9999px',
+                                  background: downloadFeedback === 'EXCEL' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255, 255, 255, 0.08)',
+                                  color: downloadFeedback === 'EXCEL' ? '#4ade80' : '#ffffff',
+                                  fontWeight: '600',
+                                  fontSize: '0.75rem',
+                                  border: downloadFeedback === 'EXCEL' ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  gap: '0.4rem',
+                                  transition: 'all 0.2s ease'
+                                }}
+                              >
+                                {downloadFeedback === 'EXCEL' ? <Check size={14} /> : <FileSpreadsheet size={14} />}
+                                <span>{downloadFeedback === 'EXCEL' ? '¡Excel Descargado!' : 'Exportar CSV (Excel)'}</span>
+                              </button>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -2328,14 +2466,48 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
               Genera balances con desglose de obligaciones, tasas de ahorro y comprobaciones formales listos para imprimir o auditar en Excel.
             </p>
             <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '0.65rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.825rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Download size={15} />
-                <span>PDF Ejecutivo</span>
-              </div>
-              <div style={{ background: 'rgba(255,255,255,0.06)', padding: '0.65rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.825rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <FileSpreadsheet size={15} />
-                <span>CSV para Excel</span>
-              </div>
+              <button
+                type="button"
+                onClick={handleDownloadPdfDemo}
+                style={{
+                  background: downloadFeedback === 'PDF' ? '#22c55e' : 'rgba(255,255,255,0.06)',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '12px',
+                  border: downloadFeedback === 'PDF' ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
+                  fontSize: '0.825rem',
+                  color: downloadFeedback === 'PDF' ? '#ffffff' : '#ffffff',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {downloadFeedback === 'PDF' ? <Check size={15} /> : <Download size={15} />}
+                <span>{downloadFeedback === 'PDF' ? '¡PDF Descargado!' : 'Descargar PDF Demo'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleDownloadExcelDemo}
+                style={{
+                  background: downloadFeedback === 'EXCEL' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(255,255,255,0.06)',
+                  padding: '0.65rem 1.15rem',
+                  borderRadius: '12px',
+                  border: downloadFeedback === 'EXCEL' ? '1px solid #22c55e' : '1px solid rgba(255,255,255,0.15)',
+                  fontSize: '0.825rem',
+                  color: downloadFeedback === 'EXCEL' ? '#4ade80' : '#ffffff',
+                  fontWeight: '600',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {downloadFeedback === 'EXCEL' ? <Check size={15} /> : <FileSpreadsheet size={15} />}
+                <span>{downloadFeedback === 'EXCEL' ? '¡Excel Descargado!' : 'Descargar CSV (Excel)'}</span>
+              </button>
             </div>
           </div>
         </div>

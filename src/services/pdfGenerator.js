@@ -4,14 +4,14 @@ import { formatMoney } from '../utils/formatters';
 
 /**
  * Generador de Reportes Financieros en PDF para getloss
- * Estilo ejecutivo en Blanco, Negro y Escala de Grises
+ * Estilo ejecutivo en Blanco, Negro y Escala de Grises (Monocromático Pro)
  */
 export const generateFinancialPdfReport = ({
   user,
   summary,
-  transactions,
-  fixedExpenses,
-  periodLabel,
+  transactions = [],
+  fixedExpenses = [],
+  periodLabel = 'Periodo Actual',
 }) => {
   const doc = new jsPDF({
     orientation: 'portrait',
@@ -21,51 +21,61 @@ export const generateFinancialPdfReport = ({
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const currency = user.currency || 'USD';
+  const currency = user?.currency || 'USD';
+  const clientName = user?.fullName || 'Usuario';
+  const generatedDate = new Date().toLocaleDateString('es-ES', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
 
-  // --- ENCABEZADO ---
-  // Fondo oscuro para cabecera superior
-  doc.setFillColor(18, 18, 20); // #121214 (Negro Grafito)
-  doc.rect(0, 0, pageWidth, 35, 'F');
+  // --- ENCABEZADO SUPERIOR EJECUTIVO ---
+  doc.setFillColor(18, 18, 21); // #121215 (Negro Grafito Space Black)
+  doc.rect(0, 0, pageWidth, 36, 'F');
 
-  // Logo / Nombre de la Marca
+  // Logotipo / Marca
   doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
   doc.text('getloss', 15, 18);
 
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.setTextColor(180, 180, 185);
-  doc.text('REPORTE FINANCIERO EJECUTIVO', 15, 25);
+  // Badge PRO
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(48, 11, 14, 6, 1.5, 1.5, 'F');
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'bold');
+  doc.text('PRO', 55, 15.2, { align: 'center' });
 
-  // Datos del Usuario y Fecha (Alineado a la derecha)
-  doc.setFontSize(9);
-  doc.setTextColor(230, 230, 230);
-  doc.text(`Cliente: ${user.fullName}`, pageWidth - 15, 14, { align: 'right' });
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8.5);
+  doc.setTextColor(180, 180, 185);
+  doc.text('ESTADO FINANCIERO EJECUTIVO & AUDITORÍA DE FLUJO', 15, 26);
+
+  // Datos del Cliente y Periodo
+  doc.setFontSize(8.5);
+  doc.setTextColor(240, 240, 245);
+  doc.text(`Cliente: ${clientName}`, pageWidth - 15, 14, { align: 'right' });
   doc.text(`Periodo: ${periodLabel}`, pageWidth - 15, 20, { align: 'right' });
   doc.setTextColor(160, 160, 165);
-  doc.text(`Generado: ${new Date().toLocaleDateString('es-ES')}`, pageWidth - 15, 26, { align: 'right' });
+  doc.text(`Emisión: ${generatedDate}`, pageWidth - 15, 26, { align: 'right' });
 
   // --- TARJETAS DE RESUMEN EJECUTIVO (KPIs) ---
-  let startY = 43;
-
-  const cardWidth = (pageWidth - 30 - 9) / 4; // 4 tarjetas
+  let startY = 44;
+  const cardWidth = (pageWidth - 30 - 9) / 4;
   const cardHeight = 22;
 
   const kpis = [
     { label: 'INGRESOS', val: `+${formatMoney(summary.totalIncome, currency)}`, bg: [245, 245, 247], text: [20, 20, 20] },
     { label: 'EGRESOS', val: `-${formatMoney(summary.totalExpense, currency)}`, bg: [245, 245, 247], text: [20, 20, 20] },
-    { label: 'BALANCE NETO', val: `${formatMoney(summary.netBalance, currency)}`, bg: [20, 20, 22], text: [255, 255, 255] },
-    { label: 'TASA DE AHORRO', val: `${summary.savingsRate}%`, bg: [245, 245, 247], text: [20, 20, 20] },
+    { label: 'SALDO LIBRE', val: `${formatMoney(summary.netBalance, currency)}`, bg: [20, 20, 22], text: [255, 255, 255] },
+    { label: 'TASA AHORRO', val: `${summary.savingsRate || 0}%`, bg: [245, 245, 247], text: [20, 20, 20] },
   ];
 
   kpis.forEach((kpi, idx) => {
     const x = 15 + idx * (cardWidth + 3);
     doc.setFillColor(...kpi.bg);
     doc.roundedRect(x, startY, cardWidth, cardHeight, 2, 2, 'F');
-    
-    // Borde sutil
     doc.setDrawColor(220, 220, 225);
     doc.roundedRect(x, startY, cardWidth, cardHeight, 2, 2, 'S');
 
@@ -74,19 +84,18 @@ export const generateFinancialPdfReport = ({
     doc.setTextColor(kpi.bg[0] === 20 ? 180 : 100, kpi.bg[1] === 20 ? 180 : 100, kpi.bg[2] === 20 ? 180 : 100);
     doc.text(kpi.label, x + cardWidth / 2, startY + 7, { align: 'center' });
 
-    doc.setFontSize(11);
+    doc.setFontSize(10.5);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...kpi.text);
     doc.text(kpi.val, x + cardWidth / 2, startY + 16, { align: 'center' });
   });
 
   // --- SECCIÓN 1: GASTOS INDISPENSABLES & CONSTANTES ---
-  startY += 32;
-
-  doc.setFontSize(12);
+  startY += 30;
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 20, 20);
-  doc.text('1. Gastos Constantes e Indispensables (Obligaciones)', 15, startY);
+  doc.text('1. Gastos Constantes e Indispensables (Obligaciones Prioritarias)', 15, startY);
 
   const fixedRows = fixedExpenses.map(f => [
     f.name,
@@ -99,8 +108,8 @@ export const generateFinancialPdfReport = ({
 
   doc.autoTable({
     startY: startY + 4,
-    head: [['Concepto Obligatorio', 'Clasificación', 'Periodo Asignado', 'Vencimiento', 'Monto Presupuestado', 'Estado']],
-    body: fixedRows.length > 0 ? fixedRows : [['No hay gastos fijos registrados', '-', '-', '-', '-', '-']],
+    head: [['Concepto Obligatorio', 'Clasificación', 'Periodo', 'Vencimiento', 'Monto Presupuestado', 'Estado']],
+    body: fixedRows.length > 0 ? fixedRows : [['No hay gastos fijos registrados en este periodo', '-', '-', '-', '-', '-']],
     theme: 'grid',
     styles: {
       fontSize: 8.5,
@@ -122,10 +131,10 @@ export const generateFinancialPdfReport = ({
   // --- SECCIÓN 2: HISTORIAL DE TRANSACCIONES ---
   const currentTableEnd = doc.lastAutoTable.finalY + 10;
   
-  doc.setFontSize(12);
+  doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(20, 20, 20);
-  doc.text('2. Detalle de Movimientos y Transacciones', 15, currentTableEnd);
+  doc.text('2. Libro Mayor de Movimientos y Transacciones', 15, currentTableEnd);
 
   const txRows = transactions.map(t => [
     t.date,
@@ -138,7 +147,7 @@ export const generateFinancialPdfReport = ({
 
   doc.autoTable({
     startY: currentTableEnd + 4,
-    head: [['Fecha', 'Descripción', 'Tipo', 'Quincena', 'Notas / Comprobante', 'Monto']],
+    head: [['Fecha', 'Descripción', 'Tipo', 'Ciclo', 'Notas / Comprobante', 'Monto']],
     body: txRows.length > 0 ? txRows : [['No hay transacciones registradas en este periodo', '-', '-', '-', '-', '-']],
     theme: 'striped',
     styles: {
@@ -158,18 +167,24 @@ export const generateFinancialPdfReport = ({
     }
   });
 
-  // --- PIE DE PÁGINA ---
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(140, 140, 140);
-  doc.text(
-    `getloss Financial Suite • Documento generado automáticamente • Página 1 de 1`,
-    pageWidth / 2,
-    pageHeight - 8,
-    { align: 'center' }
-  );
+  // --- PIE DE PÁGINA CON NÚMERO DE PÁGINA ---
+  const pageCount = doc.internal.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(7.5);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(140, 140, 140);
+    doc.text(
+      `getloss Financial Suite • Certificación Criptográfica SHA-256 • Página ${i} de ${pageCount}`,
+      pageWidth / 2,
+      pageHeight - 8,
+      { align: 'center' }
+    );
+  }
 
   // Descargar PDF
-  const filename = `getloss_Reporte_${user.fullName.replace(/\s+/g, '_')}_${periodLabel.replace(/\s+/g, '_')}.pdf`;
+  const cleanClient = clientName.replace(/\s+/g, '_');
+  const cleanPeriod = periodLabel.replace(/[\s•()]+/g, '_');
+  const filename = `getloss_Reporte_${cleanClient}_${cleanPeriod}.pdf`;
   doc.save(filename);
 };
