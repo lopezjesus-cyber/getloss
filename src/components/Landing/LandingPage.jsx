@@ -1549,34 +1549,11 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                           {/* -------------------------------------------------- */}
                           {activeScreenTab === 'transactions' && (
                             <div style={{ animation: 'fadeIn 0.2s ease-in' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                                <div>
-                                  <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
-                                    Libro Mayor de Transacciones
-                                  </h3>
-                                  <p style={{ fontSize: '0.78rem', color: '#86868b' }}>Monitoreo en tiempo real de ingresos y salidas con detección de fugas.</p>
-                                </div>
-
-                                <button
-                                  type="button"
-                                  onClick={() => setIsQuickAddOpen(true)}
-                                  style={{
-                                    padding: '0.45rem 0.95rem',
-                                    borderRadius: '8px',
-                                    background: '#ffffff',
-                                    color: '#000000',
-                                    fontSize: '0.75rem',
-                                    fontWeight: '700',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.4rem'
-                                  }}
-                                >
-                                  <Plus size={14} />
-                                  <span>Registrar Movimiento</span>
-                                </button>
+                              <div style={{ marginBottom: '1.25rem' }}>
+                                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
+                                  Libro Mayor de Transacciones
+                                </h3>
+                                <p style={{ fontSize: '0.78rem', color: '#86868b' }}>Monitoreo en tiempo real de ingresos y salidas con detección de fugas.</p>
                               </div>
 
                               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
