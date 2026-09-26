@@ -264,6 +264,15 @@ export const FinancesDB = {
     };
   },
 
+  // Eliminar toda la información financiera de un usuario específico
+  deleteUserData: (userId) => {
+    const db = FinancesDB.getRawDatabase();
+    db.transactions = (db.transactions || []).filter(t => t.userId !== userId);
+    db.fixedExpenses = (db.fixedExpenses || []).filter(f => f.userId !== userId);
+    FinancesDB._saveDatabase(db);
+    return true;
+  },
+
   resetDatabase: () => {
     const clean = getCleanDatabase();
     localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(clean));

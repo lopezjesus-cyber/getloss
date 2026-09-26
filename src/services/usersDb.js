@@ -114,6 +114,19 @@ export const UsersDB = {
     return users[index];
   },
 
+  // Eliminar Cuenta de Usuario
+  deleteUser: (userId) => {
+    const users = UsersDB.getAllUsers();
+    const filtered = users.filter(u => u.id !== userId);
+    UsersDB._saveUsers(filtered);
+
+    const active = UsersDB.getActiveSession();
+    if (active && active.id === userId) {
+      UsersDB.logout();
+    }
+    return true;
+  },
+
   // Limpiar Base de Datos de Usuarios
   resetDatabase: () => {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([]));

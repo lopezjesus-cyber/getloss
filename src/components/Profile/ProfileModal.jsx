@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { UsersDB } from '../../services/usersDb';
+import { FinancesDB } from '../../services/financesDb';
 import { getCurrencySymbol } from '../../utils/formatters';
-import { User, Mail, DollarSign, Calendar, Phone, Check, X, Shield } from 'lucide-react';
+import { User, Mail, DollarSign, Calendar, Phone, Check, X, Shield, Trash2, AlertTriangle } from 'lucide-react';
 
-export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
+export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated, onDeleteAccount }) => {
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     phone: user?.phone || '',
@@ -12,6 +13,8 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
     monthlyIncomeGoal: user?.monthlyIncomeGoal || 2500
   });
   const [saved, setSaved] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   if (!isOpen || !user) return null;
 
@@ -34,16 +37,33 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
     }, 600);
   };
 
+  const handleConfirmDelete = () => {
+    setIsDeleting(true);
+    setTimeout(() => {
+      // 1. Eliminar datos financieros del usuario
+      FinancesDB.deleteUserData(user.id);
+      // 2. Eliminar cuenta de usuario de la base de datos
+      UsersDB.deleteUser(user.id);
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      if (onDeleteAccount) {
+        onDeleteAccount();
+      } else {
+        onClose();
+      }
+    }, 400);
+  };
+
   return (
     <div className="modal-overlay">
-      <div className="modal-box" style={{ maxWidth: '460px' }}>
+      <div className="modal-box" style={{ maxWidth: '480px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <div>
             <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)' }}>
               Configuración de Cuenta & Finanzas
             </h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-              Ajusta tus parámetros personales y ciclo de cobro
+              Ajusta tus parámetros personales, divisa o elimina tu cuenta
             </p>
           </div>
           <button onClick={onClose} className="btn-icon" style={{ width: '32px', height: '32px' }}>
@@ -167,7 +187,7 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
             />
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.25rem' }}>
             <button
               type="button"
               onClick={onClose}
@@ -185,6 +205,109 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
             </button>
           </div>
         </form>
+
+        {/* Zona de Peligro: Eliminar Cuenta */}
+        <div style={{
+          marginTop: '1.75rem',
+          paddingTop: '1.25rem',
+          borderTop: '1px solid var(--border-medium)'
+        }}>
+          {!showDeleteConfirm ? (
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'rgba(239, 68, 68, 0.04)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              borderRadius: 'var(--radius-md)',
+              padding: '0.85rem 1rem'
+            }}>
+              <div>
+                <div style={{ fontSize: '0.85rem', fontWeight: '700', color: '#f87171' }}>
+                  Eliminar Cuenta
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  Borrar permanentemente tu usuario y todos tus registros financieros
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowDeleteConfirm(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.4rem',
+                  padding: '0.45rem 0.85rem',
+                  borderRadius: 'var(--radius-sm)',
+                  background: 'rgba(239, 68, 68, 0.12)',
+                  border: '1px solid rgba(239, 68, 68, 0.35)',
+                  color: '#f87171',
+                  fontSize: '0.8rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'var(--transition)'
+                }}
+                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.25)'; }}
+                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'; }}
+              >
+                <Trash2 size={14} />
+                <span>Eliminar Cuenta</span>
+              </button>
+            </div>
+          ) : (
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.35)',
+              borderRadius: 'var(--radius-md)',
+              padding: '1rem',
+              animation: 'fadeIn 0.2s ease'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f87171', fontWeight: '700', marginBottom: '0.4rem', fontSize: '0.9rem' }}>
+                <AlertTriangle size={18} />
+                <span>¿Confirmas que deseas eliminar tu cuenta?</span>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', marginBottom: '1rem', lineHeight: '1.45' }}>
+                Esta acción es <strong>irreversible</strong>. Se eliminarán permanentemente tu perfil, historial de ingresos, egresos, gastos fijos indispensables y reportes.
+              </p>
+
+              <div style={{ display: 'flex', gap: '0.65rem' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  disabled={isDeleting}
+                  className="btn-secondary"
+                  style={{ flex: 1, fontSize: '0.8rem', padding: '0.5rem' }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmDelete}
+                  disabled={isDeleting}
+                  style={{
+                    flex: 1.5,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.4rem',
+                    padding: '0.5rem',
+                    borderRadius: 'var(--radius-sm)',
+                    background: '#dc2626',
+                    border: '1px solid #ef4444',
+                    color: '#ffffff',
+                    fontSize: '0.8rem',
+                    fontWeight: '700',
+                    cursor: isDeleting ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  <Trash2 size={14} />
+                  <span>{isDeleting ? 'Eliminando...' : 'Sí, Eliminar Permanentemente'}</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

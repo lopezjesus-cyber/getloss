@@ -263,6 +263,11 @@ export default function App() {
           setCurrentUser(updated);
           handleDataChanged();
         }}
+        onDeleteAccount={() => {
+          setCurrentUser(null);
+          setIsProfileOpen(false);
+          handleDataChanged();
+        }}
       />
     </div>
   );
