@@ -17,6 +17,46 @@ let memoryCache = {
   finances: {} // { [userId]: { transactions: [], fixedExpenses: [] } }
 };
 
+// Fusionar usuarios sin duplicados de forma segura
+function mergeUsers(a = [], b = []) {
+  const map = new Map();
+  for (const u of a) {
+    if (u && u.email) map.set(u.email.toLowerCase(), u);
+  }
+  for (const u of b) {
+    if (u && u.email) {
+      const prev = map.get(u.email.toLowerCase()) || {};
+      map.set(u.email.toLowerCase(), { ...prev, ...u });
+    }
+  }
+  return Array.from(map.values());
+}
+
+// Fusionar finanzas sin duplicados
+function mergeFinances(a = {}, b = {}) {
+  const merged = { ...a };
+  for (const [uid, fData] of Object.entries(b || {})) {
+    if (!merged[uid]) {
+      merged[uid] = fData;
+    } else {
+      const txMap = new Map();
+      (merged[uid].transactions || []).forEach(t => txMap.set(t.id, t));
+      (fData.transactions || []).forEach(t => txMap.set(t.id, t));
+
+      const fixMap = new Map();
+      (merged[uid].fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
+      (fData.fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
+
+      merged[uid] = {
+        transactions: Array.from(txMap.values()),
+        fixedExpenses: Array.from(fixMap.values()),
+        lastSync: new Date().toISOString()
+      };
+    }
+  }
+  return merged;
+}
+
 // Función interna para obtener estado global completo
 async function fetchFullCloudState() {
   // 1. Probar Upstash / KV si existe
@@ -27,7 +67,10 @@ async function fetchFullCloudState() {
       });
       const data = await res.json();
       if (data && data.result) {
-        return typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+        const parsed = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+        memoryCache.users = mergeUsers(memoryCache.users, parsed.users);
+        memoryCache.finances = mergeFinances(memoryCache.finances, parsed.finances);
+        return memoryCache;
       }
     } catch (e) {
       console.warn('KV read warning:', e.message);
@@ -40,10 +83,8 @@ async function fetchFullCloudState() {
     if (res.ok) {
       const json = await res.json();
       if (json && json.data) {
-        memoryCache = {
-          users: Array.isArray(json.data.users) ? json.data.users : [],
-          finances: json.data.finances || {}
-        };
+        memoryCache.users = mergeUsers(memoryCache.users, json.data.users);
+        memoryCache.finances = mergeFinances(memoryCache.finances, json.data.finances);
         return memoryCache;
       }
     }
@@ -102,7 +143,7 @@ export const CloudStore = {
   // Guardar lista de usuarios en la nube
   saveUsers: async (users) => {
     const state = await fetchFullCloudState();
-    state.users = users;
+    state.users = mergeUsers(state.users, users);
     return await saveFullCloudState(state);
   },
 

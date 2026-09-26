@@ -1,11 +1,51 @@
 /**
  * getloss - Cloud Sync Client Service
  * Comunica el frontend de PC y Celular con la Nube
- * garantizando sincronización bidireccional en tiempo real con soporte offline.
+ * garantizando sincronización bidireccional en tiempo real con soporte offline y cuentas globales.
  */
 
 const API_BASE = '/api';
 const DIRECT_CLOUD_URL = 'https://api.restful-api.dev/objects/ff808181a09d98f701a0dd1362f61b60';
+
+// Fusionar usuarios sin duplicados de forma segura
+function mergeUsers(a = [], b = []) {
+  const map = new Map();
+  for (const u of a) {
+    if (u && u.email) map.set(u.email.toLowerCase(), u);
+  }
+  for (const u of b) {
+    if (u && u.email) {
+      const prev = map.get(u.email.toLowerCase()) || {};
+      map.set(u.email.toLowerCase(), { ...prev, ...u });
+    }
+  }
+  return Array.from(map.values());
+}
+
+// Fusionar finanzas sin duplicados
+function mergeFinances(a = {}, b = {}) {
+  const merged = { ...a };
+  for (const [uid, fData] of Object.entries(b || {})) {
+    if (!merged[uid]) {
+      merged[uid] = fData;
+    } else {
+      const txMap = new Map();
+      (merged[uid].transactions || []).forEach(t => txMap.set(t.id, t));
+      (fData.transactions || []).forEach(t => txMap.set(t.id, t));
+
+      const fixMap = new Map();
+      (merged[uid].fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
+      (fData.fixedExpenses || []).forEach(f => fixMap.set(f.id, f));
+
+      merged[uid] = {
+        transactions: Array.from(txMap.values()),
+        fixedExpenses: Array.from(fixMap.values()),
+        lastSync: new Date().toISOString()
+      };
+    }
+  }
+  return merged;
+}
 
 // Función auxiliar para leer directamente de la nube como respaldo
 async function getDirectCloudData() {
@@ -16,7 +56,7 @@ async function getDirectCloudData() {
       return json.data || { users: [], finances: {} };
     }
   } catch (e) {
-    console.warn('Direct cloud read fallback error:', e.message);
+    console.warn('Direct cloud read fallback warning:', e.message);
   }
   return { users: [], finances: {} };
 }
@@ -24,13 +64,18 @@ async function getDirectCloudData() {
 // Función auxiliar para guardar directamente en la nube como respaldo
 async function saveDirectCloudData(data) {
   try {
+    const current = await getDirectCloudData();
+    const mergedUsers = mergeUsers(current.users, data.users);
+    const mergedFinances = mergeFinances(current.finances, data.finances);
+
     const res = await fetch(DIRECT_CLOUD_URL, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         name: 'getloss_global_store_v1',
         data: {
-          ...data,
+          users: mergedUsers,
+          finances: mergedFinances,
           updatedAt: new Date().toISOString()
         }
       })
@@ -43,8 +88,10 @@ async function saveDirectCloudData(data) {
 }
 
 export const CloudSync = {
-  // 1. Registro en la Nube
+  // 1. Registro en la Nube Global
   registerInCloud: async (userData) => {
+    const cleanEmail = userData.email.trim().toLowerCase();
+
     // A. Intentar endpoint serverless
     try {
       const response = await fetch(`${API_BASE}/auth?action=register`, {
@@ -65,7 +112,6 @@ export const CloudSync = {
     try {
       const cloudData = await getDirectCloudData();
       const users = cloudData.users || [];
-      const cleanEmail = userData.email.trim().toLowerCase();
 
       const existing = users.find(u => u.email.toLowerCase() === cleanEmail);
       if (existing) {
@@ -88,9 +134,10 @@ export const CloudSync = {
         createdAt: new Date().toISOString()
       };
 
-      users.push(newUser);
-      cloudData.users = users;
-      await saveDirectCloudData(cloudData);
+      await saveDirectCloudData({
+        users: [...users, newUser],
+        finances: cloudData.finances || {}
+      });
 
       return newUser;
     } catch (e) {
@@ -99,16 +146,17 @@ export const CloudSync = {
     }
   },
 
-  // 2. Inicio de Sesión en la Nube (Permite acceder en PC con cuentas creadas en Celular)
+  // 2. Inicio de Sesión Global (Funciona en PC, Celular, Mac y cualquier navegador con 1 sola cuenta)
   loginInCloud: async (email, password) => {
     const cleanEmail = email.trim().toLowerCase();
+    const cleanPassword = password.trim();
 
     // A. Intentar endpoint serverless
     try {
       const response = await fetch(`${API_BASE}/auth?action=login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password })
+        body: JSON.stringify({ email: cleanEmail, password: cleanPassword })
       });
 
       if (response.ok) {
@@ -124,7 +172,7 @@ export const CloudSync = {
       const cloudData = await getDirectCloudData();
       const users = cloudData.users || [];
       const user = users.find(
-        u => u.email.toLowerCase() === cleanEmail && u.passwordHash === password
+        u => u.email.toLowerCase() === cleanEmail && u.passwordHash === cleanPassword
       );
 
       if (user) {
@@ -155,13 +203,17 @@ export const CloudSync = {
     // B. Directo
     try {
       const cloudData = await getDirectCloudData();
-      if (!cloudData.finances) cloudData.finances = {};
-      cloudData.finances[userId] = {
-        fixedExpenses: Array.isArray(fixedExpenses) ? fixedExpenses : [],
-        transactions: Array.isArray(transactions) ? transactions : [],
-        lastSync: new Date().toISOString()
+      const userFinances = {
+        [userId]: {
+          fixedExpenses: Array.isArray(fixedExpenses) ? fixedExpenses : [],
+          transactions: Array.isArray(transactions) ? transactions : [],
+          lastSync: new Date().toISOString()
+        }
       };
-      return await saveDirectCloudData(cloudData);
+      return await saveDirectCloudData({
+        users: cloudData.users || [],
+        finances: { ...(cloudData.finances || {}), ...userFinances }
+      });
     } catch {
       return false;
     }
@@ -200,8 +252,10 @@ export const CloudSync = {
       const index = users.findIndex(u => u.id === userId);
       if (index >= 0) {
         users[index] = { ...users[index], ...updates };
-        cloudData.users = users;
-        await saveDirectCloudData(cloudData);
+        await saveDirectCloudData({
+          users,
+          finances: cloudData.finances || {}
+        });
         return true;
       }
     } catch {}
@@ -213,11 +267,13 @@ export const CloudSync = {
     if (!userId) return false;
     try {
       const cloudData = await getDirectCloudData();
-      cloudData.users = (cloudData.users || []).filter(u => u.id !== userId);
-      if (cloudData.finances && cloudData.finances[userId]) {
-        delete cloudData.finances[userId];
-      }
-      await saveDirectCloudData(cloudData);
+      const filteredUsers = (cloudData.users || []).filter(u => u.id !== userId);
+      const finances = { ...(cloudData.finances || {}) };
+      delete finances[userId];
+      await saveDirectCloudData({
+        users: filteredUsers,
+        finances
+      });
       return true;
     } catch {}
     return false;
@@ -227,35 +283,16 @@ export const CloudSync = {
   syncAllLocalUsersToCloud: async (localUsers = [], localFinances = {}) => {
     try {
       const cloudData = await getDirectCloudData();
-      let changed = false;
-      const cloudUsers = cloudData.users || [];
+      const mergedUsers = mergeUsers(cloudData.users, localUsers);
+      const mergedFinances = mergeFinances(cloudData.finances, localFinances);
 
-      for (const lu of localUsers) {
-        if (!lu || !lu.email) continue;
-        const exists = cloudUsers.some(cu => cu.email.toLowerCase() === lu.email.toLowerCase());
-        if (!exists) {
-          cloudUsers.push(lu);
-          changed = true;
-        }
-      }
-
-      if (localFinances) {
-        if (!cloudData.finances) cloudData.finances = {};
-        for (const [uid, fData] of Object.entries(localFinances)) {
-          if (!cloudData.finances[uid] || (fData.transactions && fData.transactions.length > (cloudData.finances[uid].transactions?.length || 0))) {
-            cloudData.finances[uid] = fData;
-            changed = true;
-          }
-        }
-      }
-
-      if (changed) {
-        cloudData.users = cloudUsers;
-        await saveDirectCloudData(cloudData);
-        console.log('[getloss Sync] Cuentas locales sincronizadas a la nube con éxito.');
-      }
+      await saveDirectCloudData({
+        users: mergedUsers,
+        finances: mergedFinances
+      });
+      console.log('[getloss Sync] Cuentas y finanzas globales sincronizadas exitosamente.');
     } catch (e) {
-      console.warn('[getloss Sync] Error durante auto-migración a la nube:', e);
+      console.warn('[getloss Sync] Error durante sincronización global:', e);
     }
   }
 };
