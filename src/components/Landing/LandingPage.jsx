@@ -1710,62 +1710,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
               alignItems: 'center',
               justifyContent: 'center',
               position: 'relative',
-              padding: '1rem 0'
+              padding: '0.5rem 0'
             }}>
-              {/* Tarjeta Flotante Izquierda (Desktop Callout) */}
-              <div style={{
-                position: 'absolute',
-                left: '2%',
-                top: '28%',
-                maxWidth: '220px',
-                background: 'rgba(18, 18, 21, 0.85)',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                borderRadius: '20px',
-                padding: '1.15rem',
-                backdropFilter: 'blur(20px)',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                textAlign: 'left',
-                display: 'none',
-                zIndex: 3
-              }} className="hide-on-mobile">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.45rem' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: '#ffffff', color: '#000000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Zap size={15} />
-                  </div>
-                  <span style={{ fontSize: '0.825rem', fontWeight: '700', color: '#ffffff' }}>Modo 1 Mano</span>
-                </div>
-                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: '1.45', margin: 0 }}>
-                  Navegación al alcance de tu pulgar y botón flotante (+) para registrar gastos en 3 segundos.
-                </p>
-              </div>
-
-              {/* Tarjeta Flotante Derecha (Desktop Callout) */}
-              <div style={{
-                position: 'absolute',
-                right: '2%',
-                top: '42%',
-                maxWidth: '220px',
-                background: 'rgba(18, 18, 21, 0.85)',
-                border: '1px solid rgba(255, 255, 255, 0.14)',
-                borderRadius: '20px',
-                padding: '1.15rem',
-                backdropFilter: 'blur(20px)',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
-                textAlign: 'left',
-                display: 'none',
-                zIndex: 3
-              }} className="hide-on-mobile">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.45rem' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(34, 197, 94, 0.2)', color: '#4ade80', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <ShieldCheck size={16} />
-                  </div>
-                  <span style={{ fontSize: '0.825rem', fontWeight: '700', color: '#ffffff' }}>Check Táctil</span>
-                </div>
-                <p style={{ fontSize: '0.75rem', color: '#a1a1aa', lineHeight: '1.45', margin: 0 }}>
-                  Toca las obligaciones en pantalla para marcarlas como pagadas y ver el balance reaccionar en vivo.
-                </p>
-              </div>
-
               {/* CHASIS FÍSICO IPHONE 16 PRO TITANIUM CON RATIO Y MEDIDAS DE PRECISIÓN */}
               <div className="apple-hardware-wrapper" style={{
                 position: 'relative',
@@ -2302,13 +2248,9 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
         </div>
 
         {/* Bento Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(12, 1fr)',
-          gap: '1.5rem'
-        }}>
+        <div className="apple-bento-grid">
           {/* Bento Card 1: Doble Ciclo (Span 7) */}
-          <div className="apple-bento-card" style={{ gridColumn: 'span 7' }}>
+          <div className="apple-bento-card apple-bento-span-7">
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
               <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#86868b' }}>
                 Flexibilidad de Ciclo
@@ -2320,7 +2262,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             <p style={{ color: '#a1a1aa', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.5rem' }}>
               Cambia instantáneamente de frecuencia. Los saldos, reportes y compromisos fijos se recalculan en tiempo real sin perder coherencia histórica.
             </p>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <div style={{ background: 'rgba(255,255,255,0.06)', padding: '0.65rem 1.1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.85rem', color: '#ffffff', fontWeight: '600' }}>
                 🗓️ Ciclos de 15 Días
               </div>
@@ -2331,7 +2273,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           </div>
 
           {/* Bento Card 2: 0% Deudas Sorpresa (Span 5) */}
-          <div className="apple-bento-card" style={{ gridColumn: 'span 5' }}>
+          <div className="apple-bento-card apple-bento-span-5">
             <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#86868b' }}>
               Blindaje de Compromisos
             </span>
@@ -2353,7 +2295,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           </div>
 
           {/* Bento Card 3: Velocidad Mobile (Span 5) */}
-          <div className="apple-bento-card" style={{ gridColumn: 'span 5' }}>
+          <div className="apple-bento-card apple-bento-span-5">
             <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#86868b' }}>
               Ergonomía Táctil
             </span>
@@ -2375,7 +2317,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           </div>
 
           {/* Bento Card 4: Reportes Ejecutivos PDF (Span 7) */}
-          <div className="apple-bento-card" style={{ gridColumn: 'span 7' }}>
+          <div className="apple-bento-card apple-bento-span-7">
             <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#86868b' }}>
               Auditoría y Exportación
             </span>
@@ -2385,7 +2327,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             <p style={{ color: '#a1a1aa', fontSize: '0.95rem', lineHeight: '1.6', marginBottom: '1.25rem' }}>
               Genera balances con desglose de obligaciones, tasas de ahorro y comprobaciones formales listos para imprimir o auditar en Excel.
             </p>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
               <div style={{ background: 'rgba(255,255,255,0.06)', padding: '0.65rem 1rem', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', fontSize: '0.825rem', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <Download size={15} />
                 <span>PDF Ejecutivo</span>
