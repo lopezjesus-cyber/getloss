@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { formatMoney } from '../utils/formatters';
 
 /**
@@ -106,7 +106,7 @@ export const generateFinancialPdfReport = ({
     (f.paidPeriods && f.paidPeriods.length > 0) ? 'PAGADO' : 'PENDIENTE'
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: startY + 4,
     head: [['Concepto Obligatorio', 'Clasificación', 'Periodo', 'Vencimiento', 'Monto Presupuestado', 'Estado']],
     body: fixedRows.length > 0 ? fixedRows : [['No hay gastos fijos registrados en este periodo', '-', '-', '-', '-', '-']],
@@ -129,7 +129,7 @@ export const generateFinancialPdfReport = ({
   });
 
   // --- SECCIÓN 2: HISTORIAL DE TRANSACCIONES ---
-  const currentTableEnd = doc.lastAutoTable.finalY + 10;
+  const currentTableEnd = (doc.lastAutoTable ? doc.lastAutoTable.finalY : startY + 40) + 10;
   
   doc.setFontSize(11);
   doc.setFont('helvetica', 'bold');
@@ -145,7 +145,7 @@ export const generateFinancialPdfReport = ({
     `${t.type === 'INCOME' ? '+' : '-'}${formatMoney(t.amount, currency)}`
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     startY: currentTableEnd + 4,
     head: [['Fecha', 'Descripción', 'Tipo', 'Ciclo', 'Notas / Comprobante', 'Monto']],
     body: txRows.length > 0 ? txRows : [['No hay transacciones registradas en este periodo', '-', '-', '-', '-', '-']],
