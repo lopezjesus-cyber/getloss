@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { UsersDB } from './services/usersDb';
 import { FinancesDB } from './services/financesDb';
+import { useDeviceDetect } from './hooks/useDeviceDetect';
 
 // Componente de Página de Inicio (Landing Page para usuarios no autenticados)
 import { LandingPage } from './components/Landing/LandingPage';
@@ -23,6 +24,9 @@ import { AddTransactionModal } from './components/Transactions/AddTransactionMod
 import { ProfileModal } from './components/Profile/ProfileModal';
 
 export default function App() {
+  // Detección precisa de dispositivo (PC vs Celular)
+  const { isMobile, isDesktop, deviceType, hasTouch } = useDeviceDetect();
+
   // Estado de Usuario y Sesión
   const [currentUser, setCurrentUser] = useState(() => {
     return UsersDB.getActiveSession() || null;
@@ -58,8 +62,9 @@ export default function App() {
   // Efecto para aplicar el tema en el HTML
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-device', deviceType.toLowerCase());
     localStorage.setItem('getloss_theme', theme);
-  }, [theme]);
+  }, [theme, deviceType]);
 
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
@@ -101,11 +106,12 @@ export default function App() {
   // Si no hay usuario autenticado, mostramos la Landing Page como primera página
   if (!currentUser) {
     return (
-      <>
+      <div data-device={deviceType.toLowerCase()} data-touch={hasTouch ? 'true' : 'false'}>
         <LandingPage
           onOpenAuth={handleOpenAuth}
           onToggleTheme={toggleTheme}
           theme={theme}
+          detectedDevice={deviceType}
         />
 
         <AuthModal
@@ -117,13 +123,13 @@ export default function App() {
             handleDataChanged();
           }}
         />
-      </>
+      </div>
     );
   }
 
   // Si el usuario ha iniciado sesión, mostramos la Aplicación Financiera Completa
   return (
-    <div className="app-container">
+    <div className="app-container" data-device={deviceType.toLowerCase()} data-touch={hasTouch ? 'true' : 'false'}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
         {/* Barra Superior */}
         <Navbar
@@ -133,22 +139,24 @@ export default function App() {
           onOpenAuth={() => handleOpenAuth(true)}
           onLogout={handleLogout}
           onOpenProfile={() => setIsProfileOpen(true)}
-          onOpenDbInspector={() => setIsDbInspectorOpen(true)}
           onOpenAddTx={() => setIsAddTxOpen(true)}
+          isMobile={isMobile}
         />
 
         <div style={{ display: 'flex', flex: 1 }}>
-          {/* Barra Lateral Desktop */}
+          {/* Barra Lateral Desktop (mostrada automáticamente en PC) */}
           <Sidebar
             activeTab={activeTab}
             onSelectTab={setActiveTab}
             onOpenAddTx={() => setIsAddTxOpen(true)}
-            onOpenDbInspector={() => setIsDbInspectorOpen(true)}
             fixedCount={fixedList.length}
           />
 
           {/* Área de Contenido Principal */}
-          <main className="main-wrapper">
+          <main className="main-wrapper" style={{
+            paddingBottom: isMobile ? 'calc(5.5rem + env(safe-area-inset-bottom, 0px))' : '2rem'
+          }}>
+
             <div className="content-container">
               {/* Botón de Atrás si no está en Dashboard */}
               {activeTab !== 'dashboard' && (

@@ -218,12 +218,38 @@ button {
   }
 }
 
+.content-container {
+  width: 100%;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding: 1rem 0.85rem;
+}
 
 @media (min-width: 768px) {
   .content-container {
-    padding: 2rem 2rem;
+    padding: 2rem 2.25rem;
   }
 }
+
+/* Optimización para dispositivos táctiles */
+[data-touch='true'] button,
+[data-touch='true'] a,
+[data-touch='true'] input[type='button'] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+[data-touch='true'] button:active {
+  transform: scale(0.97);
+  transition: transform 0.08s ease;
+}
+
+/* Evitar zoom forzado de iOS en inputs */
+@media (max-width: 768px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
 
 /* Tarjetas y Paneles */
 .card {
@@ -353,6 +379,25 @@ button {
   box-shadow: var(--shadow-lg);
   padding: 1.75rem;
   animation: scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (max-width: 640px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+  .modal-box {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    max-height: 92vh;
+    padding: 1.25rem 1.15rem calc(1.25rem + env(safe-area-inset-bottom, 0px)) 1.15rem;
+    animation: slideUpMobile 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes slideUpMobile {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
 }
 
 /* Badges / Chips */

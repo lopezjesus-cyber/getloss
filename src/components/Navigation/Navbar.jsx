@@ -25,17 +25,18 @@ export const Navbar = ({
 
       {/* Controles del Lado Derecho */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-        {/* Botón Acción Rápida */}
+        {/* Botón Acción Rápida (visible en PC/Desktop) */}
         {user && (
           <button
             onClick={onOpenAddTx}
-            className="btn-primary"
+            className="btn-primary hide-on-mobile"
             style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
           >
             <Plus size={15} />
             <span>Nuevo Movimiento</span>
           </button>
         )}
+
 
         {/* Alternador de Tema Oscuro / Claro */}
         <button

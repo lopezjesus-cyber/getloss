@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowRight, 
   ArrowLeft,
@@ -36,13 +36,26 @@ import {
   Sun
 } from 'lucide-react';
 import { formatMoney } from '../../utils/formatters';
+import { useDeviceDetect } from '../../hooks/useDeviceDetect';
 
 export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
+  // Detección automática del dispositivo real del usuario
+  const deviceDetect = useDeviceDetect();
   // Estado para el dispositivo seleccionado en el simulador: 'DESKTOP' o 'MOBILE'
-  const [activeDevice, setActiveDevice] = useState('DESKTOP');
+  const [activeDevice, setActiveDevice] = useState(() => deviceDetect.deviceType || 'DESKTOP');
+  const [hasManuallyToggled, setHasManuallyToggled] = useState(false);
+
+  // Sincronizar automáticamente con el dispositivo detectado si el usuario no ha cambiado manualmente
+  useEffect(() => {
+    if (!hasManuallyToggled && deviceDetect.deviceType) {
+      setActiveDevice(deviceDetect.deviceType);
+    }
+  }, [deviceDetect.deviceType, hasManuallyToggled]);
+
   // Estado para el periodo: 'QUINCENAL' o 'MENSUAL'
   const [simPeriod, setSimPeriod] = useState('QUINCENAL');
   const [activeFaq, setActiveFaq] = useState(null);
+
 
   // Datos simulados para demostración en vivo en la landing
   const simData = {
@@ -323,7 +336,10 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             }}>
               <button
                 type="button"
-                onClick={() => setActiveDevice('DESKTOP')}
+                onClick={() => {
+                  setActiveDevice('DESKTOP');
+                  setHasManuallyToggled(true);
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -341,11 +357,26 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
               >
                 <Laptop size={16} />
                 <span>Interfaz PC / Escritorio</span>
+                {deviceDetect.deviceType === 'DESKTOP' && (
+                  <span style={{
+                    fontSize: '0.65rem',
+                    padding: '0.1rem 0.45rem',
+                    borderRadius: 'var(--radius-full)',
+                    background: activeDevice === 'DESKTOP' ? '#09090b' : 'rgba(255, 255, 255, 0.15)',
+                    color: activeDevice === 'DESKTOP' ? '#ffffff' : '#ffffff',
+                    fontWeight: '700'
+                  }}>
+                    Tu Equipo
+                  </span>
+                )}
               </button>
 
               <button
                 type="button"
-                onClick={() => setActiveDevice('MOBILE')}
+                onClick={() => {
+                  setActiveDevice('MOBILE');
+                  setHasManuallyToggled(true);
+                }}
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -363,8 +394,21 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
               >
                 <Smartphone size={16} />
                 <span>Interfaz Celular / Móvil</span>
+                {deviceDetect.deviceType === 'MOBILE' && (
+                  <span style={{
+                    fontSize: '0.65rem',
+                    padding: '0.1rem 0.45rem',
+                    borderRadius: 'var(--radius-full)',
+                    background: activeDevice === 'MOBILE' ? '#09090b' : 'rgba(255, 255, 255, 0.15)',
+                    color: activeDevice === 'MOBILE' ? '#ffffff' : '#ffffff',
+                    fontWeight: '700'
+                  }}>
+                    Tu Equipo
+                  </span>
+                )}
               </button>
             </div>
+
 
             {/* Selector de Periodo (Quincenal vs Mensual) */}
             <div style={{
