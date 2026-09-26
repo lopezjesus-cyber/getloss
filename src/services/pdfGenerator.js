@@ -39,14 +39,6 @@ export const generateFinancialPdfReport = ({
   doc.setFontSize(22);
   doc.text('getloss', 15, 18);
 
-  // Badge PRO
-  doc.setFillColor(255, 255, 255);
-  doc.roundedRect(48, 11, 14, 6, 1.5, 1.5, 'F');
-  doc.setTextColor(0, 0, 0);
-  doc.setFontSize(8);
-  doc.setFont('helvetica', 'bold');
-  doc.text('PRO', 55, 15.2, { align: 'center' });
-
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(180, 180, 185);

@@ -314,17 +314,6 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             }}>
               getloss
             </span>
-            <span style={{
-              fontSize: '0.68rem',
-              fontWeight: '600',
-              padding: '0.15rem 0.55rem',
-              borderRadius: '9999px',
-              background: 'rgba(255, 255, 255, 0.1)',
-              color: '#d4d4d8',
-              letterSpacing: '0.04em'
-            }}>
-              PRO
-            </span>
           </div>
 
           {/* Acciones de Cabecera */}
@@ -915,15 +904,12 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                           zIndex: 10
                         }}>
                           <div>
-                            {/* Logo getloss Pro con Indicador Pulsante */}
+                            {/* Logo getloss con Indicador Pulsante */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem', paddingLeft: '0.25rem' }}>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffffff', boxShadow: '0 0 10px #ffffff' }} />
                                 <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '1.05rem', letterSpacing: '-0.02em' }}>getloss</span>
                               </div>
-                              <span style={{ fontSize: '0.625rem', background: '#ffffff', padding: '0.12rem 0.45rem', borderRadius: '9999px', color: '#000000', fontWeight: '800' }}>
-                                PRO
-                              </span>
                             </div>
 
                             {/* Botón "+ Nuevo Movimiento" con Efecto Glow */}
@@ -1110,7 +1096,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                                 </div>
                                 <div style={{ fontSize: '0.68rem', color: '#22c55e', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                   <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#22c55e' }} />
-                                  <span>Cuenta Pro Activa</span>
+                                  <span>Cuenta Activa</span>
                                 </div>
                               </div>
                             </div>
@@ -1742,7 +1728,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
 
                                 {/* Pie de Firma del Reporte */}
                                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #e4e4e7', paddingTop: '0.75rem', fontSize: '0.68rem', color: '#71717a' }}>
-                                  <span>Generado para: Jesús López • getloss Pro</span>
+                                  <span>Generado para: Jesús López • getloss</span>
                                   <span>Certificado Criptográfico SHA-256</span>
                                 </div>
                               </div>
@@ -2694,7 +2680,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
           <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ffffff' }} />
           <span style={{ fontWeight: '800', color: '#ffffff', letterSpacing: '-0.02em' }}>
-            getloss Pro
+            getloss
           </span>
         </div>
         <p>© {new Date().getFullYear()} getloss • Suite de control financiero quincenal y mensual optimizada para PC y Celular.</p>

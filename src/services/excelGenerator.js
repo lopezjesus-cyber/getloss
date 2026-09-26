@@ -128,7 +128,7 @@ export const generateFinancialExcelReport = ({
   }
 
   // 6. FIRMA DE AUDITORÍA
-  lines.push([escapeCell('Certificación Digital:'), escapeCell(`SHA-256 Verified • getloss Pro v2.0 • ${clientName}`)].join(','));
+  lines.push([escapeCell('Certificación Digital:'), escapeCell(`SHA-256 Verified • getloss v2.0 • ${clientName}`)].join(','));
 
   // Generar Archivo con BOM UTF-8 (\uFEFF) para compatibilidad total con Microsoft Excel
   const csvContent = '\uFEFF' + lines.join('\r\n');
