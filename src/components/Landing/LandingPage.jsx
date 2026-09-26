@@ -30,47 +30,35 @@ import {
 } from 'lucide-react';
 
 export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
-  // Estado para el simulador interactivo en la landing
-  const [simPeriod, setSimPeriod] = useState('Q1'); // 'Q1' | 'Q2' | 'MES'
+  // Estado para el simulador interactivo en la landing: 'QUINCENAL' o 'MENSUAL'
+  const [simPeriod, setSimPeriod] = useState('QUINCENAL');
   const [activeFaq, setActiveFaq] = useState(null);
 
   // Datos simulados para demostración en vivo en la landing
   const simData = {
-    Q1: {
+    QUINCENAL: {
       income: 1400,
       expenses: 960,
       balance: 440,
       savingsRate: '31.4%',
       obligationsPaid: '2 de 2 Pagadas',
       obligations: [
-        { name: 'Arriendo Apartamento', amount: 850, due: 'Día 5', status: 'Pagado', icon: Home },
-        { name: 'Factura Luz & Agua', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap }
+        { name: 'Arriendo / Vivienda (15 Días)', amount: 425, due: 'Día 5', status: 'Pagado', icon: Home },
+        { name: 'Servicios Básicos (Luz/Agua)', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap },
+        { name: 'Mercado Quincenal', amount: 220, due: 'Día 3', status: 'Pagado', icon: ShoppingCart }
       ]
     },
-    Q2: {
-      income: 1400,
-      expenses: 495,
-      balance: 905,
-      savingsRate: '64.6%',
-      obligationsPaid: '1 de 2 Pagadas',
-      obligations: [
-        { name: 'Mercado Quincena 2', amount: 220, due: 'Día 17', status: 'Pagado', icon: ShoppingCart },
-        { name: 'Internet Fibra Óptica', amount: 45, due: 'Día 18', status: 'Pendiente', icon: Zap },
-        { name: 'Combustible & Pasajes', amount: 130, due: 'Día 25', status: 'Pendiente', icon: Car }
-      ]
-    },
-    MES: {
+    MENSUAL: {
       income: 2800,
       expenses: 1455,
       balance: 1345,
       savingsRate: '48.0%',
-      obligationsPaid: '3 de 5 Pagadas',
+      obligationsPaid: '4 de 4 Pagadas',
       obligations: [
-        { name: 'Arriendo Apartamento', amount: 850, due: 'Día 5', status: 'Pagado', icon: Home },
+        { name: 'Arriendo Apartamento Mensual', amount: 850, due: 'Día 5', status: 'Pagado', icon: Home },
         { name: 'Factura Luz & Agua', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap },
-        { name: 'Mercado Quincenal', amount: 220, due: 'Día 17', status: 'Pagado', icon: ShoppingCart },
-        { name: 'Internet Fibra Óptica', amount: 45, due: 'Día 18', status: 'Pendiente', icon: Zap },
-        { name: 'Combustible & Pasajes', amount: 130, due: 'Día 25', status: 'Pendiente', icon: Car }
+        { name: 'Mercado Mensual Integral', amount: 440, due: 'Día 15', status: 'Pagado', icon: ShoppingCart },
+        { name: 'Internet Fibra Óptica 500MB', amount: 45, due: 'Día 18', status: 'Pagado', icon: Zap }
       ]
     }
   };
@@ -79,8 +67,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
 
   const faqs = [
     {
-      q: '¿Cómo funciona el control quincenal en getloss?',
-      a: 'getloss divide automáticamente el mes en 1ª Quincena (del día 1 al 15) y 2ª Quincena (del día 16 al fin de mes). Puedes asignar qué obligaciones fijas se pagan con el primer sueldo y cuáles con el segundo.'
+      q: '¿Cómo funciona la elección entre Modo Quincenal o Modo Mensual?',
+      a: 'getloss te permite escoger si deseas administrar tu dinero en ciclos de 15 días (Modo Quincenal) o en ciclos de 30 días (Modo Mensual). Tus balances, listas de obligaciones y reportes se adaptan automáticamente a tu elección.'
     },
     {
       q: '¿Qué son los Gastos Constantes e Indispensables?',
@@ -343,46 +331,32 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
               gap: '0.3rem'
             }}>
               <button
-                onClick={() => setSimPeriod('Q1')}
+                onClick={() => setSimPeriod('QUINCENAL')}
                 style={{
-                  padding: '0.45rem 0.85rem',
+                  padding: '0.5rem 1rem',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.8rem',
-                  fontWeight: simPeriod === 'Q1' ? '700' : '500',
-                  background: simPeriod === 'Q1' ? '#ffffff' : 'transparent',
-                  color: simPeriod === 'Q1' ? '#09090b' : '#a1a1aa',
+                  fontSize: '0.825rem',
+                  fontWeight: simPeriod === 'QUINCENAL' ? '700' : '500',
+                  background: simPeriod === 'QUINCENAL' ? '#ffffff' : 'transparent',
+                  color: simPeriod === 'QUINCENAL' ? '#09090b' : '#a1a1aa',
                   transition: 'var(--transition)'
                 }}
               >
-                1ª Quincena (1-15)
+                🗓️ Modo Quincenal
               </button>
               <button
-                onClick={() => setSimPeriod('Q2')}
+                onClick={() => setSimPeriod('MENSUAL')}
                 style={{
-                  padding: '0.45rem 0.85rem',
+                  padding: '0.5rem 1rem',
                   borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.8rem',
-                  fontWeight: simPeriod === 'Q2' ? '700' : '500',
-                  background: simPeriod === 'Q2' ? '#ffffff' : 'transparent',
-                  color: simPeriod === 'Q2' ? '#09090b' : '#a1a1aa',
+                  fontSize: '0.825rem',
+                  fontWeight: simPeriod === 'MENSUAL' ? '700' : '500',
+                  background: simPeriod === 'MENSUAL' ? '#ffffff' : 'transparent',
+                  color: simPeriod === 'MENSUAL' ? '#09090b' : '#a1a1aa',
                   transition: 'var(--transition)'
                 }}
               >
-                2ª Quincena (16-30)
-              </button>
-              <button
-                onClick={() => setSimPeriod('MES')}
-                style={{
-                  padding: '0.45rem 0.85rem',
-                  borderRadius: 'var(--radius-sm)',
-                  fontSize: '0.8rem',
-                  fontWeight: simPeriod === 'MES' ? '700' : '500',
-                  background: simPeriod === 'MES' ? '#ffffff' : 'transparent',
-                  color: simPeriod === 'MES' ? '#09090b' : '#a1a1aa',
-                  transition: 'var(--transition)'
-                }}
-              >
-                Mes Completo
+                📅 Modo Mensual
               </button>
             </div>
           </div>

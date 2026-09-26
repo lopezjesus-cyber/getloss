@@ -1,6 +1,7 @@
 /**
  * getloss - Base de Datos Financiera de Clientes (getloss_finances_db)
- * Gestiona transacciones, categorías con vectores, gastos fijos indispensables y reportes.
+ * Gestiona transacciones, categorías con vectores, gastos fijos indispensables y reportes
+ * con soporte directo para selección entre Modo Quincenal o Modo Mensual.
  */
 
 const FINANCES_STORAGE_KEY = 'getloss_finances_db_v1';
@@ -28,14 +29,12 @@ export const DEFAULT_CATEGORIES = [
   { id: 'cat-other-inc', name: 'Otros Ingresos', type: 'INCOME', icon: 'PlusCircle', isIndispensable: false, color: '#a1a1aa' }
 ];
 
-// Estructura limpia para nuevos usuarios
 const getCleanDatabase = () => ({
   fixedExpenses: [],
   transactions: []
 });
 
 export const FinancesDB = {
-  // Obtener toda la base de datos de finanzas
   getRawDatabase: () => {
     try {
       const data = localStorage.getItem(FINANCES_STORAGE_KEY);
@@ -51,17 +50,12 @@ export const FinancesDB = {
     }
   },
 
-  // Guardar estado completo
   _saveDatabase: (db) => {
     localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(db));
   },
 
-  // Obtener categorías
-  getCategories: () => {
-    return DEFAULT_CATEGORIES;
-  },
+  getCategories: () => DEFAULT_CATEGORIES,
 
-  // Obtener categoría por ID
   getCategoryById: (catId) => {
     return DEFAULT_CATEGORIES.find(c => c.id === catId) || {
       id: 'unknown',
@@ -74,7 +68,7 @@ export const FinancesDB = {
   },
 
   // --------------------------------------------------------------------------
-  // TRANSACCIONES (INGRESOS & EGRESOS)
+  // TRANSACCIONES
   // --------------------------------------------------------------------------
   getTransactions: (userId, filters = {}) => {
     const db = FinancesDB.getRawDatabase();
@@ -86,8 +80,8 @@ export const FinancesDB = {
     if (filters.month) {
       txs = txs.filter(t => t.periodMonth === Number(filters.month));
     }
-    if (filters.quincena && filters.quincena !== 'ALL') {
-      txs = txs.filter(t => t.periodQuincena === Number(filters.quincena));
+    if (filters.mode && filters.mode !== 'ALL') {
+      txs = txs.filter(t => t.periodMode === filters.mode || !t.periodMode);
     }
     if (filters.type && filters.type !== 'ALL') {
       txs = txs.filter(t => t.type === filters.type);
@@ -96,7 +90,6 @@ export const FinancesDB = {
       txs = txs.filter(t => t.categoryId === filters.categoryId);
     }
 
-    // Ordenar de más reciente a más antigua
     return txs.sort((a, b) => new Date(b.date) - new Date(a.date));
   },
 
@@ -105,10 +98,8 @@ export const FinancesDB = {
     if (!db.transactions) db.transactions = [];
 
     const dateObj = new Date(data.date || new Date());
-    const day = dateObj.getDate();
     const month = dateObj.getMonth() + 1;
     const year = dateObj.getFullYear();
-    const quincena = day <= 15 ? 1 : 2;
 
     const newTx = {
       id: `tx-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
@@ -120,7 +111,7 @@ export const FinancesDB = {
       date: data.date,
       periodYear: year,
       periodMonth: month,
-      periodQuincena: data.periodQuincena ? Number(data.periodQuincena) : quincena,
+      periodMode: data.periodMode || 'QUINCENAL', // 'QUINCENAL' | 'MENSUAL'
       notes: data.notes || '',
       createdAt: new Date().toISOString()
     };
@@ -138,7 +129,7 @@ export const FinancesDB = {
   },
 
   // --------------------------------------------------------------------------
-  // GASTOS INDISPENSABLES Y FIJOS (OBLIGACIONES)
+  // GASTOS INDISPENSABLES Y FIJOS
   // --------------------------------------------------------------------------
   getFixedExpenses: (userId) => {
     const db = FinancesDB.getRawDatabase();
@@ -156,7 +147,7 @@ export const FinancesDB = {
       name: data.name.trim(),
       amount: Math.abs(Number(data.amount)),
       dueDay: Number(data.dueDay) || 15,
-      targetPeriod: data.targetPeriod || 'Q1', // 'Q1' | 'Q2' | 'MENSUAL'
+      targetMode: data.targetMode || 'QUINCENAL', // 'QUINCENAL' | 'MENSUAL'
       isIndispensable: data.isIndispensable !== false,
       notes: data.notes || '',
       paidPeriods: []
@@ -167,12 +158,12 @@ export const FinancesDB = {
     return newFixed;
   },
 
-  toggleFixedExpensePaid: (fixedId, year, month, quincena) => {
+  toggleFixedExpensePaid: (fixedId, year, month, mode = 'QUINCENAL') => {
     const db = FinancesDB.getRawDatabase();
     const item = (db.fixedExpenses || []).find(f => f.id === fixedId);
     if (!item) throw new Error('Gasto fijo no encontrado');
 
-    const periodKey = `${year}-${month}-${quincena}`;
+    const periodKey = `${year}-${month}-${mode}`;
     const isPaid = (item.paidPeriods || []).includes(periodKey);
 
     if (isPaid) {
@@ -195,30 +186,31 @@ export const FinancesDB = {
   // --------------------------------------------------------------------------
   // MOTOR DE CÁLCULO DE REPORTES Y BALANCE
   // --------------------------------------------------------------------------
-  calculateFinancialSummary: (userId, year, month, quincena = 'ALL') => {
-    const txs = FinancesDB.getTransactions(userId, { year, month, quincena });
+  calculateFinancialSummary: (userId, year, month, mode = 'QUINCENAL') => {
+    const txs = FinancesDB.getTransactions(userId, { year, month });
     const fixed = FinancesDB.getFixedExpenses(userId);
 
-    // Calcular Totales
-    const totalIncome = txs
+    // Filtrar transacciones según el modo si aplica o calcular el total
+    const filteredTxs = mode === 'MENSUAL'
+      ? txs
+      : txs.filter(t => t.periodMode === 'QUINCENAL' || !t.periodMode);
+
+    const totalIncome = filteredTxs
       .filter(t => t.type === 'INCOME')
       .reduce((sum, t) => sum + t.amount, 0);
 
-    const totalExpense = txs
+    const totalExpense = filteredTxs
       .filter(t => t.type === 'EXPENSE')
       .reduce((sum, t) => sum + t.amount, 0);
 
     const netBalance = totalIncome - totalExpense;
     const savingsRate = totalIncome > 0 ? Math.max(0, ((netBalance / totalIncome) * 100)).toFixed(1) : 0;
 
-    // Calcular Gastos Fijos vs Variables
     let indispensableExpenseTotal = 0;
     let variableExpenseTotal = 0;
-
-    // Desglose por categoría
     const categoryTotals = {};
 
-    txs.forEach(t => {
+    filteredTxs.forEach(t => {
       const cat = FinancesDB.getCategoryById(t.categoryId);
       if (t.type === 'EXPENSE') {
         if (cat.isIndispensable) {
@@ -241,31 +233,23 @@ export const FinancesDB = {
 
     const categoryBreakdown = Object.values(categoryTotals).sort((a, b) => b.amount - a.amount);
 
-    // Calcular estado de Gastos Fijos Indispensables para el periodo
-    const periodKeyQ1 = `${year}-${month}-Q1`;
-    const periodKeyQ2 = `${year}-${month}-Q2`;
-
+    // Obligaciones fijas para este modo
+    const periodKey = `${year}-${month}-${mode}`;
     let totalFixedCommitted = 0;
     let totalFixedPaid = 0;
 
     fixed.forEach(f => {
-      let isRelevantForPeriod = true;
-      if (quincena === '1' && f.targetPeriod === 'Q2') isRelevantForPeriod = false;
-      if (quincena === '2' && f.targetPeriod === 'Q1') isRelevantForPeriod = false;
+      let isRelevant = mode === 'MENSUAL' || f.targetMode === 'QUINCENAL' || !f.targetMode;
 
-      if (isRelevantForPeriod) {
+      if (isRelevant) {
         totalFixedCommitted += f.amount;
-        const paidInQ1 = (f.paidPeriods || []).includes(periodKeyQ1);
-        const paidInQ2 = (f.paidPeriods || []).includes(periodKeyQ2);
-
-        if (quincena === '1' && paidInQ1) totalFixedPaid += f.amount;
-        else if (quincena === '2' && paidInQ2) totalFixedPaid += f.amount;
-        else if (quincena === 'ALL' && (paidInQ1 || paidInQ2)) totalFixedPaid += f.amount;
+        const isPaid = (f.paidPeriods || []).includes(periodKey);
+        if (isPaid) totalFixedPaid += f.amount;
       }
     });
 
     return {
-      period: { year, month, quincena },
+      period: { year, month, mode },
       totalIncome,
       totalExpense,
       netBalance,
@@ -276,11 +260,10 @@ export const FinancesDB = {
       totalFixedPaid,
       fixedPendingAmount: Math.max(0, totalFixedCommitted - totalFixedPaid),
       categoryBreakdown,
-      transactionsCount: txs.length
+      transactionsCount: filteredTxs.length
     };
   },
 
-  // Resetear base de datos financiera
   resetDatabase: () => {
     const clean = getCleanDatabase();
     localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(clean));

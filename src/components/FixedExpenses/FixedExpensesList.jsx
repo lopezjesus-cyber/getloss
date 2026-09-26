@@ -9,32 +9,30 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
     name: '',
     categoryId: 'cat-services',
     amount: '',
-    dueDay: 5,
-    targetPeriod: 'Q1',
+    dueDay: 15,
+    targetMode: currentPeriod.mode || 'QUINCENAL',
     isIndispensable: true,
     notes: ''
   });
 
   const fixedList = FinancesDB.getFixedExpenses(user.id);
   const symbol = user.currencySymbol || '$';
-  const { year, month, quincena } = currentPeriod;
+  const { year, month, mode = 'QUINCENAL' } = currentPeriod;
 
-  // Filtrar según el periodo seleccionado si es Quincenal o Mensual
+  // Filtrar según el modo activo (Quincenal o Mensual)
   const filteredList = fixedList.filter(item => {
-    if (quincena === '1') return item.targetPeriod === 'Q1' || item.targetPeriod === 'MENSUAL';
-    if (quincena === '2') return item.targetPeriod === 'Q2' || item.targetPeriod === 'MENSUAL';
-    return true; // En Mes Completo se muestran todos
+    if (mode === 'QUINCENAL') return item.targetMode === 'QUINCENAL' || !item.targetMode;
+    return true; // En modo mensual se muestran todas las obligaciones del mes
   });
 
-  // Calcular progreso de pagos del periodo actual
-  const currentPeriodKey = `${year}-${month}-${quincena === 'ALL' ? 'Q1' : `Q${quincena}`}`;
+  const currentPeriodKey = `${year}-${month}-${mode}`;
   const totalAmount = filteredList.reduce((sum, item) => sum + item.amount, 0);
   const paidList = filteredList.filter(item => (item.paidPeriods || []).includes(currentPeriodKey));
   const paidAmount = paidList.reduce((sum, item) => sum + item.amount, 0);
   const progressPercent = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 100;
 
   const handleTogglePaid = (fixedId) => {
-    FinancesDB.toggleFixedExpensePaid(fixedId, year, month, quincena === 'ALL' ? 'Q1' : `Q${quincena}`);
+    FinancesDB.toggleFixedExpensePaid(fixedId, year, month, mode);
     onDataChanged();
   };
 
@@ -59,8 +57,8 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
       name: '',
       categoryId: 'cat-services',
       amount: '',
-      dueDay: 5,
-      targetPeriod: 'Q1',
+      dueDay: 15,
+      targetMode: mode,
       isIndispensable: true,
       notes: ''
     });
@@ -87,7 +85,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
             </h2>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-            Obligaciones fijas críticas (Servicios, Alquiler, Comida, Transporte) proyectadas para este periodo.
+            Obligaciones fijas críticas (Servicios, Alquiler, Comida, Transporte) en <strong>Modo {mode === 'QUINCENAL' ? 'Quincenal' : 'Mensual'}</strong>.
           </p>
         </div>
 
@@ -111,7 +109,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
       }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.8rem' }}>
           <span style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
-            Estado de Cumplimiento: {progressPercent}% Cubierto
+            Cumplimiento del Periodo: {progressPercent}% Pagado
           </span>
           <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
             {symbol}{paidAmount.toLocaleString()} de {symbol}{totalAmount.toLocaleString()}
@@ -140,10 +138,10 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
         }}>
           <Info size={28} style={{ color: 'var(--text-muted)', margin: '0 auto 0.5rem auto' }} />
           <p style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            No hay obligaciones asignadas a este periodo ({quincena === '1' ? '1ª Quincena' : quincena === '2' ? '2ª Quincena' : 'Mes'}).
+            No hay obligaciones asignadas al {mode === 'QUINCENAL' ? 'Modo Quincenal' : 'Modo Mensual'}.
           </p>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Agrega tu arriendo, servicios o presupuesto de comida para mantener el control.
+            Agrega tu arriendo, servicios básicos o presupuesto de comida para mantener el control.
           </p>
         </div>
       ) : (
@@ -220,7 +218,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <Clock size={11} />
-                      <span>Vence día {item.dueDay} ({item.targetPeriod === 'MENSUAL' ? 'Mensual' : item.targetPeriod === 'Q1' ? '1ª Q' : '2ª Q'})</span>
+                      <span>Vence día {item.dueDay} ({item.targetMode === 'QUINCENAL' ? 'Quincenal' : 'Mensual'})</span>
                     </div>
                   </div>
 
@@ -286,7 +284,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                    Monto Presupuestado *
+                    Monto ({symbol}) *
                   </label>
                   <input
                     type="number"
@@ -357,11 +355,11 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
 
               <div>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                  Asignar a Periodo
+                  Frecuencia de la Obligación
                 </label>
                 <select
-                  value={newFixed.targetPeriod}
-                  onChange={(e) => setNewFixed({ ...newFixed, targetPeriod: e.target.value })}
+                  value={newFixed.targetMode}
+                  onChange={(e) => setNewFixed({ ...newFixed, targetMode: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '0.7rem',
@@ -372,9 +370,8 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                     fontSize: '0.875rem'
                   }}
                 >
-                  <option value="Q1">1ª Quincena (Días 1 al 15)</option>
-                  <option value="Q2">2ª Quincena (Días 16 al 30)</option>
-                  <option value="MENSUAL">Mensual Completo</option>
+                  <option value="QUINCENAL">Quincenal (Cada 15 días)</option>
+                  <option value="MENSUAL">Mensual (1 vez al mes)</option>
                 </select>
               </div>
 

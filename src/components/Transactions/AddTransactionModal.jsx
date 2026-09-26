@@ -247,11 +247,11 @@ export const AddTransactionModal = ({ isOpen, onClose, user, currentPeriod, onTr
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                Periodo Quincenal
+                Frecuencia del Movimiento
               </label>
               <select
-                value={formData.periodQuincena}
-                onChange={(e) => setFormData({ ...formData, periodQuincena: Number(e.target.value) })}
+                value={formData.periodMode || 'QUINCENAL'}
+                onChange={(e) => setFormData({ ...formData, periodMode: e.target.value })}
                 style={{
                   width: '100%',
                   padding: '0.75rem',
@@ -262,8 +262,8 @@ export const AddTransactionModal = ({ isOpen, onClose, user, currentPeriod, onTr
                   fontSize: '0.85rem'
                 }}
               >
-                <option value={1}>1ª Quincena (1 - 15)</option>
-                <option value={2}>2ª Quincena (16 - 31)</option>
+                <option value="QUINCENAL">Quincenal (15 Días)</option>
+                <option value="MENSUAL">Mensual (Mes Completo)</option>
               </select>
             </div>
 

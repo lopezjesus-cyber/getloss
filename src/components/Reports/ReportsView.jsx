@@ -21,19 +21,17 @@ const MONTH_NAMES = [
 ];
 
 export const ReportsView = ({ user, currentPeriod }) => {
-  const { year, month, quincena } = currentPeriod;
+  const { year, month, mode = 'QUINCENAL' } = currentPeriod;
   const symbol = user.currencySymbol || '$';
 
-  const summary = FinancesDB.calculateFinancialSummary(user.id, year, month, quincena);
-  const transactions = FinancesDB.getTransactions(user.id, { year, month, quincena });
+  const summary = FinancesDB.calculateFinancialSummary(user.id, year, month, mode);
+  const transactions = FinancesDB.getTransactions(user.id, { year, month });
   const fixedExpenses = FinancesDB.getFixedExpenses(user.id);
 
   const monthName = MONTH_NAMES[month - 1];
-  const periodLabel = quincena === '1'
-    ? `1ª Quincena (1-15 de ${monthName} ${year})`
-    : quincena === '2'
-      ? `2ª Quincena (16-30 de ${monthName} ${year})`
-      : `Mes Completo (${monthName} ${year})`;
+  const periodLabel = mode === 'QUINCENAL'
+    ? `Reporte Quincenal (15 Días • ${monthName} ${year})`
+    : `Reporte Mensual (Mes Completo • ${monthName} ${year})`;
 
   // Porcentajes de la regla presupuestaria 50/30/20 adaptada
   const indispensablePct = summary.totalIncome > 0 
@@ -61,7 +59,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
 
   // Exportar a CSV / Excel
   const handleExportCSV = () => {
-    const headers = ['ID', 'Fecha', 'Titulo', 'Tipo', 'Categoria', 'Monto', 'Quincena', 'Notas'];
+    const headers = ['ID', 'Fecha', 'Titulo', 'Tipo', 'Categoria', 'Monto', 'Modo', 'Notas'];
     const rows = transactions.map(t => {
       const cat = FinancesDB.getCategoryById(t.categoryId);
       return [
@@ -71,7 +69,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
         t.type,
         `"${cat.name}"`,
         t.amount,
-        t.periodQuincena,
+        t.periodMode || 'QUINCENAL',
         `"${(t.notes || '').replace(/"/g, '""')}"`
       ];
     });
@@ -82,7 +80,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `getloss_reporte_${monthName}_${year}_Q${quincena}.csv`);
+    link.setAttribute('download', `getloss_reporte_${monthName}_${year}_${mode}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

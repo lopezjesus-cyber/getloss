@@ -35,7 +35,7 @@ export default function App() {
     return {
       year: today.getFullYear(),
       month: today.getMonth() + 1,
-      quincena: today.getDate() <= 15 ? '1' : '2' // '1' | '2' | 'ALL'
+      mode: 'QUINCENAL' // 'QUINCENAL' | 'MENSUAL'
     };
   });
 
@@ -86,7 +86,7 @@ export default function App() {
         currentUser.id,
         currentPeriod.year,
         currentPeriod.month,
-        currentPeriod.quincena
+        currentPeriod.mode
       )
     : {
         totalIncome: 0,

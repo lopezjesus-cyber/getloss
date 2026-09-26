@@ -1,5 +1,5 @@
 import React from 'react';
-import { Calendar, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, Layers } from 'lucide-react';
 
 const MONTH_NAMES = [
   'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -7,7 +7,7 @@ const MONTH_NAMES = [
 ];
 
 export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
-  const { year, month, quincena } = currentPeriod;
+  const { year, month, mode = 'QUINCENAL' } = currentPeriod;
 
   const handlePrevMonth = () => {
     let newMonth = month - 1;
@@ -29,15 +29,14 @@ export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
     onPeriodChange({ ...currentPeriod, month: newMonth, year: newYear });
   };
 
-  const setQuincena = (q) => {
-    onPeriodChange({ ...currentPeriod, quincena: q });
+  const setMode = (selectedMode) => {
+    onPeriodChange({ ...currentPeriod, mode: selectedMode });
   };
 
+  const monthName = MONTH_NAMES[month - 1];
   const getPeriodLabel = () => {
-    const monthName = MONTH_NAMES[month - 1];
-    if (quincena === '1') return `1ª Quincena (1 - 15 de ${monthName})`;
-    if (quincena === '2') return `2ª Quincena (16 - Fin de ${monthName})`;
-    return `Mes Completo (${monthName} ${year})`;
+    if (mode === 'QUINCENAL') return `Control Quincenal (15 Días • ${monthName} ${year})`;
+    return `Control Mensual (Mes Completo • ${monthName} ${year})`;
   };
 
   return (
@@ -67,7 +66,7 @@ export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '160px', justifyContent: 'center' }}>
           <Calendar size={16} style={{ color: 'var(--text-secondary)' }} />
           <span style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-primary)' }}>
-            {MONTH_NAMES[month - 1]} {year}
+            {monthName} {year}
           </span>
         </div>
 
@@ -81,63 +80,56 @@ export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
         </button>
       </div>
 
-      {/* Selector de Quincena o Mes */}
+      {/* Selector Directo: QUINCENAL vs MENSUAL */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         background: 'var(--bg-surface)',
-        padding: '0.25rem',
+        padding: '0.3rem',
         borderRadius: 'var(--radius-md)',
-        border: '1px solid var(--border-subtle)',
-        gap: '0.25rem'
+        border: '1px solid var(--border-medium)',
+        gap: '0.35rem'
       }}>
         <button
-          onClick={() => setQuincena('1')}
+          onClick={() => setMode('QUINCENAL')}
           style={{
-            padding: '0.45rem 0.85rem',
+            padding: '0.5rem 1.1rem',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '0.8rem',
-            fontWeight: quincena === '1' ? '700' : '500',
-            background: quincena === '1' ? 'var(--btn-primary-bg)' : 'transparent',
-            color: quincena === '1' ? 'var(--btn-primary-text)' : 'var(--text-secondary)',
-            transition: 'var(--transition)'
+            fontSize: '0.825rem',
+            fontWeight: mode === 'QUINCENAL' ? '700' : '500',
+            background: mode === 'QUINCENAL' ? 'var(--btn-primary-bg)' : 'transparent',
+            color: mode === 'QUINCENAL' ? 'var(--btn-primary-text)' : 'var(--text-secondary)',
+            boxShadow: mode === 'QUINCENAL' ? 'var(--shadow-sm)' : 'none',
+            transition: 'var(--transition)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem'
           }}
         >
-          1ª Quincena (1-15)
+          <span>🗓️ Modo Quincenal</span>
         </button>
 
         <button
-          onClick={() => setQuincena('2')}
+          onClick={() => setMode('MENSUAL')}
           style={{
-            padding: '0.45rem 0.85rem',
+            padding: '0.5rem 1.1rem',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '0.8rem',
-            fontWeight: quincena === '2' ? '700' : '500',
-            background: quincena === '2' ? 'var(--btn-primary-bg)' : 'transparent',
-            color: quincena === '2' ? 'var(--btn-primary-text)' : 'var(--text-secondary)',
-            transition: 'var(--transition)'
+            fontSize: '0.825rem',
+            fontWeight: mode === 'MENSUAL' ? '700' : '500',
+            background: mode === 'MENSUAL' ? 'var(--btn-primary-bg)' : 'transparent',
+            color: mode === 'MENSUAL' ? 'var(--btn-primary-text)' : 'var(--text-secondary)',
+            boxShadow: mode === 'MENSUAL' ? 'var(--shadow-sm)' : 'none',
+            transition: 'var(--transition)',
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem'
           }}
         >
-          2ª Quincena (16-Fin)
-        </button>
-
-        <button
-          onClick={() => setQuincena('ALL')}
-          style={{
-            padding: '0.45rem 0.85rem',
-            borderRadius: 'var(--radius-sm)',
-            fontSize: '0.8rem',
-            fontWeight: quincena === 'ALL' ? '700' : '500',
-            background: quincena === 'ALL' ? 'var(--btn-primary-bg)' : 'transparent',
-            color: quincena === 'ALL' ? 'var(--btn-primary-text)' : 'var(--text-secondary)',
-            transition: 'var(--transition)'
-          }}
-        >
-          Mes Completo
+          <span>📅 Modo Mensual</span>
         </button>
       </div>
 
-      {/* Indicador de Rango de Fechas */}
+      {/* Indicador de Modo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
         <Clock size={14} />
         <span>{getPeriodLabel()}</span>

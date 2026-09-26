@@ -180,7 +180,7 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
                       <span>•</span>
                       <span>{cat.name}</span>
                       <span>•</span>
-                      <span>Quincena {t.periodQuincena}</span>
+                      <span>{t.periodMode === 'MENSUAL' ? 'Mensual' : 'Quincenal'}</span>
                       {t.notes && (
                         <>
                           <span>•</span>
