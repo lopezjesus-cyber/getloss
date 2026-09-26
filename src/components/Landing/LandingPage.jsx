@@ -17,7 +17,6 @@ import {
   Sparkles,
   Smartphone,
   Laptop,
-  Database,
   Check,
   X,
   CreditCard,
@@ -26,11 +25,22 @@ import {
   DollarSign,
   PieChart,
   HelpCircle,
-  Clock
+  Clock,
+  Plus,
+  LayoutDashboard,
+  Receipt,
+  Wifi,
+  Battery,
+  ShieldAlert,
+  Moon,
+  Sun
 } from 'lucide-react';
+import { formatMoney } from '../../utils/formatters';
 
 export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
-  // Estado para el simulador interactivo en la landing: 'QUINCENAL' o 'MENSUAL'
+  // Estado para el dispositivo seleccionado en el simulador: 'DESKTOP' o 'MOBILE'
+  const [activeDevice, setActiveDevice] = useState('DESKTOP');
+  // Estado para el periodo: 'QUINCENAL' o 'MENSUAL'
   const [simPeriod, setSimPeriod] = useState('QUINCENAL');
   const [activeFaq, setActiveFaq] = useState(null);
 
@@ -41,11 +51,16 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
       expenses: 960,
       balance: 440,
       savingsRate: '31.4%',
-      obligationsPaid: '2 de 2 Pagadas',
+      obligationsPaid: '3 de 3 Pagadas',
       obligations: [
-        { name: 'Arriendo / Vivienda (15 Días)', amount: 425, due: 'Día 5', status: 'Pagado', icon: Home },
-        { name: 'Servicios Básicos (Luz/Agua)', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap },
-        { name: 'Mercado Quincenal', amount: 220, due: 'Día 3', status: 'Pagado', icon: ShoppingCart }
+        { name: 'Arriendo / Vivienda (15 Días)', amount: 425, due: 'Día 5', status: 'Pagado', icon: Home, cat: 'Vivienda' },
+        { name: 'Servicios Básicos (Luz/Agua)', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap, cat: 'Servicios' },
+        { name: 'Supermercado Quincenal', amount: 220, due: 'Día 3', status: 'Pagado', icon: ShoppingCart, cat: 'Alimentación' }
+      ],
+      recentTxs: [
+        { title: 'Pago Quincena Nómina', amount: 1400, type: 'INCOME', date: '15 Sep', icon: TrendingUp },
+        { title: 'Pago Arriendo', amount: 425, type: 'EXPENSE', date: '05 Sep', icon: Home },
+        { title: 'Factura Luz & Gas', amount: 110, type: 'EXPENSE', date: '12 Sep', icon: Zap }
       ]
     },
     MENSUAL: {
@@ -55,10 +70,15 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
       savingsRate: '48.0%',
       obligationsPaid: '4 de 4 Pagadas',
       obligations: [
-        { name: 'Arriendo Apartamento Mensual', amount: 850, due: 'Día 5', status: 'Pagado', icon: Home },
-        { name: 'Factura Luz & Agua', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap },
-        { name: 'Mercado Mensual Integral', amount: 440, due: 'Día 15', status: 'Pagado', icon: ShoppingCart },
-        { name: 'Internet Fibra Óptica 500MB', amount: 45, due: 'Día 18', status: 'Pagado', icon: Zap }
+        { name: 'Arriendo Apartamento Mensual', amount: 850, due: 'Día 5', status: 'Pagado', icon: Home, cat: 'Vivienda' },
+        { name: 'Factura Luz & Agua', amount: 110, due: 'Día 12', status: 'Pagado', icon: Zap, cat: 'Servicios' },
+        { name: 'Mercado Mensual Integral', amount: 440, due: 'Día 15', status: 'Pagado', icon: ShoppingCart, cat: 'Alimentación' },
+        { name: 'Internet Fibra Óptica 500MB', amount: 45, due: 'Día 18', status: 'Pagado', icon: Zap, cat: 'Servicios' }
+      ],
+      recentTxs: [
+        { title: 'Sueldo Mensual Completo', amount: 2800, type: 'INCOME', date: '30 Sep', icon: TrendingUp },
+        { title: 'Arriendo Apartamento', amount: 850, type: 'EXPENSE', date: '05 Sep', icon: Home },
+        { title: 'Mercado Mensual', amount: 440, type: 'EXPENSE', date: '15 Sep', icon: ShoppingCart }
       ]
     }
   };
@@ -79,8 +99,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
       a: 'Sí. Con un solo clic puedes descargar un reporte ejecutivo en PDF estructurado con balances y listas de comprobación, o exportar todos los datos a formato CSV compatible con Excel.'
     },
     {
-      q: '¿Está adaptado para celular y computadora?',
-      a: 'Completamente. En celular cuentas con una barra inferior ergonómica y botón flotante de registro rápido (+), y en PC dispones de un panel lateral y vista extendida.'
+      q: '¿Cómo cambia la interfaz entre PC y Celular?',
+      a: 'En PC cuentas con una vista extendida con panel lateral, gráficos completos y atajos. En Celular disfrutas de una navegación inferior ergonómica con botón flotante (+) para registrar gastos en segundos.'
     }
   ];
 
@@ -118,44 +138,32 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           }} />
           <span style={{
             fontFamily: 'var(--font-display)',
-            fontSize: '1.6rem',
+            fontSize: '1.45rem',
             fontWeight: '800',
             letterSpacing: '-0.04em',
             color: '#ffffff'
           }}>
             getloss
           </span>
-          <span style={{
-            fontSize: '0.68rem',
-            fontWeight: '700',
-            textTransform: 'uppercase',
-            letterSpacing: '0.08em',
-            padding: '0.2rem 0.55rem',
-            borderRadius: 'var(--radius-full)',
-            background: 'rgba(255, 255, 255, 0.08)',
-            border: '1px solid rgba(255, 255, 255, 0.15)',
-            color: '#a1a1aa'
-          }}>
+          <span className="badge" style={{ fontSize: '0.68rem', padding: '0.15rem 0.5rem' }}>
             Fintech Suite
           </span>
         </div>
 
-        {/* Botones de Acceso */}
+        {/* Botones de Acción */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
           <button
             onClick={() => onOpenAuth(true)}
             style={{
-              padding: '0.6rem 1.15rem',
+              padding: '0.55rem 1.15rem',
+              borderRadius: 'var(--radius-md)',
               fontSize: '0.875rem',
               fontWeight: '600',
-              color: '#f4f4f5',
-              borderRadius: 'var(--radius-md)',
+              background: 'transparent',
+              color: '#e4e4e7',
               border: '1px solid rgba(255, 255, 255, 0.15)',
-              background: 'rgba(255, 255, 255, 0.04)',
               transition: 'var(--transition)'
             }}
-            onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)'; }}
           >
             Iniciar Sesión
           </button>
@@ -163,20 +171,18 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           <button
             onClick={() => onOpenAuth(false)}
             style={{
-              padding: '0.6rem 1.35rem',
+              padding: '0.55rem 1.25rem',
+              borderRadius: 'var(--radius-md)',
               fontSize: '0.875rem',
               fontWeight: '700',
-              color: '#09090b',
-              borderRadius: 'var(--radius-md)',
               background: '#ffffff',
+              color: '#09090b',
               boxShadow: '0 0 20px rgba(255, 255, 255, 0.25)',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '0.45rem',
+              gap: '0.4rem',
               transition: 'var(--transition)'
             }}
-            onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; }}
-            onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
           >
             <span>Crear Cuenta</span>
             <ArrowRight size={15} />
@@ -184,18 +190,18 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
         </div>
       </header>
 
-      {/* 2. Hero Section */}
+      {/* 2. HERO SECTION */}
       <section style={{
         maxWidth: '1200px',
         margin: '0 auto',
-        padding: '5rem 1.5rem 3.5rem 1.5rem',
+        padding: '4rem 1.5rem 2rem 1.5rem',
         textAlign: 'center',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        gap: '1.75rem'
+        gap: '1.5rem'
       }}>
-        {/* Badge Pill */}
+        {/* Badge Superior */}
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -210,7 +216,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
         }}>
           <Sparkles size={15} style={{ color: '#ffffff' }} />
-          <span>Gestión de Finanzas Quincenales, Gastos Indispensables y Reportes</span>
+          <span>Gestión Financiera Quincenal y Mensual • Para PC y Celular</span>
         </div>
 
         {/* Titular */}
@@ -235,7 +241,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           maxWidth: '740px',
           lineHeight: '1.65'
         }}>
-          <strong>getloss</strong> es la plataforma minimalista que te ayuda a separar tus <strong>obligaciones indispensables</strong> (arriendo, servicios, despensa) de tus gastos variables, proyectar tu ahorro y generar reportes ejecutivos en PDF.
+          <strong>getloss</strong> separa tus <strong>obligaciones indispensables</strong> (arriendo, servicios, despensa) de tus gastos variables, calcula tu ahorro con decimales exactos y genera reportes ejecutivos en PDF.
         </p>
 
         {/* CTAs */}
@@ -284,75 +290,120 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
           </button>
         </div>
 
-        {/* 3. SIMULADOR EN VIVO INTERACTIVO (DEMO EN LA LANDING) */}
+        {/* ------------------------------------------------------------------ */}
+        {/* 3. SHOWCASE INTERACTIVO: SELECTOR DUAL (PC vs CELULAR)             */}
+        {/* ------------------------------------------------------------------ */}
         <div style={{
           marginTop: '3.5rem',
           width: '100%',
-          maxWidth: '1020px',
-          background: 'rgba(24, 24, 27, 0.75)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255, 255, 255, 0.16)',
-          borderRadius: 'var(--radius-xl)',
-          padding: '2rem',
-          boxShadow: '0 24px 64px -12px rgba(0, 0, 0, 0.9), 0 0 32px rgba(255, 255, 255, 0.04)',
-          textAlign: 'left'
+          maxWidth: '1100px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center'
         }}>
-          {/* Header del Simulador */}
+          {/* Selector de Dispositivo (PC vs Celular) y Periodo */}
           <div style={{
             display: 'flex',
+            flexWrap: 'wrap',
             alignItems: 'center',
             justifyContent: 'space-between',
-            borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-            paddingBottom: '1.25rem',
-            marginBottom: '1.5rem',
-            flexWrap: 'wrap',
-            gap: '1rem'
+            width: '100%',
+            gap: '1rem',
+            marginBottom: '1.25rem',
+            padding: '0 0.5rem'
           }}>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 8px #22c55e' }} />
-                <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#ffffff' }}>
-                  Simulador Interactivo de Flujo de Caja
-                </span>
-              </div>
-              <span style={{ fontSize: '0.78rem', color: '#71717a' }}>
-                Haz clic en los periodos para ver cómo se proyectan tus finanzas
-              </span>
-            </div>
-
-            {/* Alternador Quincenal / Mensual en Vivo */}
+            {/* Botones de Cambio de Dispositivo (PC / Móvil) */}
             <div style={{
-              display: 'flex',
-              background: '#09090b',
-              padding: '0.3rem',
+              display: 'inline-flex',
+              background: '#121215',
+              padding: '0.35rem',
               borderRadius: 'var(--radius-md)',
-              border: '1px solid rgba(255, 255, 255, 0.12)',
-              gap: '0.3rem'
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              gap: '0.35rem'
             }}>
               <button
+                type="button"
+                onClick={() => setActiveDevice('DESKTOP')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.55rem 1.15rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.85rem',
+                  fontWeight: activeDevice === 'DESKTOP' ? '700' : '500',
+                  background: activeDevice === 'DESKTOP' ? '#ffffff' : 'transparent',
+                  color: activeDevice === 'DESKTOP' ? '#09090b' : '#a1a1aa',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'var(--transition)'
+                }}
+              >
+                <Laptop size={16} />
+                <span>Interfaz PC / Escritorio</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setActiveDevice('MOBILE')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  padding: '0.55rem 1.15rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.85rem',
+                  fontWeight: activeDevice === 'MOBILE' ? '700' : '500',
+                  background: activeDevice === 'MOBILE' ? '#ffffff' : 'transparent',
+                  color: activeDevice === 'MOBILE' ? '#09090b' : '#a1a1aa',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'var(--transition)'
+                }}
+              >
+                <Smartphone size={16} />
+                <span>Interfaz Celular / Móvil</span>
+              </button>
+            </div>
+
+            {/* Selector de Periodo (Quincenal vs Mensual) */}
+            <div style={{
+              display: 'inline-flex',
+              background: '#121215',
+              padding: '0.35rem',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid rgba(255, 255, 255, 0.15)',
+              gap: '0.35rem'
+            }}>
+              <button
+                type="button"
                 onClick={() => setSimPeriod('QUINCENAL')}
                 style={{
-                  padding: '0.5rem 1rem',
+                  padding: '0.55rem 1rem',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '0.825rem',
                   fontWeight: simPeriod === 'QUINCENAL' ? '700' : '500',
                   background: simPeriod === 'QUINCENAL' ? '#ffffff' : 'transparent',
                   color: simPeriod === 'QUINCENAL' ? '#09090b' : '#a1a1aa',
+                  border: 'none',
+                  cursor: 'pointer',
                   transition: 'var(--transition)'
                 }}
               >
                 🗓️ Modo Quincenal
               </button>
               <button
+                type="button"
                 onClick={() => setSimPeriod('MENSUAL')}
                 style={{
-                  padding: '0.5rem 1rem',
+                  padding: '0.55rem 1rem',
                   borderRadius: 'var(--radius-sm)',
                   fontSize: '0.825rem',
                   fontWeight: simPeriod === 'MENSUAL' ? '700' : '500',
                   background: simPeriod === 'MENSUAL' ? '#ffffff' : 'transparent',
                   color: simPeriod === 'MENSUAL' ? '#09090b' : '#a1a1aa',
+                  border: 'none',
+                  cursor: 'pointer',
                   transition: 'var(--transition)'
                 }}
               >
@@ -361,210 +412,465 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             </div>
           </div>
 
-          {/* Tarjetas de Métricas Simuladas */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
-            gap: '1rem',
-            marginBottom: '1.5rem'
-          }}>
+          {/* ============================================================= */}
+          {/* MOCKUP 1: INTERFAZ PC / ESCRITORIO                            */}
+          {/* ============================================================= */}
+          {activeDevice === 'DESKTOP' && (
             <div style={{
-              background: 'rgba(9, 9, 11, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1.15rem'
+              width: '100%',
+              background: 'rgba(24, 24, 27, 0.85)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(255, 255, 255, 0.16)',
+              borderRadius: 'var(--radius-xl)',
+              overflow: 'hidden',
+              boxShadow: '0 28px 72px -12px rgba(0, 0, 0, 0.95), 0 0 40px rgba(255, 255, 255, 0.05)',
+              textAlign: 'left'
             }}>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#71717a', fontWeight: '700' }}>
-                Balance Disponible
-              </span>
-              <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#ffffff', margin: '0.2rem 0' }}>
-                ${currentSim.balance.toLocaleString()}
+              {/* Barra de Ventana PC */}
+              <div style={{
+                background: '#121215',
+                padding: '0.75rem 1.25rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.08)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '11px', height: '11px', borderRadius: '50%', background: '#ef4444' }} />
+                  <span style={{ width: '11px', height: '11px', borderRadius: '50%', background: '#eab308' }} />
+                  <span style={{ width: '11px', height: '11px', borderRadius: '50%', background: '#22c55e' }} />
+                </div>
+                <div style={{
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  padding: '0.25rem 1.25rem',
+                  borderRadius: 'var(--radius-sm)',
+                  fontSize: '0.75rem',
+                  color: '#a1a1aa',
+                  fontFamily: 'monospace'
+                }}>
+                  app.getloss.com/dashboard • Vista Escritorio ({simPeriod})
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#71717a', fontSize: '0.75rem' }}>
+                  <Laptop size={14} />
+                  <span>PC Mode</span>
+                </div>
               </div>
-              <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
-                {currentSim.savingsRate} tasa de ahorro
-              </span>
-            </div>
 
-            <div style={{
-              background: 'rgba(9, 9, 11, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1.15rem'
-            }}>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#71717a', fontWeight: '700' }}>
-                Ingresos Proyectados
-              </span>
-              <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#ffffff', margin: '0.2rem 0' }}>
-                +${currentSim.income.toLocaleString()}
-              </div>
-              <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>
-                Entrada garantizada
-              </span>
-            </div>
+              {/* Contenido de la Pantalla PC (Sidebar + Panel Principal) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', minHeight: '480px' }}>
+                {/* Sidebar Desktop */}
+                <div style={{
+                  background: '#121215',
+                  borderRight: '1px solid rgba(255, 255, 255, 0.08)',
+                  padding: '1.25rem 1rem',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between'
+                }}>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', paddingLeft: '0.35rem' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffffff' }} />
+                      <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '1.05rem' }}>getloss</span>
+                    </div>
 
-            <div style={{
-              background: 'rgba(9, 9, 11, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1.15rem'
-            }}>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#71717a', fontWeight: '700' }}>
-                Egresos Comprometidos
-              </span>
-              <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#a1a1aa', margin: '0.2rem 0' }}>
-                -${currentSim.expenses.toLocaleString()}
-              </div>
-              <span style={{ fontSize: '0.75rem', color: '#71717a' }}>
-                Obligaciones + Variables
-              </span>
-            </div>
-
-            <div style={{
-              background: 'rgba(9, 9, 11, 0.6)',
-              border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: 'var(--radius-md)',
-              padding: '1.15rem'
-            }}>
-              <span style={{ fontSize: '0.72rem', textTransform: 'uppercase', color: '#71717a', fontWeight: '700' }}>
-                Estado de Obligaciones
-              </span>
-              <div style={{ fontSize: '1.4rem', fontWeight: '800', color: '#ffffff', margin: '0.4rem 0' }}>
-                {currentSim.obligationsPaid}
-              </div>
-              <span style={{ fontSize: '0.75rem', color: '#22c55e' }}>
-                ✓ Gastos indispensables
-              </span>
-            </div>
-          </div>
-
-          {/* Lista de Obligaciones de Muestra en el Simulador */}
-          <div style={{
-            background: 'rgba(9, 9, 11, 0.8)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
-            borderRadius: 'var(--radius-md)',
-            padding: '1.15rem'
-          }}>
-            <div style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', color: '#a1a1aa', marginBottom: '0.75rem' }}>
-              Obligaciones Indispensables de este Periodo ({simPeriod})
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              {currentSim.obligations.map((item, idx) => {
-                const Icon = item.icon;
-                const isPaid = item.status === 'Pagado';
-
-                return (
-                  <div key={idx} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '0.65rem 0.85rem',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    borderRadius: 'var(--radius-sm)',
-                    border: '1px solid rgba(255, 255, 255, 0.06)'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                      <div style={{
-                        width: '32px',
-                        height: '32px',
+                    <button
+                      type="button"
+                      onClick={() => onOpenAuth(false)}
+                      style={{
+                        width: '100%',
+                        padding: '0.65rem',
                         borderRadius: 'var(--radius-sm)',
-                        background: 'rgba(255, 255, 255, 0.08)',
+                        background: '#ffffff',
+                        color: '#09090b',
+                        fontWeight: '700',
+                        fontSize: '0.8rem',
+                        border: 'none',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#ffffff'
-                      }}>
-                        <Icon size={16} />
+                        gap: '0.4rem',
+                        marginBottom: '1.25rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <Plus size={15} />
+                      <span>Nuevo Movimiento</span>
+                    </button>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+                      <div style={{ padding: '0.55rem 0.75rem', background: 'rgba(255,255,255,0.08)', borderRadius: 'var(--radius-sm)', color: '#ffffff', fontWeight: '700', fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <LayoutDashboard size={16} />
+                        <span>Panel Principal</span>
                       </div>
-                      <div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: '600', color: '#ffffff' }}>
-                          {item.name}
-                        </div>
-                        <div style={{ fontSize: '0.72rem', color: '#71717a' }}>
-                          Vencimiento: {item.due}
-                        </div>
+                      <div style={{ padding: '0.55rem 0.75rem', borderRadius: 'var(--radius-sm)', color: '#a1a1aa', fontWeight: '500', fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <ShieldCheck size={16} />
+                        <span>Obligaciones ({currentSim.obligations.length})</span>
+                      </div>
+                      <div style={{ padding: '0.55rem 0.75rem', borderRadius: 'var(--radius-sm)', color: '#a1a1aa', fontWeight: '500', fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <Receipt size={16} />
+                        <span>Movimientos</span>
+                      </div>
+                      <div style={{ padding: '0.55rem 0.75rem', borderRadius: 'var(--radius-sm)', color: '#a1a1aa', fontWeight: '500', fontSize: '0.825rem', display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                        <BarChart3 size={16} />
+                        <span>Reportes & PDF</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ borderTop: '1px solid rgba(255,255,255,0.08)', paddingTop: '0.85rem' }}>
+                    <div style={{ fontSize: '0.75rem', color: '#71717a' }}>Usuario demo</div>
+                    <div style={{ fontSize: '0.825rem', fontWeight: '600', color: '#ffffff' }}>Jesús López</div>
+                  </div>
+                </div>
+
+                {/* Dashboard Desktop */}
+                <div style={{ padding: '1.5rem', background: '#09090b', overflowY: 'auto' }}>
+                  {/* Tarjetas de Métricas en PC */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                    <div style={{ background: '#18181b', border: '1px solid rgba(255, 255, 255, 0.15)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '700', textTransform: 'uppercase' }}>Balance Disponible</span>
+                      <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', margin: '0.2rem 0' }}>{formatMoney(currentSim.balance, 'USD')}</div>
+                      <span style={{ fontSize: '0.72rem', color: '#a1a1aa' }}>{currentSim.savingsRate} tasa de ahorro</span>
+                    </div>
+
+                    <div style={{ background: '#18181b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '700', textTransform: 'uppercase' }}>Ingresos Proyectados</span>
+                      <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#ffffff', margin: '0.2rem 0' }}>+{formatMoney(currentSim.income, 'USD')}</div>
+                      <span style={{ fontSize: '0.72rem', color: '#a1a1aa' }}>Entrada garantizada</span>
+                    </div>
+
+                    <div style={{ background: '#18181b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '700', textTransform: 'uppercase' }}>Egresos Totales</span>
+                      <div style={{ fontSize: '1.6rem', fontWeight: '800', color: '#a1a1aa', margin: '0.2rem 0' }}>-{formatMoney(currentSim.expenses, 'USD')}</div>
+                      <span style={{ fontSize: '0.72rem', color: '#71717a' }}>Obligaciones + Variables</span>
+                    </div>
+
+                    <div style={{ background: '#18181b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#71717a', fontWeight: '700', textTransform: 'uppercase' }}>Cumplimiento Fijo</span>
+                      <div style={{ fontSize: '1.25rem', fontWeight: '800', color: '#ffffff', margin: '0.35rem 0' }}>{currentSim.obligationsPaid}</div>
+                      <span style={{ fontSize: '0.72rem', color: '#22c55e' }}>✓ 100% al día</span>
+                    </div>
+                  </div>
+
+                  {/* Dos Columnas: Obligaciones y Últimas Transacciones en PC */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '1rem' }}>
+                    {/* Lista de Obligaciones Fijas */}
+                    <div style={{ background: '#18181b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', color: '#a1a1aa', marginBottom: '0.75rem' }}>
+                        Obligaciones Indispensables ({simPeriod})
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                        {currentSim.obligations.map((item, idx) => {
+                          const Icon = item.icon;
+                          return (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.55rem 0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                                <div style={{ width: '28px', height: '28px', borderRadius: '4px', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                  <Icon size={14} color="#ffffff" />
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '0.825rem', fontWeight: '600', color: '#ffffff' }}>{item.name}</div>
+                                  <div style={{ fontSize: '0.7rem', color: '#71717a' }}>Vencimiento: {item.due}</div>
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                                <span style={{ fontSize: '0.85rem', fontWeight: '700', color: '#ffffff' }}>{formatMoney(item.amount, 'USD')}</span>
+                                <span style={{ fontSize: '0.65rem', fontWeight: '700', background: 'rgba(34, 197, 94, 0.15)', color: '#4ade80', padding: '0.15rem 0.45rem', borderRadius: 'var(--radius-full)' }}>{item.status}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
-                      <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#ffffff' }}>
-                        ${item.amount}
-                      </span>
-                      <span style={{
-                        padding: '0.2rem 0.55rem',
-                        borderRadius: 'var(--radius-full)',
-                        fontSize: '0.7rem',
-                        fontWeight: '700',
-                        background: isPaid ? 'rgba(34, 197, 94, 0.15)' : 'rgba(255, 255, 255, 0.08)',
-                        color: isPaid ? '#4ade80' : '#a1a1aa',
-                        border: isPaid ? '1px solid rgba(34, 197, 94, 0.3)' : '1px solid rgba(255, 255, 255, 0.15)'
-                      }}>
-                        {item.status}
-                      </span>
+                    {/* Transacciones Recientes en PC */}
+                    <div style={{ background: '#18181b', border: '1px solid rgba(255, 255, 255, 0.08)', borderRadius: 'var(--radius-md)', padding: '1rem' }}>
+                      <div style={{ fontSize: '0.8rem', fontWeight: '700', textTransform: 'uppercase', color: '#a1a1aa', marginBottom: '0.75rem' }}>
+                        Movimientos Recientes
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
+                        {currentSim.recentTxs.map((tx, idx) => {
+                          const Icon = tx.icon;
+                          const isInc = tx.type === 'INCOME';
+                          return (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.55rem 0.75rem', background: 'rgba(255,255,255,0.03)', borderRadius: 'var(--radius-sm)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                                <Icon size={14} color={isInc ? '#ffffff' : '#a1a1aa'} />
+                                <div>
+                                  <div style={{ fontSize: '0.8rem', fontWeight: '600', color: '#ffffff' }}>{tx.title}</div>
+                                  <div style={{ fontSize: '0.68rem', color: '#71717a' }}>{tx.date}</div>
+                                </div>
+                              </div>
+                              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: isInc ? '#ffffff' : '#a1a1aa' }}>
+                                {isInc ? '+' : '-'}{formatMoney(tx.amount, 'USD')}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
                   </div>
-                );
-              })}
+                </div>
+              </div>
             </div>
-          </div>
+          )}
+
+          {/* ============================================================= */}
+          {/* MOCKUP 2: INTERFAZ CELULAR / MÓVIL                            */}
+          {/* ============================================================= */}
+          {activeDevice === 'MOBILE' && (
+            <div style={{
+              width: '100%',
+              maxWidth: '380px',
+              margin: '0 auto',
+              background: '#000000',
+              border: '6px solid #27272a',
+              borderRadius: '44px',
+              padding: '0.85rem',
+              boxShadow: '0 32px 80px -12px rgba(0, 0, 0, 0.95), 0 0 32px rgba(255, 255, 255, 0.08)',
+              position: 'relative',
+              textAlign: 'left'
+            }}>
+              {/* Dynamic Island / Notch Móvil */}
+              <div style={{
+                width: '110px',
+                height: '24px',
+                background: '#09090b',
+                borderRadius: 'var(--radius-full)',
+                margin: '0 auto 0.75rem auto',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}>
+                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#27272a' }} />
+              </div>
+
+              {/* Barra de Estado del Móvil */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.75rem 0.5rem 0.75rem', fontSize: '0.75rem', color: '#a1a1aa' }}>
+                <span style={{ fontWeight: '700', color: '#ffffff' }}>9:41</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Wifi size={13} />
+                  <Battery size={14} />
+                </div>
+              </div>
+
+              {/* Pantalla del Celular */}
+              <div style={{
+                background: '#121215',
+                borderRadius: '28px',
+                padding: '1.15rem 1rem',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                minHeight: '520px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  {/* Top Bar Móvil */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                      <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ffffff' }} />
+                      <span style={{ fontWeight: '800', color: '#ffffff', fontSize: '0.95rem' }}>getloss</span>
+                    </div>
+                    <span className="badge" style={{ fontSize: '0.65rem' }}>{simPeriod}</span>
+                  </div>
+
+                  {/* Tarjeta Principal Móvil (Balance Libre) */}
+                  <div style={{
+                    background: 'linear-gradient(135deg, #1f1f23 0%, #18181b 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.16)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '1.15rem',
+                    marginBottom: '1rem',
+                    boxShadow: '0 8px 24px rgba(0, 0, 0, 0.4)'
+                  }}>
+                    <div style={{ fontSize: '0.72rem', color: '#a1a1aa', fontWeight: '700', textTransform: 'uppercase' }}>
+                      Balance Disponible
+                    </div>
+                    <div style={{ fontSize: '1.85rem', fontWeight: '800', color: '#ffffff', margin: '0.2rem 0' }}>
+                      {formatMoney(currentSim.balance, 'USD')}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.6rem', fontSize: '0.72rem', color: '#a1a1aa', borderTop: '1px solid rgba(255, 255, 255, 0.08)', paddingTop: '0.5rem' }}>
+                      <span>Ingresos: +{formatMoney(currentSim.income, 'USD')}</span>
+                      <span style={{ color: '#22c55e' }}>{currentSim.savingsRate} Ahorro</span>
+                    </div>
+                  </div>
+
+                  {/* Lista Compacta de Obligaciones en Celular */}
+                  <div style={{ marginBottom: '1rem' }}>
+                    <div style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: '#a1a1aa', marginBottom: '0.5rem' }}>
+                      Obligaciones ({currentSim.obligations.length})
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      {currentSim.obligations.map((item, idx) => {
+                        const Icon = item.icon;
+                        return (
+                          <div key={idx} style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '0.6rem 0.75rem',
+                            background: 'rgba(255, 255, 255, 0.04)',
+                            borderRadius: 'var(--radius-md)',
+                            border: '1px solid rgba(255, 255, 255, 0.06)'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                              <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(255, 255, 255, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Icon size={14} color="#ffffff" />
+                              </div>
+                              <div>
+                                <div style={{ fontSize: '0.78rem', fontWeight: '600', color: '#ffffff' }}>{item.name}</div>
+                                <div style={{ fontSize: '0.68rem', color: '#71717a' }}>{item.due}</div>
+                              </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                              <div style={{ fontSize: '0.8rem', fontWeight: '700', color: '#ffffff' }}>{formatMoney(item.amount, 'USD')}</div>
+                              <span style={{ fontSize: '0.6rem', color: '#4ade80' }}>✓ Pagado</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Barra de Navegación Inferior Móvil con Botón Flotante (+) */}
+                <div style={{ position: 'relative' }}>
+                  {/* Botón Flotante Central (+) */}
+                  <button
+                    type="button"
+                    onClick={() => onOpenAuth(false)}
+                    style={{
+                      position: 'absolute',
+                      top: '-24px',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '50%',
+                      background: '#ffffff',
+                      color: '#09090b',
+                      border: 'none',
+                      boxShadow: '0 4px 16px rgba(255, 255, 255, 0.4)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      zIndex: 10
+                    }}
+                    title="Nuevo Movimiento Móvil"
+                  >
+                    <Plus size={20} strokeWidth={2.5} />
+                  </button>
+
+                  <div style={{
+                    background: '#18181b',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: 'var(--radius-lg)',
+                    padding: '0.55rem 0.5rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-around',
+                    fontSize: '0.65rem',
+                    color: '#71717a'
+                  }}>
+                    <div style={{ textAlign: 'center', color: '#ffffff', fontWeight: '700' }}>
+                      <LayoutDashboard size={15} style={{ margin: '0 auto 2px auto' }} />
+                      <span>Inicio</span>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <ShieldCheck size={15} style={{ margin: '0 auto 2px auto' }} />
+                      <span>Fijos</span>
+                    </div>
+                    <div style={{ width: '32px' }} /> {/* Espacio para el botón flotante */}
+                    <div style={{ textAlign: 'center' }}>
+                      <Receipt size={15} style={{ margin: '0 auto 2px auto' }} />
+                      <span>Movs</span>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <BarChart3 size={15} style={{ margin: '0 auto 2px auto' }} />
+                      <span>PDF</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </section>
 
-      {/* 4. Comparativa: Con getloss vs Sin getloss */}
+      {/* 4. COMPARATIVA DE PLATAFORMAS (PC vs CELULAR) */}
       <section style={{
         maxWidth: '1100px',
         margin: '0 auto',
-        padding: '4rem 1.5rem',
+        padding: '4rem 1.5rem 2rem 1.5rem',
         borderTop: '1px solid rgba(255, 255, 255, 0.08)'
       }}>
-        <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <h2 style={{
             fontFamily: 'var(--font-display)',
             fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)',
             fontWeight: '800',
             color: '#ffffff',
-            letterSpacing: '-0.02em'
+            letterSpacing: '-0.02em',
+            marginBottom: '0.5rem'
           }}>
-            La diferencia entre perder dinero y multiplicarlo
+            Diseñado para Computadora y Celular
           </h2>
+          <p style={{ color: '#a1a1aa', fontSize: '0.95rem' }}>
+            Accede desde cualquier dispositivo con una experiencia optimizada para cada pantalla.
+          </p>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
-          {/* Columna: Sin getloss */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+          {/* Card: Interfaz PC */}
           <div style={{
-            background: 'rgba(24, 24, 27, 0.5)',
-            border: '1px solid rgba(239, 68, 68, 0.2)',
+            background: 'rgba(24, 24, 27, 0.7)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: 'var(--radius-lg)',
-            padding: '2rem'
+            padding: '2rem',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#f87171', fontWeight: '700', marginBottom: '1.25rem' }}>
-              <X size={20} />
-              <span>Sin getloss</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: '#ffffff', color: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Laptop size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#ffffff' }}>Experiencia en PC & Mac</h3>
+                <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>Productividad y Análisis Extendido</span>
+              </div>
             </div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem', color: '#a1a1aa' }}>
-              <li>❌ Gastas en la primera semana y no alcanza para la segunda quincena.</li>
-              <li>❌ Olvidos de facturas de luz, agua o arriendo con recargos por mora.</li>
-              <li>❌ Fugas de dinero invisibles en gastos pequeños.</li>
-              <li>❌ Cero claridad sobre cuánto dinero realmente puedes ahorrar.</li>
+
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem', color: '#d4d4d8' }}>
+              <li>✅ <strong>Panel Lateral Extendido:</strong> Navegación instantánea con indicadores de obligaciones.</li>
+              <li>✅ <strong>Tablas y Reportes Ejecutivos:</strong> Visualización simultánea de ingresos, egresos y descarga en PDF/CSV.</li>
+              <li>✅ <strong>Multicolumna Financiera:</strong> Proyección de ahorro y balance libre en pantalla completa.</li>
             </ul>
           </div>
 
-          {/* Columna: Con getloss */}
+          {/* Card: Interfaz Celular */}
           <div style={{
-            background: 'rgba(24, 24, 27, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
+            background: 'rgba(24, 24, 27, 0.7)',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
             borderRadius: 'var(--radius-lg)',
             padding: '2rem',
-            boxShadow: '0 0 30px rgba(255, 255, 255, 0.05)'
+            boxShadow: '0 8px 32px rgba(0,0,0,0.5)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#ffffff', fontWeight: '700', marginBottom: '1.25rem' }}>
-              <Check size={20} />
-              <span>Con getloss</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+              <div style={{ width: '40px', height: '40px', borderRadius: 'var(--radius-md)', background: '#ffffff', color: '#09090b', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Smartphone size={22} />
+              </div>
+              <div>
+                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: '#ffffff' }}>Experiencia en Celular</h3>
+                <span style={{ fontSize: '0.75rem', color: '#a1a1aa' }}>Control Inmediato y Ergonómico</span>
+              </div>
             </div>
-            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem', color: '#e4e4e7' }}>
-              <li>✅ Tu sueldo asignado a cada quincena con balance libre exacto.</li>
-              <li>✅ Lista de obligaciones indispensables con aviso de vencimiento y check de pagado.</li>
-              <li>✅ Identificación visual inmediata con vectores y categorías.</li>
-              <li>✅ Reportes ejecutivos descargables en PDF para auditar tus finanzas.</li>
+
+            <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem', color: '#d4d4d8' }}>
+              <li>✅ <strong>Botón Flotante (+):</strong> Registra gastos en 3 segundos desde cualquier lugar.</li>
+              <li>✅ <strong>Navegación al alcance del pulgar:</strong> Barra inferior adaptada para uso con una sola mano.</li>
+              <li>✅ <strong>Check Táctil de Pagos:</strong> Marca tus facturas de luz, agua y arriendo con un toque.</li>
             </ul>
           </div>
         </div>
@@ -611,7 +917,10 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                     textAlign: 'left',
                     color: '#ffffff',
                     fontWeight: '600',
-                    fontSize: '0.95rem'
+                    fontSize: '0.95rem',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer'
                   }}
                 >
                   <span>{faq.q}</span>
@@ -667,7 +976,9 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                 color: '#09090b',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '0.5rem'
+                gap: '0.5rem',
+                cursor: 'pointer',
+                border: 'none'
               }}
             >
               <span>Crear Cuenta Gratis</span>
@@ -682,7 +993,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                 borderRadius: 'var(--radius-md)',
                 background: 'rgba(255, 255, 255, 0.08)',
                 color: '#ffffff',
-                border: '1px solid rgba(255, 255, 255, 0.15)'
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                cursor: 'pointer'
               }}
             >
               <span>Iniciar Sesión</span>
@@ -705,7 +1017,7 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
             getloss
           </span>
         </div>
-        <p>© {new Date().getFullYear()} getloss • Tu suite de control financiero quincenal y mensual.</p>
+        <p>© {new Date().getFullYear()} getloss • Tu suite de control financiero quincenal y mensual para PC y Celular.</p>
       </footer>
     </div>
   );
