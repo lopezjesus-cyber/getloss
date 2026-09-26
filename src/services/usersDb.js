@@ -1,44 +1,10 @@
 /**
  * getloss - Base de Datos de Usuarios y Autenticación (getloss_users_db)
- * Administra la seguridad, registros, contraseñas, sesiones y preferencias de usuario.
+ * Administra la seguridad, registros, contraseñas, sesiones y preferencias de usuario reales.
  */
 
 const USERS_STORAGE_KEY = 'getloss_users_db_v1';
 const SESSION_STORAGE_KEY = 'getloss_active_session_v1';
-
-// Usuarios de demostración iniciales
-const INITIAL_USERS = [
-  {
-    id: 'usr-demo-01',
-    email: 'demo@getloss.com',
-    fullName: 'Alejandro Morales',
-    passwordHash: 'getloss123', // En producción sería bcrypt/argon2
-    phone: '+57 300 123 4567',
-    avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80',
-    currency: 'USD',
-    currencySymbol: '$',
-    payFrequency: 'QUINCENAL', // 'QUINCENAL' | 'MENSUAL'
-    payDayFirst: 15,
-    payDaySecond: 30,
-    monthlyIncomeGoal: 2800,
-    createdAt: '2026-01-01T00:00:00.000Z',
-  },
-  {
-    id: 'usr-admin-02',
-    email: 'admin@getloss.com',
-    fullName: 'Valentina Restrepo',
-    passwordHash: 'admin123',
-    phone: '+57 312 987 6543',
-    avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80',
-    currency: 'COP',
-    currencySymbol: '$',
-    payFrequency: 'QUINCENAL',
-    payDayFirst: 15,
-    payDaySecond: 30,
-    monthlyIncomeGoal: 4500000,
-    createdAt: '2026-02-15T00:00:00.000Z',
-  }
-];
 
 export const UsersDB = {
   // Obtener todos los usuarios registrados
@@ -46,13 +12,13 @@ export const UsersDB = {
     try {
       const data = localStorage.getItem(USERS_STORAGE_KEY);
       if (!data) {
-        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(INITIAL_USERS));
-        return INITIAL_USERS;
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([]));
+        return [];
       }
       return JSON.parse(data);
     } catch (e) {
       console.error('Error al leer Base de Datos de Usuarios:', e);
-      return INITIAL_USERS;
+      return [];
     }
   },
 
@@ -74,7 +40,7 @@ export const UsersDB = {
       id: `usr-${Date.now()}`,
       email: userData.email.trim(),
       fullName: userData.fullName.trim(),
-      passwordHash: userData.password, // Mock hash
+      passwordHash: userData.password,
       phone: userData.phone || '',
       avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.fullName)}`,
       currency: userData.currency || 'USD',
@@ -115,7 +81,6 @@ export const UsersDB = {
       const session = localStorage.getItem(SESSION_STORAGE_KEY);
       if (!session) return null;
       const user = JSON.parse(session);
-      // Validar si aún existe en DB
       const users = UsersDB.getAllUsers();
       return users.find(u => u.id === user.id) || null;
     } catch {
@@ -149,10 +114,10 @@ export const UsersDB = {
     return users[index];
   },
 
-  // Reiniciar Base de Datos a valores iniciales
+  // Limpiar Base de Datos de Usuarios
   resetDatabase: () => {
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(INITIAL_USERS));
-    UsersDB.setActiveSession(INITIAL_USERS[0]);
-    return INITIAL_USERS;
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify([]));
+    localStorage.removeItem(SESSION_STORAGE_KEY);
+    return [];
   }
 };

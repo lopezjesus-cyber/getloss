@@ -23,13 +23,7 @@ import { DatabaseModal } from './components/DatabaseInspector/DatabaseModal';
 export default function App() {
   // Estado de Usuario y Sesión
   const [currentUser, setCurrentUser] = useState(() => {
-    const active = UsersDB.getActiveSession();
-    if (active) return active;
-    // Si no hay sesión, cargamos el usuario demo por defecto para testing inmediato
-    const all = UsersDB.getAllUsers();
-    const demo = all[0];
-    if (demo) UsersDB.setActiveSession(demo);
-    return demo || null;
+    return UsersDB.getActiveSession() || null;
   });
 
   // Estado del Periodo Financiero Activo (Quincenal / Mensual)

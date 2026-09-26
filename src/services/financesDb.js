@@ -28,194 +28,11 @@ export const DEFAULT_CATEGORIES = [
   { id: 'cat-other-inc', name: 'Otros Ingresos', type: 'INCOME', icon: 'PlusCircle', isIndispensable: false, color: '#a1a1aa' }
 ];
 
-// Semilla inicial de datos financieros de prueba
-const getInitialSeed = () => {
-  const currentYear = new Date().getFullYear();
-  const currentMonth = new Date().getMonth() + 1;
-
-  return {
-    fixedExpenses: [
-      {
-        id: 'fix-01',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-rent',
-        name: 'Arriendo Apartamento',
-        amount: 850,
-        dueDay: 5,
-        targetPeriod: 'Q1', // 'Q1' (1-15), 'Q2' (16-30), 'MENSUAL'
-        isIndispensable: true,
-        notes: 'Pago transferencia bancaria primer día hábil',
-        paidPeriods: [`${currentYear}-${currentMonth}-Q1`]
-      },
-      {
-        id: 'fix-02',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-services',
-        name: 'Servicio de Electricidad & Agua',
-        amount: 110,
-        dueDay: 12,
-        targetPeriod: 'Q1',
-        isIndispensable: true,
-        notes: 'Factura conjunta mensual',
-        paidPeriods: [`${currentYear}-${currentMonth}-Q1`]
-      },
-      {
-        id: 'fix-03',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-services',
-        name: 'Internet Fibra Óptica 500MB',
-        amount: 45,
-        dueDay: 18,
-        targetPeriod: 'Q2',
-        isIndispensable: true,
-        notes: 'Débito automático',
-        paidPeriods: []
-      },
-      {
-        id: 'fix-04',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-food',
-        name: 'Mercado Básico Quincena 1',
-        amount: 220,
-        dueDay: 2,
-        targetPeriod: 'Q1',
-        isIndispensable: true,
-        notes: 'Supermercado alimentos y aseo',
-        paidPeriods: [`${currentYear}-${currentMonth}-Q1`]
-      },
-      {
-        id: 'fix-05',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-food',
-        name: 'Mercado Básico Quincena 2',
-        amount: 220,
-        dueDay: 17,
-        targetPeriod: 'Q2',
-        isIndispensable: true,
-        notes: 'Supermercado despensa',
-        paidPeriods: []
-      },
-      {
-        id: 'fix-06',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-transport',
-        name: 'Combustible & Transporte Público',
-        amount: 130,
-        dueDay: 15,
-        targetPeriod: 'MENSUAL',
-        isIndispensable: true,
-        notes: 'Recargas y gasolina del mes',
-        paidPeriods: [`${currentYear}-${currentMonth}-Q1`]
-      }
-    ],
-    transactions: [
-      {
-        id: 'tx-01',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-salary',
-        title: 'Primera Quincena de Salario',
-        amount: 1400,
-        type: 'INCOME',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-01`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 1,
-        notes: 'Depósito directo empresa'
-      },
-      {
-        id: 'tx-02',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-freelance',
-        title: 'Diseño Web Cliente Particular',
-        amount: 350,
-        type: 'INCOME',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-08`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 1,
-        notes: 'Pago de anticipo 50%'
-      },
-      {
-        id: 'tx-03',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-rent',
-        title: 'Pago de Arriendo Apartamento',
-        amount: 850,
-        type: 'EXPENSE',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-03`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 1,
-        notes: 'Transferencia realizada con comprobante'
-      },
-      {
-        id: 'tx-04',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-services',
-        title: 'Pago de Luz y Agua',
-        amount: 110,
-        type: 'EXPENSE',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-10`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 1,
-        notes: 'Pago en línea portal'
-      },
-      {
-        id: 'tx-05',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-food',
-        title: 'Compras Supermercado Quincena 1',
-        amount: 215,
-        type: 'EXPENSE',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-04`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 1,
-        notes: 'Mercado de víveres'
-      },
-      {
-        id: 'tx-06',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-entertainment',
-        title: 'Cena Restaurante y Cine',
-        amount: 65,
-        type: 'EXPENSE',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-07`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 1,
-        notes: 'Salida de fin de semana'
-      },
-      {
-        id: 'tx-07',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-salary',
-        title: 'Segunda Quincena de Salario',
-        amount: 1400,
-        type: 'INCOME',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-16`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 2,
-        notes: 'Depósito nómina quincena 2'
-      },
-      {
-        id: 'tx-08',
-        userId: 'usr-demo-01',
-        categoryId: 'cat-shopping',
-        title: 'Calzado Deportivo',
-        amount: 85,
-        type: 'EXPENSE',
-        date: `${currentYear}-${String(currentMonth).padStart(2, '0')}-18`,
-        periodYear: currentYear,
-        periodMonth: currentMonth,
-        periodQuincena: 2,
-        notes: 'Oferta calzado'
-      }
-    ]
-  };
-};
+// Estructura limpia para nuevos usuarios
+const getCleanDatabase = () => ({
+  fixedExpenses: [],
+  transactions: []
+});
 
 export const FinancesDB = {
   // Obtener toda la base de datos de finanzas
@@ -223,14 +40,14 @@ export const FinancesDB = {
     try {
       const data = localStorage.getItem(FINANCES_STORAGE_KEY);
       if (!data) {
-        const seed = getInitialSeed();
-        localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(seed));
-        return seed;
+        const clean = getCleanDatabase();
+        localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(clean));
+        return clean;
       }
       return JSON.parse(data);
     } catch (e) {
       console.error('Error al cargar base de datos financiera:', e);
-      return getInitialSeed();
+      return getCleanDatabase();
     }
   },
 
@@ -261,7 +78,7 @@ export const FinancesDB = {
   // --------------------------------------------------------------------------
   getTransactions: (userId, filters = {}) => {
     const db = FinancesDB.getRawDatabase();
-    let txs = db.transactions.filter(t => t.userId === userId);
+    let txs = (db.transactions || []).filter(t => t.userId === userId);
 
     if (filters.year) {
       txs = txs.filter(t => t.periodYear === Number(filters.year));
@@ -285,6 +102,8 @@ export const FinancesDB = {
 
   addTransaction: (userId, data) => {
     const db = FinancesDB.getRawDatabase();
+    if (!db.transactions) db.transactions = [];
+
     const dateObj = new Date(data.date || new Date());
     const day = dateObj.getDate();
     const month = dateObj.getMonth() + 1;
@@ -313,7 +132,7 @@ export const FinancesDB = {
 
   deleteTransaction: (txId) => {
     const db = FinancesDB.getRawDatabase();
-    db.transactions = db.transactions.filter(t => t.id !== txId);
+    db.transactions = (db.transactions || []).filter(t => t.id !== txId);
     FinancesDB._saveDatabase(db);
     return true;
   },
@@ -323,11 +142,13 @@ export const FinancesDB = {
   // --------------------------------------------------------------------------
   getFixedExpenses: (userId) => {
     const db = FinancesDB.getRawDatabase();
-    return db.fixedExpenses.filter(f => f.userId === userId);
+    return (db.fixedExpenses || []).filter(f => f.userId === userId);
   },
 
   addFixedExpense: (userId, data) => {
     const db = FinancesDB.getRawDatabase();
+    if (!db.fixedExpenses) db.fixedExpenses = [];
+
     const newFixed = {
       id: `fix-${Date.now()}`,
       userId,
@@ -348,7 +169,7 @@ export const FinancesDB = {
 
   toggleFixedExpensePaid: (fixedId, year, month, quincena) => {
     const db = FinancesDB.getRawDatabase();
-    const item = db.fixedExpenses.find(f => f.id === fixedId);
+    const item = (db.fixedExpenses || []).find(f => f.id === fixedId);
     if (!item) throw new Error('Gasto fijo no encontrado');
 
     const periodKey = `${year}-${month}-${quincena}`;
@@ -366,7 +187,7 @@ export const FinancesDB = {
 
   deleteFixedExpense: (fixedId) => {
     const db = FinancesDB.getRawDatabase();
-    db.fixedExpenses = db.fixedExpenses.filter(f => f.id !== fixedId);
+    db.fixedExpenses = (db.fixedExpenses || []).filter(f => f.id !== fixedId);
     FinancesDB._saveDatabase(db);
     return true;
   },
@@ -461,8 +282,8 @@ export const FinancesDB = {
 
   // Resetear base de datos financiera
   resetDatabase: () => {
-    const seed = getInitialSeed();
-    localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(seed));
-    return seed;
+    const clean = getCleanDatabase();
+    localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(clean));
+    return clean;
   }
 };

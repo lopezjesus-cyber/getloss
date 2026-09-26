@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { UsersDB } from '../../services/usersDb';
-import { Lock, Mail, User, Phone, DollarSign, Calendar, Sparkles, AlertCircle, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, User, Phone, DollarSign, Calendar, AlertCircle, ArrowRight, ShieldCheck, X } from 'lucide-react';
 
 export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,7 +11,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
     phone: '',
     currency: 'USD',
     payFrequency: 'QUINCENAL',
-    monthlyIncomeGoal: 2500,
+    monthlyIncomeGoal: 2000,
   });
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -43,22 +43,11 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
     }
   };
 
-  const loadDemoUser = (email, password) => {
-    setFormData(prev => ({ ...prev, email, password }));
-    try {
-      const user = UsersDB.login(email, password);
-      onAuthSuccess(user);
-      onClose();
-    } catch (err) {
-      setError(err.message);
-    }
-  };
-
   return (
     <div className="modal-overlay">
       <div className="modal-box" style={{ maxWidth: '480px' }}>
         {/* Cabecera del Modal */}
-        <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+        <div style={{ textAlign: 'center', marginBottom: '1.5rem', position: 'relative' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <span style={{ 
               width: '10px', 
@@ -156,7 +145,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
                 <input
                   type="text"
                   required
-                  placeholder="ej. Alejandro Morales"
+                  placeholder="ej. Jesús López"
                   value={formData.fullName}
                   onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   style={{
@@ -281,7 +270,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
                   <DollarSign size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                   <input
                     type="number"
-                    placeholder="2500"
+                    placeholder="2000"
                     value={formData.monthlyIncomeGoal}
                     onChange={(e) => setFormData({ ...formData, monthlyIncomeGoal: e.target.value })}
                     style={{
@@ -309,36 +298,6 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess }) => {
             <ArrowRight size={16} />
           </button>
         </form>
-
-        {/* Acceso Rápido con Cuentas Demo */}
-        {isLogin && (
-          <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-subtle)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', marginBottom: '0.65rem' }}>
-              <Sparkles size={14} style={{ color: 'var(--text-secondary)' }} />
-              <span style={{ fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)' }}>
-                Acceso Rápido de Prueba (Demo)
-              </span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
-              <button
-                type="button"
-                onClick={() => loadDemoUser('demo@getloss.com', 'getloss123')}
-                className="btn-secondary"
-                style={{ fontSize: '0.8rem', padding: '0.5rem' }}
-              >
-                👤 Alejandro (USD)
-              </button>
-              <button
-                type="button"
-                onClick={() => loadDemoUser('admin@getloss.com', 'admin123')}
-                className="btn-secondary"
-                style={{ fontSize: '0.8rem', padding: '0.5rem' }}
-              >
-                👤 Valentina (COP)
-              </button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

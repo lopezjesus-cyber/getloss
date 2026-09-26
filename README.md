@@ -68,15 +68,6 @@
 
 ---
 
-## 👤 Cuentas Demo de Prueba Rápida
-
-La aplicación incluye dos cuentas preconfiguradas con datos de demostración:
-
-| Usuario | Correo Electrónico | Contraseña | Moneda | Frecuencia |
-| :--- | :--- | :--- | :--- | :--- |
-| **Alejandro Morales** | `demo@getloss.com` | `getloss123` | USD ($) | Quincenal |
-| **Valentina Restrepo** | `admin@getloss.com` | `admin123` | COP ($) | Quincenal |
-
 ---
 
 ## 📄 Licencia

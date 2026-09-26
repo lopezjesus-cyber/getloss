@@ -250,7 +250,7 @@ export const DatabaseModal = ({ isOpen, onClose, onDataReset }) => {
             }}
           >
             <RefreshCw size={12} />
-            <span>Restablecer Datos de Demostración</span>
+            <span>Limpiar y Vaciar Bases de Datos</span>
           </button>
 
           <button onClick={onClose} className="btn-primary" style={{ padding: '0.5rem 1.25rem', fontSize: '0.85rem' }}>
