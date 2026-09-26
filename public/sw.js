@@ -1,11 +1,17 @@
 // Service Worker getloss - Soporte PWA Offline e Instalación
-const CACHE_NAME = 'getloss-pwa-v2';
+const CACHE_NAME = 'getloss-pwa-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/manifest.json',
-  '/favicon.svg',
   '/favicon.ico',
+  '/favicon.svg',
+  '/favicon-16x16.png',
+  '/favicon-32x32.png',
+  '/favicon-48x48.png',
+  '/apple-touch-icon.png',
+  '/app-icon-192.png',
+  '/app-icon-512.png',
   '/app-icon.png',
   '/app-icon.jpg',
   '/brand-hero.jpg'
