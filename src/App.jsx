@@ -21,7 +21,6 @@ import { ReportsView } from './components/Reports/ReportsView';
 import { AuthModal } from './components/Auth/AuthModal';
 import { AddTransactionModal } from './components/Transactions/AddTransactionModal';
 import { ProfileModal } from './components/Profile/ProfileModal';
-import { DatabaseModal } from './components/DatabaseInspector/DatabaseModal';
 
 export default function App() {
   // Estado de Usuario y Sesión
@@ -47,7 +46,6 @@ export default function App() {
   const [authInitialIsLogin, setAuthInitialIsLogin] = useState(true);
   const [isAddTxOpen, setIsAddTxOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [isDbInspectorOpen, setIsDbInspectorOpen] = useState(false);
 
   // Control de Tema (Dark por defecto / Light)
   const [theme, setTheme] = useState(() => {
@@ -265,12 +263,6 @@ export default function App() {
           setCurrentUser(updated);
           handleDataChanged();
         }}
-      />
-
-      <DatabaseModal
-        isOpen={isDbInspectorOpen}
-        onClose={() => setIsDbInspectorOpen(false)}
-        onDataReset={handleDataChanged}
       />
     </div>
   );

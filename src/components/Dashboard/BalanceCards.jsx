@@ -1,8 +1,9 @@
 import React from 'react';
 import { ArrowUpRight, ArrowDownRight, Wallet, ShieldAlert, CheckCircle2, TrendingUp } from 'lucide-react';
+import { formatMoney } from '../../utils/formatters';
 
 export const BalanceCards = ({ summary, user }) => {
-  const symbol = user?.currencySymbol || '$';
+  const currency = user?.currency || 'USD';
 
   return (
     <div style={{
@@ -32,7 +33,7 @@ export const BalanceCards = ({ summary, user }) => {
           </div>
         </div>
         <div className="card-value" style={{ color: summary.netBalance >= 0 ? 'var(--text-primary)' : '#ef4444' }}>
-          {symbol}{summary.netBalance.toLocaleString()}
+          {formatMoney(summary.netBalance, currency)}
         </div>
         <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <span className="badge">
@@ -63,7 +64,7 @@ export const BalanceCards = ({ summary, user }) => {
           </div>
         </div>
         <div className="card-value">
-          +{symbol}{summary.totalIncome.toLocaleString()}
+          +{formatMoney(summary.totalIncome, currency)}
         </div>
         <div style={{ marginTop: '0.65rem', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
           Entradas registradas
@@ -88,7 +89,7 @@ export const BalanceCards = ({ summary, user }) => {
           </div>
         </div>
         <div className="card-value" style={{ color: 'var(--text-secondary)' }}>
-          -{symbol}{summary.totalExpense.toLocaleString()}
+          -{formatMoney(summary.totalExpense, currency)}
         </div>
         <div style={{ marginTop: '0.65rem', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
           {summary.transactionsCount} movimientos realizados
@@ -113,7 +114,7 @@ export const BalanceCards = ({ summary, user }) => {
           </div>
         </div>
         <div className="card-value" style={{ fontSize: '1.8rem' }}>
-          {symbol}{summary.fixedPendingAmount.toLocaleString()}
+          {formatMoney(summary.fixedPendingAmount, currency)}
         </div>
         <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
           <span className="badge" style={{
@@ -123,7 +124,7 @@ export const BalanceCards = ({ summary, user }) => {
             {summary.fixedPendingAmount === 0 ? '✓ Todo al día' : 'Pendiente por pagar'}
           </span>
           <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-            de {symbol}{summary.totalFixedCommitted.toLocaleString()}
+            de {formatMoney(summary.totalFixedCommitted, currency)}
           </span>
         </div>
       </div>

@@ -44,7 +44,7 @@ export const UsersDB = {
       phone: userData.phone || '',
       avatar: userData.avatar || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(userData.fullName)}`,
       currency: userData.currency || 'USD',
-      currencySymbol: userData.currency === 'COP' || userData.currency === 'MXN' || userData.currency === 'USD' ? '$' : '€',
+      currencySymbol: (userData.currency === 'EUR' ? '€' : userData.currency === 'GBP' ? '£' : userData.currency === 'PEN' ? 'S/' : userData.currency === 'CAD' ? 'C$' : '$'),
       payFrequency: userData.payFrequency || 'QUINCENAL',
       payDayFirst: 15,
       payDaySecond: 30,

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FinancesDB, DEFAULT_CATEGORIES } from '../../services/financesDb';
+import { formatMoney } from '../../utils/formatters';
 import { CategoryIcon } from '../Common/CategoryIcon';
 import { Search, Filter, Trash2, ArrowUpRight, ArrowDownRight, Tag, Calendar, FileText } from 'lucide-react';
 
@@ -8,13 +9,13 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [categoryFilter, setCategoryFilter] = useState('ALL');
 
-  const { year, month, quincena } = currentPeriod;
-  const symbol = user.currencySymbol || '$';
+  const { year, month, mode } = currentPeriod;
+  const currency = user?.currency || 'USD';
 
   const transactions = FinancesDB.getTransactions(user.id, {
     year,
     month,
-    quincena
+    mode
   });
 
   // Filtrado local
@@ -200,7 +201,7 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
                       fontFamily: 'var(--font-display)',
                       color: isIncome ? 'var(--text-primary)' : 'var(--text-secondary)'
                     }}>
-                      {isIncome ? '+' : '-'}{symbol}{t.amount.toLocaleString()}
+                      {isIncome ? '+' : '-'}{formatMoney(t.amount, currency)}
                     </div>
                     <span style={{
                       fontSize: '0.7rem',

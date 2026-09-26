@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { CategoryIcon } from '../Common/CategoryIcon';
 import { FinancesDB, DEFAULT_CATEGORIES } from '../../services/financesDb';
+import { formatMoney } from '../../utils/formatters';
 import { Plus, Check, Clock, Trash2, ShieldCheck, AlertCircle, Info } from 'lucide-react';
 
 export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
@@ -16,7 +17,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
   });
 
   const fixedList = FinancesDB.getFixedExpenses(user.id);
-  const symbol = user.currencySymbol || '$';
+  const currency = user?.currency || 'USD';
   const { year, month, mode = 'QUINCENAL' } = currentPeriod;
 
   // Filtrar según el modo activo (Quincenal o Mensual)
@@ -112,7 +113,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
             Cumplimiento del Periodo: {progressPercent}% Pagado
           </span>
           <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
-            {symbol}{paidAmount.toLocaleString()} de {symbol}{totalAmount.toLocaleString()}
+            {formatMoney(paidAmount, currency)} de {formatMoney(totalAmount, currency)}
           </span>
         </div>
         <div style={{ width: '100%', height: '8px', background: 'var(--bg-card-elevated)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
@@ -214,7 +215,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                 }}>
                   <div>
                     <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
-                      {symbol}{item.amount.toLocaleString()}
+                      {formatMoney(item.amount, currency)}
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <Clock size={11} />
@@ -288,9 +289,10 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                   </label>
                   <input
                     type="number"
+                    step="0.01"
                     required
-                    min="1"
-                    placeholder="ej. 120"
+                    min="0.01"
+                    placeholder="ej. 120.00"
                     value={newFixed.amount}
                     onChange={(e) => setNewFixed({ ...newFixed, amount: e.target.value })}
                     style={{

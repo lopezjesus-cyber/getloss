@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { formatMoney } from '../utils/formatters';
 
 /**
  * Generador de Reportes Financieros en PDF para getloss
@@ -20,7 +21,7 @@ export const generateFinancialPdfReport = ({
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const symbol = user.currencySymbol || '$';
+  const currency = user.currency || 'USD';
 
   // --- ENCABEZADO ---
   // Fondo oscuro para cabecera superior
@@ -53,9 +54,9 @@ export const generateFinancialPdfReport = ({
   const cardHeight = 22;
 
   const kpis = [
-    { label: 'INGRESOS', val: `${symbol}${summary.totalIncome.toLocaleString()}`, bg: [245, 245, 247], text: [20, 20, 20] },
-    { label: 'EGRESOS', val: `${symbol}${summary.totalExpense.toLocaleString()}`, bg: [245, 245, 247], text: [20, 20, 20] },
-    { label: 'BALANCE NETO', val: `${symbol}${summary.netBalance.toLocaleString()}`, bg: [20, 20, 22], text: [255, 255, 255] },
+    { label: 'INGRESOS', val: `+${formatMoney(summary.totalIncome, currency)}`, bg: [245, 245, 247], text: [20, 20, 20] },
+    { label: 'EGRESOS', val: `-${formatMoney(summary.totalExpense, currency)}`, bg: [245, 245, 247], text: [20, 20, 20] },
+    { label: 'BALANCE NETO', val: `${formatMoney(summary.netBalance, currency)}`, bg: [20, 20, 22], text: [255, 255, 255] },
     { label: 'TASA DE AHORRO', val: `${summary.savingsRate}%`, bg: [245, 245, 247], text: [20, 20, 20] },
   ];
 
@@ -90,9 +91,9 @@ export const generateFinancialPdfReport = ({
   const fixedRows = fixedExpenses.map(f => [
     f.name,
     f.isIndispensable ? 'Indispensable' : 'Fijo',
-    f.targetPeriod === 'Q1' ? '1ª Quincena' : f.targetPeriod === 'Q2' ? '2ª Quincena' : 'Mensual',
+    f.targetMode === 'QUINCENAL' ? 'Quincenal' : 'Mensual',
     `Día ${f.dueDay}`,
-    `${symbol}${Number(f.amount).toLocaleString()}`,
+    formatMoney(f.amount, currency),
     (f.paidPeriods && f.paidPeriods.length > 0) ? 'PAGADO' : 'PENDIENTE'
   ]);
 
@@ -130,9 +131,9 @@ export const generateFinancialPdfReport = ({
     t.date,
     t.title,
     t.type === 'INCOME' ? 'INGRESO' : 'EGRESO',
-    `Q${t.periodQuincena}`,
+    t.periodMode || 'QUINCENAL',
     t.notes || '-',
-    `${t.type === 'INCOME' ? '+' : '-'}${symbol}${Number(t.amount).toLocaleString()}`
+    `${t.type === 'INCOME' ? '+' : '-'}${formatMoney(t.amount, currency)}`
   ]);
 
   doc.autoTable({

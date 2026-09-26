@@ -285,6 +285,11 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                     <option value="COP">COP ($ - Peso Colombiano)</option>
                     <option value="MXN">MXN ($ - Peso Mexicano)</option>
                     <option value="EUR">EUR (€ - Euro)</option>
+                    <option value="ARS">ARS ($ - Peso Argentino)</option>
+                    <option value="CLP">CLP ($ - Peso Chileno)</option>
+                    <option value="PEN">PEN (S/ - Sol)</option>
+                    <option value="GBP">GBP (£ - Libra)</option>
+                    <option value="CAD">CAD (C$ - Dólar Can.)</option>
                   </select>
                 </div>
               </div>
@@ -297,7 +302,8 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                   <DollarSign size={16} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                   <input
                     type="number"
-                    placeholder="2000"
+                    step="0.01"
+                    placeholder="2000.00"
                     value={formData.monthlyIncomeGoal}
                     onChange={(e) => setFormData({ ...formData, monthlyIncomeGoal: e.target.value })}
                     style={{

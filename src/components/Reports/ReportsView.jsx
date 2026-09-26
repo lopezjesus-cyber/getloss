@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { FinancesDB, DEFAULT_CATEGORIES } from '../../services/financesDb';
 import { generateFinancialPdfReport } from '../../services/pdfGenerator';
 import { CategoryIcon } from '../Common/CategoryIcon';
+import { formatMoney } from '../../utils/formatters';
 import { 
   BarChart3, 
   PieChart, 
@@ -22,7 +23,7 @@ const MONTH_NAMES = [
 
 export const ReportsView = ({ user, currentPeriod }) => {
   const { year, month, mode = 'QUINCENAL' } = currentPeriod;
-  const symbol = user.currencySymbol || '$';
+  const currency = user?.currency || 'USD';
 
   const summary = FinancesDB.calculateFinancialSummary(user.id, year, month, mode);
   const transactions = FinancesDB.getTransactions(user.id, { year, month });
@@ -147,7 +148,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
                   1. Gastos Indispensables (Fijos)
                 </span>
                 <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
-                  {symbol}{summary.indispensableExpenseTotal.toLocaleString()} ({indispensablePct}%)
+                  {formatMoney(summary.indispensableExpenseTotal, currency)} ({indispensablePct}%)
                 </span>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
@@ -163,7 +164,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
                   2. Gastos Variables & Ocio
                 </span>
                 <span style={{ fontWeight: '700', color: 'var(--text-secondary)' }}>
-                  {symbol}{summary.variableExpenseTotal.toLocaleString()} ({variablePct}%)
+                  {formatMoney(summary.variableExpenseTotal, currency)} ({variablePct}%)
                 </span>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
@@ -179,7 +180,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
                   3. Ahorro / Flujo Neto Remanente
                 </span>
                 <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
-                  {symbol}{summary.netBalance.toLocaleString()} ({savingsPct}%)
+                  {formatMoney(summary.netBalance, currency)} ({savingsPct}%)
                 </span>
               </div>
               <div style={{ width: '100%', height: '8px', background: 'var(--bg-surface)', borderRadius: 'var(--radius-full)', overflow: 'hidden' }}>
@@ -231,7 +232,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
                     </div>
 
                     <div style={{ fontWeight: '700', fontSize: '0.875rem', color: 'var(--text-primary)' }}>
-                      {symbol}{item.amount.toLocaleString()}
+                      {formatMoney(item.amount, currency)}
                     </div>
                   </div>
                 );
@@ -254,7 +255,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
                 <th style={{ padding: '0.6rem 0.5rem' }}>Fecha</th>
                 <th style={{ padding: '0.6rem 0.5rem' }}>Concepto</th>
                 <th style={{ padding: '0.6rem 0.5rem' }}>Categoría</th>
-                <th style={{ padding: '0.6rem 0.5rem' }}>Quincena</th>
+                <th style={{ padding: '0.6rem 0.5rem' }}>Modo</th>
                 <th style={{ padding: '0.6rem 0.5rem' }}>Tipo</th>
                 <th style={{ padding: '0.6rem 0.5rem', textAlign: 'right' }}>Monto</th>
               </tr>
@@ -274,7 +275,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
                       <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-muted)' }}>{t.date}</td>
                       <td style={{ padding: '0.65rem 0.5rem', fontWeight: '600', color: 'var(--text-primary)' }}>{t.title}</td>
                       <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-secondary)' }}>{cat.name}</td>
-                      <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-muted)' }}>Q{t.periodQuincena}</td>
+                      <td style={{ padding: '0.65rem 0.5rem', color: 'var(--text-muted)' }}>{t.periodMode === 'MENSUAL' ? 'Mensual' : 'Quincenal'}</td>
                       <td style={{ padding: '0.65rem 0.5rem' }}>
                         <span className="badge" style={{
                           background: t.type === 'INCOME' ? 'rgba(255, 255, 255, 0.12)' : 'var(--badge-bg)',
@@ -289,7 +290,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
                         fontWeight: '700',
                         color: t.type === 'INCOME' ? 'var(--text-primary)' : 'var(--text-secondary)'
                       }}>
-                        {t.type === 'INCOME' ? '+' : '-'}{symbol}{t.amount.toLocaleString()}
+                        {t.type === 'INCOME' ? '+' : '-'}{formatMoney(t.amount, currency)}
                       </td>
                     </tr>
                   );

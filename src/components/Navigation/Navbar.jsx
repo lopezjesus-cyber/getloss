@@ -1,5 +1,5 @@
 import React from 'react';
-import { Database, Sun, Moon, LogIn, LogOut, User, Plus, Shield } from 'lucide-react';
+import { Sun, Moon, LogIn, LogOut, User, Plus, Shield } from 'lucide-react';
 
 export const Navbar = ({
   user,
@@ -8,7 +8,6 @@ export const Navbar = ({
   onOpenAuth,
   onLogout,
   onOpenProfile,
-  onOpenDbInspector,
   onOpenAddTx
 }) => {
   return (
@@ -19,34 +18,24 @@ export const Navbar = ({
           <span className="brand-dot" />
           <span>getloss</span>
         </div>
-        <span className="badge" style={{ fontSize: '0.7rem', display: 'none' /* visible on md */ }}>
+        <span className="badge" style={{ fontSize: '0.7rem' }}>
           Fintech Suite
         </span>
       </div>
 
       {/* Controles del Lado Derecho */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-        {/* Botón Acción Rápida (Desktop/Tablet) */}
+        {/* Botón Acción Rápida */}
         {user && (
           <button
             onClick={onOpenAddTx}
             className="btn-primary"
-            style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem', display: 'none' /* shown on md */ }}
+            style={{ fontSize: '0.8rem', padding: '0.45rem 0.9rem' }}
           >
             <Plus size={15} />
             <span>Nuevo Movimiento</span>
           </button>
         )}
-
-        {/* Botón Inspector de Base de Datos */}
-        <button
-          onClick={onOpenDbInspector}
-          className="btn-icon"
-          title="Ver Bases de Datos (Usuarios y Finanzas)"
-          style={{ width: '36px', height: '36px' }}
-        >
-          <Database size={17} />
-        </button>
 
         {/* Alternador de Tema Oscuro / Claro */}
         <button

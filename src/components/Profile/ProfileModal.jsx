@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { UsersDB } from '../../services/usersDb';
+import { getCurrencySymbol } from '../../utils/formatters';
 import { User, Mail, DollarSign, Calendar, Phone, Check, X, Shield } from 'lucide-react';
 
 export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
@@ -20,7 +21,7 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
       fullName: formData.fullName,
       phone: formData.phone,
       currency: formData.currency,
-      currencySymbol: formData.currency === 'EUR' ? '€' : '$',
+      currencySymbol: getCurrencySymbol(formData.currency),
       payFrequency: formData.payFrequency,
       monthlyIncomeGoal: Number(formData.monthlyIncomeGoal)
     });
@@ -114,6 +115,11 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
                 <option value="COP">COP ($ - Peso Col.)</option>
                 <option value="MXN">MXN ($ - Peso Mex.)</option>
                 <option value="EUR">EUR (€ - Euro)</option>
+                <option value="ARS">ARS ($ - Peso Arg.)</option>
+                <option value="CLP">CLP ($ - Peso Chileno)</option>
+                <option value="PEN">PEN (S/ - Sol)</option>
+                <option value="GBP">GBP (£ - Libra)</option>
+                <option value="CAD">CAD (C$ - Dólar Can.)</option>
               </select>
             </div>
 
@@ -146,6 +152,7 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated }) => {
             </label>
             <input
               type="number"
+              step="0.01"
               value={formData.monthlyIncomeGoal}
               onChange={(e) => setFormData({ ...formData, monthlyIncomeGoal: e.target.value })}
               style={{

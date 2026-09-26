@@ -4,13 +4,11 @@ import {
   ShieldCheck, 
   Receipt, 
   BarChart3, 
-  Database, 
   PlusCircle, 
-  Settings,
   Sparkles
 } from 'lucide-react';
 
-export const Sidebar = ({ activeTab, onSelectTab, onOpenAddTx, onOpenDbInspector, fixedCount }) => {
+export const Sidebar = ({ activeTab, onSelectTab, onOpenAddTx, fixedCount }) => {
   const navItems = [
     { id: 'dashboard', label: 'Panel Principal', icon: LayoutDashboard },
     { id: 'fixed', label: 'Gastos Indispensables', icon: ShieldCheck, badge: fixedCount },
@@ -23,7 +21,7 @@ export const Sidebar = ({ activeTab, onSelectTab, onOpenAddTx, onOpenDbInspector
       width: '260px',
       background: 'var(--bg-surface)',
       borderRight: '1px solid var(--border-subtle)',
-      display: 'none', /* Shown in desktop via CSS or wrapper */
+      display: 'none',
       flexDirection: 'column',
       justifyContent: 'space-between',
       padding: '1.5rem 1rem',
@@ -97,27 +95,20 @@ export const Sidebar = ({ activeTab, onSelectTab, onOpenAddTx, onOpenDbInspector
         </div>
       </div>
 
-      {/* Acceso Inferior a Base de Datos */}
-      <div style={{ paddingTop: '1rem', borderTop: '1px solid var(--border-subtle)' }}>
-        <button
-          onClick={onOpenDbInspector}
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.65rem',
-            width: '100%',
-            padding: '0.65rem 0.85rem',
-            borderRadius: 'var(--radius-md)',
-            background: 'var(--bg-card)',
-            color: 'var(--text-secondary)',
-            border: '1px solid var(--border-subtle)',
-            fontSize: '0.8rem',
-            fontWeight: '600'
-          }}
-        >
-          <Database size={16} />
-          <span>Bases de Datos Separadas</span>
-        </button>
+      {/* Footer del Sidebar */}
+      <div style={{
+        padding: '0.85rem',
+        borderRadius: 'var(--radius-md)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-subtle)',
+        textAlign: 'center'
+      }}>
+        <div style={{ fontSize: '0.75rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+          getloss Suite
+        </div>
+        <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.15rem' }}>
+          Control Quincenal & Mensual
+        </div>
       </div>
     </aside>
   );
