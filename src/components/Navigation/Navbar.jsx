@@ -10,7 +10,8 @@ export const Navbar = ({
   onLogout,
   onOpenProfile,
   onOpenAddTx,
-  onOpenDatabase
+  onOpenDatabase,
+  onOpenSql
 }) => {
   return (
     <header className="top-navbar">
@@ -23,7 +24,33 @@ export const Navbar = ({
       </div>
 
       {/* Controles del Lado Derecho */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+
+        {/* Consola y Tablas de Base de Datos SQL */}
+        <button
+          onClick={onOpenSql}
+          className="sql-status-pill"
+          title="Consola y Explorador de Base de Datos Relacional SQL (SQLite)"
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.38rem',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: '9999px',
+            padding: '0.28rem 0.65rem',
+            fontSize: '0.72rem',
+            fontWeight: '700',
+            color: 'var(--text-primary)',
+            cursor: 'pointer',
+            transition: 'var(--transition)'
+          }}
+          onMouseOver={(e) => { e.currentTarget.style.borderColor = 'var(--border-strong)'; }}
+          onMouseOut={(e) => { e.currentTarget.style.borderColor = 'var(--border-medium)'; }}
+        >
+          <Database size={13} style={{ color: '#ffffff' }} />
+          <span>SQL</span>
+        </button>
 
         {/* Estado de Base de Datos Global en la Nube */}
         <button

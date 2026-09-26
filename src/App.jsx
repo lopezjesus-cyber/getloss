@@ -26,6 +26,7 @@ import { AddTransactionModal } from './components/Transactions/AddTransactionMod
 import { ProfileModal } from './components/Profile/ProfileModal';
 import { InstallAppModal } from './components/Common/InstallAppModal';
 import { FirebaseConfigModal } from './components/Firebase/FirebaseConfigModal';
+import { SqlDatabaseModal } from './components/DatabaseInspector/SqlDatabaseModal';
 
 export default function App() {
   // Detección precisa de dispositivo (PC vs Celular)
@@ -57,6 +58,7 @@ export default function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isInstallModalOpen, setIsInstallModalOpen] = useState(false);
   const [isFirebaseOpen, setIsFirebaseOpen] = useState(false);
+  const [isSqlModalOpen, setIsSqlModalOpen] = useState(false);
 
   // Control de Tema (Dark por defecto / Light)
   const [theme, setTheme] = useState(() => {
@@ -193,6 +195,7 @@ export default function App() {
           onOpenProfile={() => setIsProfileOpen(true)}
           onOpenAddTx={() => setIsAddTxOpen(true)}
           onOpenDatabase={() => setIsFirebaseOpen(true)}
+          onOpenSql={() => setIsSqlModalOpen(true)}
           isMobile={isMobile}
         />
 
@@ -321,6 +324,7 @@ export default function App() {
         onClose={() => setIsProfileOpen(false)}
         user={currentUser}
         onOpenFirebase={() => setIsFirebaseOpen(true)}
+        onOpenSql={() => setIsSqlModalOpen(true)}
         onProfileUpdated={(updated) => {
           setCurrentUser(updated);
           handleDataChanged();
@@ -341,6 +345,12 @@ export default function App() {
       <FirebaseConfigModal
         isOpen={isFirebaseOpen}
         onClose={() => setIsFirebaseOpen(false)}
+      />
+
+      <SqlDatabaseModal
+        isOpen={isSqlModalOpen}
+        onClose={() => setIsSqlModalOpen(false)}
+        currentUser={currentUser}
       />
     </div>
   );

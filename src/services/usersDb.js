@@ -6,6 +6,7 @@
 import { CloudSync, getDeterministicUserId, getDirectCloudData } from './cloudSync';
 import { FirebaseService } from './firebaseService';
 import { FinancesDB } from './financesDb';
+import { SqlDatabase } from './sqlDatabase';
 
 const USERS_STORAGE_KEY = 'getloss_users_db_v1';
 const SESSION_STORAGE_KEY = 'getloss_active_session_v1';
@@ -86,7 +87,12 @@ export const UsersDB = {
       createdAt: new Date().toISOString()
     };
 
-    // 3. Guardar en caché local
+    // 3. Guardar en Base de Datos Relacional SQL
+    SqlDatabase.sqlInsertUser(registeredUser).catch(err => {
+      console.warn('[SQL DB] Aviso al guardar usuario en SQL:', err.message);
+    });
+
+    // 4. Guardar en caché local
     const users = UsersDB.getAllUsers();
     const existingIndex = users.findIndex(u => u.email.toLowerCase() === cleanEmail);
     if (existingIndex >= 0) {
@@ -96,7 +102,7 @@ export const UsersDB = {
     }
     UsersDB._saveUsers(users);
 
-    // 4. Establecer sesión activa
+    // 5. Establecer sesión activa
     UsersDB.setActiveSession(registeredUser);
     return registeredUser;
   },
@@ -111,6 +117,9 @@ export const UsersDB = {
       const cloudResult = await CloudSync.loginInCloud(cleanEmail, cleanPassword);
       if (cloudResult && cloudResult.success && cloudResult.user) {
         const cloudUser = cloudResult.user;
+
+        // Guardar/Actualizar en Base de Datos Relacional SQL
+        SqlDatabase.sqlInsertUser(cloudUser).catch(() => {});
 
         // Actualizar caché local de usuarios
         const users = UsersDB.getAllUsers();
@@ -147,6 +156,7 @@ export const UsersDB = {
       const firebaseResult = await FirebaseService.loginUser(cleanEmail, cleanPassword);
       if (firebaseResult && firebaseResult.success && firebaseResult.user) {
         const cloudUser = firebaseResult.user;
+        SqlDatabase.sqlInsertUser(cloudUser).catch(() => {});
         const users = UsersDB.getAllUsers();
         const index = users.findIndex(u => u.email.toLowerCase() === cleanEmail);
         if (index >= 0) {
@@ -165,7 +175,18 @@ export const UsersDB = {
       }
     } catch {}
 
-    // 3. Fallback a caché local si no hay conexión a internet
+    // 3. Autenticación contra Base de Datos Relacional SQL
+    try {
+      const sqlUser = await SqlDatabase.sqlFindUserByEmailAndPassword(cleanEmail, cleanPassword);
+      if (sqlUser) {
+        UsersDB.setActiveSession(sqlUser);
+        return sqlUser;
+      }
+    } catch (e) {
+      console.warn('[SQL DB] Consulta SQL aviso:', e.message);
+    }
+
+    // 4. Fallback a caché local si no hay conexión a internet
     const users = UsersDB.getAllUsers();
     const user = users.find(
       u => u.email.toLowerCase() === cleanEmail && 

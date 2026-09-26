@@ -6,6 +6,7 @@
 
 import { CloudSync } from './cloudSync';
 import { FirebaseService } from './firebaseService';
+import { SqlDatabase } from './sqlDatabase';
 
 const FINANCES_STORAGE_KEY = 'getloss_finances_db_v1';
 
@@ -95,6 +96,17 @@ export const FinancesDB = {
     db.fixedExpenses = [...otherFixed, ...(cloudData.fixedExpenses || [])];
 
     localStorage.setItem(FINANCES_STORAGE_KEY, JSON.stringify(db));
+
+    // Guardar en la Base de Datos Relacional SQL
+    (cloudData.transactions || []).forEach(t => {
+      SqlDatabase.sqlInsertTransaction(t).catch(() => {});
+    });
+    (cloudData.fixedExpenses || []).forEach(f => {
+      SqlDatabase.sqlInsertFixedExpense(f).catch(() => {});
+      (f.paidPeriods || []).forEach(pKey => {
+        SqlDatabase.sqlToggleFixedExpensePaid(f.id, userId, pKey).catch(() => {});
+      });
+    });
   },
 
   // Suscribirse a cambios en vivo desde la Nube (Multi-dispositivo en tiempo real)
@@ -197,6 +209,12 @@ export const FinancesDB = {
 
     db.transactions.unshift(newTx);
     FinancesDB._saveDatabase(db, userId);
+
+    // Guardar en Base de Datos Relacional SQL
+    SqlDatabase.sqlInsertTransaction(newTx).catch(err => {
+      console.warn('[SQL DB] Error al insertar transacción SQL:', err.message);
+    });
+
     return newTx;
   },
 
@@ -207,6 +225,10 @@ export const FinancesDB = {
 
     db.transactions = (db.transactions || []).filter(t => t.id !== txId);
     FinancesDB._saveDatabase(db, userId);
+
+    // Eliminar en Base de Datos Relacional SQL
+    SqlDatabase.sqlDeleteTransaction(txId).catch(() => {});
+
     return true;
   },
 
@@ -237,6 +259,12 @@ export const FinancesDB = {
 
     db.fixedExpenses.push(newFixed);
     FinancesDB._saveDatabase(db, userId);
+
+    // Guardar en Base de Datos Relacional SQL
+    SqlDatabase.sqlInsertFixedExpense(newFixed).catch(err => {
+      console.warn('[SQL DB] Error al insertar gasto fijo SQL:', err.message);
+    });
+
     return newFixed;
   },
 
@@ -255,6 +283,10 @@ export const FinancesDB = {
     }
 
     FinancesDB._saveDatabase(db, item.userId);
+
+    // Actualizar en Base de Datos Relacional SQL
+    SqlDatabase.sqlToggleFixedExpensePaid(fixedId, item.userId, periodKey).catch(() => {});
+
     return !isPaid;
   },
 
@@ -265,6 +297,10 @@ export const FinancesDB = {
 
     db.fixedExpenses = (db.fixedExpenses || []).filter(f => f.id !== fixedId);
     FinancesDB._saveDatabase(db, userId);
+
+    // Eliminar en Base de Datos Relacional SQL
+    SqlDatabase.sqlDeleteFixedExpense(fixedId).catch(() => {});
+
     return true;
   },
 

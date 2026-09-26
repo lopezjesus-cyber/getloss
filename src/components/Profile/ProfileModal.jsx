@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { UsersDB } from '../../services/usersDb';
 import { FinancesDB } from '../../services/financesDb';
 import { getCurrencySymbol } from '../../utils/formatters';
-import { User, Mail, DollarSign, Calendar, Phone, Check, X, Shield, Trash2, AlertTriangle } from 'lucide-react';
+import { User, Mail, DollarSign, Calendar, Phone, Check, X, Shield, Trash2, AlertTriangle, Database } from 'lucide-react';
 
-export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated, onDeleteAccount }) => {
+export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated, onDeleteAccount, onOpenFirebase, onOpenSql }) => {
   const [formData, setFormData] = useState({
     fullName: user?.fullName || '',
     phone: user?.phone || '',
@@ -232,6 +232,38 @@ export const ProfileModal = ({ isOpen, onClose, user, onProfileUpdated, onDelete
               style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem' }}
             >
               <span>Ver Estado</span>
+            </button>
+          </div>
+        )}
+
+        {/* Base de Datos Relacional SQL */}
+        {onOpenSql && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-medium)',
+            borderRadius: 'var(--radius-md)',
+            padding: '0.75rem 1rem',
+            marginTop: '0.75rem'
+          }}>
+            <div>
+              <div style={{ fontSize: '0.825rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                <Database size={14} style={{ color: '#ffffff' }} />
+                <span>Base de Datos SQL (SQLite)</span>
+              </div>
+              <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: '0.15rem 0 0' }}>
+                Tablas relacionales users, transactions y exportación .SQL
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => { onClose(); onOpenSql(); }}
+              className="btn-secondary"
+              style={{ fontSize: '0.75rem', padding: '0.4rem 0.75rem', fontWeight: '700' }}
+            >
+              <span>Abrir SQL</span>
             </button>
           </div>
         )}
