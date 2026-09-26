@@ -1,9 +1,12 @@
 import { CloudStore } from './lib/cloudStore.js';
 
 export default async function handler(req, res) {
-  // Configuración de Cabeceras CORS para permitir peticiones desde PC, Celular y PWA
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Configuración de Cabeceras CORS universal para PC, Móvil, localhost y Vercel
+  const origin = req.headers.origin || '*';
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  if (origin !== '*') {
+    res.setHeader('Access-Control-Allow-Credentials', 'true');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
   res.setHeader(
     'Access-Control-Allow-Headers',

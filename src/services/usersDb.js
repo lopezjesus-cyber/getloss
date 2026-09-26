@@ -32,12 +32,16 @@ export const UsersDB = {
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(users));
   },
 
-  // Obtener usuarios directamente de la nube
+  // Obtener usuarios directamente de la nube y sincronizar con SQL y caché local
   fetchCloudUsers: async () => {
     try {
       const cloudData = await getDirectCloudData();
-      if (cloudData && Array.isArray(cloudData.users)) {
+      if (cloudData && Array.isArray(cloudData.users) && cloudData.users.length > 0) {
         UsersDB._saveUsers(cloudData.users);
+        // Poblar e indexar en la Base de Datos Relacional SQL
+        for (const u of cloudData.users) {
+          SqlDatabase.sqlInsertUser(u).catch(() => {});
+        }
         return cloudData.users;
       }
     } catch (e) {
@@ -46,7 +50,7 @@ export const UsersDB = {
     return UsersDB.getAllUsers();
   },
 
-  // Registrar nuevo usuario (Guarda permanentemente en la Nube Global y en local)
+  // Registrar nuevo usuario (Guarda permanentemente en la Nube Global, SQL y en local)
   register: async (userData) => {
     const cleanEmail = userData.email.trim().toLowerCase();
     const userId = userData.id || getDeterministicUserId(cleanEmail);
@@ -87,10 +91,12 @@ export const UsersDB = {
       createdAt: new Date().toISOString()
     };
 
-    // 3. Guardar en Base de Datos Relacional SQL
-    SqlDatabase.sqlInsertUser(registeredUser).catch(err => {
+    // 3. Guardar obligatoriamente en Base de Datos Relacional SQL
+    try {
+      await SqlDatabase.sqlInsertUser(registeredUser);
+    } catch (err) {
       console.warn('[SQL DB] Aviso al guardar usuario en SQL:', err.message);
-    });
+    }
 
     // 4. Guardar en caché local
     const users = UsersDB.getAllUsers();

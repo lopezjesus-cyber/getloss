@@ -98,7 +98,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
         setIsLoading(false);
       }
     } else {
-      // Registro: Validar y enviar código de verificación al correo real
+      // Registro directo e instantáneo en la Base de Datos SQL y Nube Global
       if (!formData.fullName.trim() || !formData.email.trim() || !formData.password) {
         setError('Por favor completa todos los campos obligatorios.');
         return;
@@ -110,21 +110,16 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
         return;
       }
 
-      // Validar si el correo ya existe
-      const existingUsers = UsersDB.getAllUsers();
-      if (existingUsers.some(u => u.email.toLowerCase() === formData.email.trim().toLowerCase())) {
-        setError('Ya existe una cuenta con este correo electrónico.');
-        return;
-      }
-
       setIsLoading(true);
       try {
-        await EmailService.sendVerificationCode(formData.email, formData.fullName);
-        setPin(['', '', '', '', '', '']);
-        setResendTimer(30);
-        setStep('VERIFY_EMAIL');
+        const newUser = await UsersDB.register(formData);
+        setStep('SUCCESS');
+        setTimeout(() => {
+          onAuthSuccess(newUser);
+          onClose();
+        }, 1200);
       } catch (err) {
-        setError('No se pudo enviar el correo de verificación. Intenta nuevamente.');
+        setError(err.message || 'Error al completar el registro.');
       } finally {
         setIsLoading(false);
       }
@@ -271,7 +266,7 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
               <p style={{ color: 'var(--text-secondary)', fontSize: '0.875rem' }}>
                 {isLogin
                   ? 'Inicia sesión para gestionar tus finanzas quincenales y mensuales'
-                  : 'Crea tu cuenta y verifica tu correo para comenzar'}
+                  : 'Crea tu cuenta con persistencia SQL y sincronización global'}
               </p>
             </div>
 
@@ -596,10 +591,10 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
                 style={{ width: '100%', marginTop: '0.5rem', padding: '0.85rem' }}
               >
                 {isLoading
-                  ? 'Enviando código...'
+                  ? 'Guardando cuenta en SQL y Nube...'
                   : isLogin
                     ? 'Ingresar a getloss'
-                    : 'Enviar Código de Verificación al Correo'}
+                    : 'Crear Cuenta y Guardar'}
                 <ArrowRight size={16} />
               </button>
             </form>

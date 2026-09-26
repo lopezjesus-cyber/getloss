@@ -75,30 +75,50 @@ export default function App() {
     localStorage.setItem('getloss_theme', theme);
   }, [theme, deviceType]);
 
-  // Sincronización automática de cuentas locales a la nube al iniciar en cualquier dispositivo
+  // Sincronización automática de cuentas globales y base de datos SQL al iniciar en cualquier dispositivo
   useEffect(() => {
-    try {
-      const localUsers = UsersDB.getAllUsers();
-      const rawFinances = FinancesDB.getRawDatabase();
+    const initSync = async () => {
+      try {
+        // 1. Descargar cuentas registradas desde la nube e indexarlas en SQLite
+        await UsersDB.fetchCloudUsers();
 
-      const financesMap = {};
-      if (rawFinances && rawFinances.transactions) {
-        rawFinances.transactions.forEach(t => {
-          if (!financesMap[t.userId]) financesMap[t.userId] = { transactions: [], fixedExpenses: [] };
-          financesMap[t.userId].transactions.push(t);
-        });
-      }
-      if (rawFinances && rawFinances.fixedExpenses) {
-        rawFinances.fixedExpenses.forEach(f => {
-          if (!financesMap[f.userId]) financesMap[f.userId] = { transactions: [], fixedExpenses: [] };
-          financesMap[f.userId].fixedExpenses.push(f);
-        });
-      }
+        // 2. Si hay un usuario activo, sincronizar sus finanzas más recientes desde la nube
+        const active = UsersDB.getActiveSession();
+        if (active && active.id) {
+          try {
+            const liveFinances = await CloudSync.pullFinancesFromCloud(active.id);
+            if (liveFinances && FinancesDB && FinancesDB.injectCloudData) {
+              FinancesDB.injectCloudData(active.id, liveFinances);
+              setDataVersion(v => v + 1);
+            }
+          } catch {}
+        }
 
-      CloudSync.syncAllLocalUsersToCloud(localUsers, financesMap);
-    } catch (e) {
-      console.warn('Auto-sync notice:', e.message);
-    }
+        // 3. Reconciliar finanzas locales hacia la nube
+        const localUsers = UsersDB.getAllUsers();
+        const rawFinances = FinancesDB.getRawDatabase();
+
+        const financesMap = {};
+        if (rawFinances && rawFinances.transactions) {
+          rawFinances.transactions.forEach(t => {
+            if (!financesMap[t.userId]) financesMap[t.userId] = { transactions: [], fixedExpenses: [] };
+            financesMap[t.userId].transactions.push(t);
+          });
+        }
+        if (rawFinances && rawFinances.fixedExpenses) {
+          rawFinances.fixedExpenses.forEach(f => {
+            if (!financesMap[f.userId]) financesMap[f.userId] = { transactions: [], fixedExpenses: [] };
+            financesMap[f.userId].fixedExpenses.push(f);
+          });
+        }
+
+        CloudSync.syncAllLocalUsersToCloud(localUsers, financesMap);
+      } catch (e) {
+        console.warn('Auto-sync notice:', e.message);
+      }
+    };
+
+    initSync();
   }, []);
 
   // Sincronización en Tiempo Real Multi-Dispositivo con Firebase
