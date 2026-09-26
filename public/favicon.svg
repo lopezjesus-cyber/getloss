@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64" fill="none">
   <defs>
     <!-- Fondo Squircle Titanio Oscuro -->
     <linearGradient id="favBgGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
@@ -9,10 +9,10 @@
 
     <!-- Borde Metálico Titanio Cepillado -->
     <linearGradient id="favBorderGrad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
-      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
-      <stop offset="40%" stopColor="#71717a" stopOpacity="0.3" />
-      <stop offset="70%" stopColor="#27272a" stopOpacity="0.5" />
-      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.6" />
+      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.85" />
+      <stop offset="40%" stopColor="#71717a" stopOpacity="0.35" />
+      <stop offset="70%" stopColor="#27272a" stopOpacity="0.55" />
+      <stop offset="100%" stopColor="#ffffff" stopOpacity="0.75" />
     </linearGradient>
 
     <!-- Gradiente Metálico para el Escudo getloss -->
@@ -35,7 +35,7 @@
   <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#favBgGrad)" stroke="url(#favBorderGrad)" stroke-width="2" />
 
   <!-- Brillo de Zafiro Superior -->
-  <path d="M4 16C4 9.37 9.37 4 16 4H48C54.63 4 60 9.37 60 16V28C48 26 16 26 4 28V16Z" fill="#ffffff" fill-opacity="0.08" />
+  <path d="M4 16C4 9.37 9.37 4 16 4H48C54.63 4 60 9.37 60 16V28C48 26 16 26 4 28V16Z" fill="#ffffff" fill-opacity="0.12" />
 
   <!-- Escudo Exterior getloss -->
   <path
@@ -49,8 +49,8 @@
   <!-- Núcleo de Crecimiento & Vértice de Precisión -->
   <path
     d="M32 17L41.5 22.5V32.5C41.5 38 37.5 42.5 32 44.5C26.5 42.5 22.5 38 22.5 32.5V22.5L32 17Z"
-    fill="rgba(255, 255, 255, 0.05)"
-    stroke="rgba(255, 255, 255, 0.4)"
+    fill="rgba(255, 255, 255, 0.08)"
+    stroke="rgba(255, 255, 255, 0.45)"
     stroke-width="1.6"
     stroke-linejoin="round"
   />
@@ -59,18 +59,18 @@
   <path
     d="M24 35.5L30.5 27.5L35 31.5L40.5 22.5"
     stroke="url(#favArrowGrad)"
-    stroke-width="3"
+    stroke-width="3.2"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
   <path
     d="M35 22.5H40.5V28"
     stroke="#ffffff"
-    stroke-width="3"
+    stroke-width="3.2"
     stroke-linecap="round"
     stroke-linejoin="round"
   />
 
   <!-- Punto de Precisión Superior -->
-  <circle cx="32" cy="10" r="1.8" fill="#ffffff" />
+  <circle cx="32" cy="10" r="2" fill="#ffffff" />
 </svg>
