@@ -1,6 +1,6 @@
 /**
- * getloss - Cloud Store Engine para API Serverless
- * Proporciona persistencia permanente en la nube y sincronización en tiempo real
+ * getloss - Cloud Store Engine para API Serverless en Vercel
+ * Proporciona persistencia centralizada en la nube y sincronización universal en tiempo real
  * entre Celulares, Tablets y Computadoras de Escritorio (PC / Mac).
  */
 
@@ -31,34 +31,69 @@ function mergeUsers(a = [], b = []) {
   return Array.from(map.values());
 }
 
-// Obtener estado global completo
+// Fusionar finanzas sin sobrescribir destructivamente
+function mergeFinances(a = {}, b = {}) {
+  const merged = { ...(a || {}) };
+  for (const [uid, fData] of Object.entries(b || {})) {
+    if (!merged[uid]) {
+      merged[uid] = fData;
+    } else {
+      merged[uid] = {
+        transactions: Array.isArray(fData.transactions) ? fData.transactions : (merged[uid].transactions || []),
+        fixedExpenses: Array.isArray(fData.fixedExpenses) ? fData.fixedExpenses : (merged[uid].fixedExpenses || []),
+        lastSync: fData.lastSync || new Date().toISOString()
+      };
+    }
+  }
+  return merged;
+}
+
+// Obtener estado global completo consultando y reconciliando los nodos de la nube
 async function fetchFullCloudState() {
   for (const endpoint of CLOUD_ENDPOINTS) {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 4000);
+
       const res = await fetch(endpoint, {
         headers: {
           'Security-key': CLOUD_SECURITY_KEY,
           'Accept': 'application/json'
-        }
+        },
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
+
       if (res.ok) {
         const text = await res.text();
-        const json = text ? JSON.parse(text) : {};
-        memoryCache.users = mergeUsers(memoryCache.users, json.users || []);
-        memoryCache.finances = {
-          ...(memoryCache.finances || {}),
-          ...(json.finances || {})
-        };
-        return memoryCache;
+        let json = {};
+        try {
+          json = text ? JSON.parse(text) : {};
+        } catch {}
+
+        // En caso de que extendsclass devuelva { status: 0, data: "..." }
+        if (json && json.data && typeof json.data === 'string') {
+          try { json = JSON.parse(json.data); } catch {}
+        }
+
+        const endpointUsers = Array.isArray(json.users) ? json.users : [];
+        const endpointFinances = (json.finances && typeof json.finances === 'object') ? json.finances : {};
+
+        memoryCache.users = mergeUsers(memoryCache.users, endpointUsers);
+        memoryCache.finances = mergeFinances(memoryCache.finances, endpointFinances);
+
+        if (endpointUsers.length > 0 || Object.keys(endpointFinances).length > 0) {
+          return memoryCache;
+        }
       }
     } catch (e) {
-      console.warn(`[CloudStore] Endpoint ${endpoint} read error:`, e.message);
+      console.warn(`[CloudStore] Endpoint ${endpoint} lectura aviso:`, e.message);
     }
   }
   return memoryCache;
 }
 
-// Guardar estado global completo
+// Guardar estado global completo en todos los nodos de la nube
 async function saveFullCloudState(state) {
   memoryCache = state;
 
@@ -70,14 +105,19 @@ async function saveFullCloudState(state) {
 
   const writePromises = CLOUD_ENDPOINTS.map(async (endpoint) => {
     try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
+
       const res = await fetch(endpoint, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Security-key': CLOUD_SECURITY_KEY
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
+        signal: controller.signal
       });
+      clearTimeout(timeoutId);
       return res.ok;
     } catch {
       return false;
@@ -107,6 +147,12 @@ export const CloudStore = {
     const state = await fetchFullCloudState();
     if (state.finances && state.finances[userId]) {
       return state.finances[userId];
+    }
+    // Búsqueda insensible a mayúsculas
+    for (const [key, val] of Object.entries(state.finances || {})) {
+      if (key.toLowerCase() === (userId || '').toLowerCase()) {
+        return val;
+      }
     }
     return { transactions: [], fixedExpenses: [] };
   },
