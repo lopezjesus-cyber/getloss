@@ -816,44 +816,52 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                 </p>
               </div>
 
-              {/* CHASIS FÍSICO IPHONE 16 PRO TITANIUM */}
+              {/* CHASIS FÍSICO IPHONE 16 PRO TITANIUM CON RATIO Y MEDIDAS DE PRECISIÓN */}
               <div className="apple-hardware-wrapper" style={{
                 position: 'relative',
                 width: '100%',
-                maxWidth: '390px',
+                maxWidth: '360px',
+                height: '730px',
                 zIndex: 2,
+                margin: '0 auto',
                 animation: 'appleFadeScale 0.35s cubic-bezier(0.16, 1, 0.3, 1)'
               }}>
                 {/* Botones Físicos Izquierdos (Action Button, Vol +, Vol -) */}
-                <div style={{ position: 'absolute', left: '-3px', top: '105px', width: '4px', height: '28px', background: 'linear-gradient(180deg, #d4d4d8, #71717a)', borderRadius: '3px 0 0 3px', boxShadow: 'inset 0 0 1px #000' }} />
-                <div style={{ position: 'absolute', left: '-3px', top: '150px', width: '4px', height: '52px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '3px 0 0 3px' }} />
-                <div style={{ position: 'absolute', left: '-3px', top: '215px', width: '4px', height: '52px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '3px 0 0 3px' }} />
+                <div style={{ position: 'absolute', left: '-3px', top: '100px', width: '3.5px', height: '26px', background: 'linear-gradient(180deg, #d4d4d8, #71717a)', borderRadius: '3px 0 0 3px', boxShadow: 'inset 0 0 1px #000' }} />
+                <div style={{ position: 'absolute', left: '-3px', top: '142px', width: '3.5px', height: '48px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '3px 0 0 3px' }} />
+                <div style={{ position: 'absolute', left: '-3px', top: '200px', width: '3.5px', height: '48px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '3px 0 0 3px' }} />
 
                 {/* Botones Físicos Derechos (Power & Camera Control) */}
-                <div style={{ position: 'absolute', right: '-3px', top: '165px', width: '4px', height: '72px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '0 3px 3px 0' }} />
-                <div style={{ position: 'absolute', right: '-3px', top: '295px', width: '3px', height: '46px', background: 'linear-gradient(180deg, #3f3f46, #27272a)', borderRadius: '0 2px 2px 0' }} />
+                <div style={{ position: 'absolute', right: '-3px', top: '155px', width: '3.5px', height: '64px', background: 'linear-gradient(180deg, #a1a1aa, #52525b)', borderRadius: '0 3px 3px 0' }} />
+                <div style={{ position: 'absolute', right: '-3px', top: '480px', width: '3px', height: '42px', background: 'linear-gradient(180deg, #3f3f46, #27272a)', borderRadius: '0 2px 2px 0' }} />
 
-                {/* Chasis Exterior de Titanio Cepillado */}
+                {/* Chasis Exterior de Titanio Pulido (Concentricidad R=52px) */}
                 <div style={{
                   background: 'linear-gradient(145deg, #71717a 0%, #27272a 30%, #3f3f46 60%, #18181b 100%)',
-                  borderRadius: '56px',
-                  padding: '11px',
-                  boxShadow: '0 40px 100px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.45)',
-                  position: 'relative'
+                  borderRadius: '52px',
+                  padding: '9px',
+                  height: '100%',
+                  boxShadow: '0 40px 100px -15px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(255, 255, 255, 0.28), inset 0 1px 2px rgba(255, 255, 255, 0.45)',
+                  position: 'relative',
+                  display: 'flex',
+                  flexDirection: 'column'
                 }}>
                   {/* Bisel Negro OLED Uniforme */}
                   <div style={{
                     background: '#000000',
-                    borderRadius: '46px',
-                    padding: '3px',
-                    boxShadow: 'inset 0 0 4px rgba(0,0,0,0.9)'
+                    borderRadius: '44px',
+                    padding: '2.5px',
+                    height: '100%',
+                    boxShadow: 'inset 0 0 4px rgba(0,0,0,0.9)',
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}>
-                    {/* Pantalla Super Retina XDR OLED */}
+                    {/* Pantalla Super Retina XDR OLED (R=42px) */}
                     <div style={{
                       background: '#09090b',
-                      borderRadius: '43px',
-                      padding: '0.9rem 0.95rem 0.75rem 0.95rem',
-                      minHeight: '585px',
+                      borderRadius: '42px',
+                      padding: '0.75rem 0.9rem 0.65rem 0.9rem',
+                      height: '100%',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
@@ -867,10 +875,20 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                         top: 0,
                         left: 0,
                         right: 0,
-                        height: '160px',
-                        background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.01) 50%, transparent 100%)',
+                        height: '180px',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.01) 50%, transparent 100%)',
                         pointerEvents: 'none',
                         zIndex: 15
+                      }} />
+
+                      {/* Altavoz Superior / Ear Speaker Mesh */}
+                      <div style={{
+                        width: '44px',
+                        height: '3px',
+                        borderRadius: '2px',
+                        background: '#18181b',
+                        margin: '0 auto 4px auto',
+                        zIndex: 26
                       }} />
 
                       {/* Dynamic Island Expandible */}
@@ -880,11 +898,11 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                           onMouseEnter={() => setIsDynamicIslandExpanded(true)}
                           onMouseLeave={() => setIsDynamicIslandExpanded(false)}
                           style={{
-                            width: isDynamicIslandExpanded ? '230px' : '122px',
-                            height: isDynamicIslandExpanded ? '38px' : '28px',
+                            width: isDynamicIslandExpanded ? '225px' : '116px',
+                            height: isDynamicIslandExpanded ? '36px' : '27px',
                             background: '#000000',
                             borderRadius: '9999px',
-                            margin: '0 auto 0.5rem auto',
+                            margin: '0 auto 0.45rem auto',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -896,8 +914,8 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                           title="Dynamic Island Interactiva"
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#1c1c20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#09090b' }} />
+                            <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: '#1c1c20', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <div style={{ width: '3.5px', height: '3.5px', borderRadius: '50%', background: '#09090b' }} />
                             </div>
                             {isDynamicIslandExpanded && (
                               <span style={{ fontSize: '0.68rem', fontWeight: '700', color: '#ffffff' }}>getloss Live</span>
@@ -905,30 +923,31 @@ export const LandingPage = ({ onOpenAuth, onToggleTheme, theme }) => {
                           </div>
 
                           <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
+                            <span style={{ width: '5.5px', height: '5.5px', borderRadius: '50%', background: '#22c55e', boxShadow: '0 0 6px #22c55e' }} />
                             {isDynamicIslandExpanded ? (
                               <span style={{ fontSize: '0.68rem', fontWeight: '800', color: '#4ade80' }}>+{formatMoney(currentSim.balance, 'USD')}</span>
                             ) : (
-                              <span style={{ fontSize: '0.6rem', color: '#a1a1aa', fontWeight: '700' }}>{simPeriod}</span>
+                              <span style={{ fontSize: '0.58rem', color: '#a1a1aa', fontWeight: '700' }}>{simPeriod}</span>
                             )}
                           </div>
                         </div>
 
                         {/* Barra de Estado Nativa iOS */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.5rem 0.6rem 0.5rem', fontSize: '0.75rem', color: '#a1a1aa' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 0.4rem 0.5rem 0.4rem', fontSize: '0.725rem', color: '#a1a1aa' }}>
                           <span style={{ fontWeight: '700', color: '#ffffff' }}>9:41</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '0.65rem', fontWeight: '700', color: '#a1a1aa' }}>5G</span>
-                            <Wifi size={13} color="#ffffff" />
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ fontSize: '0.625rem', fontWeight: '700', color: '#a1a1aa' }}>5G</span>
+                            <Wifi size={12} color="#ffffff" />
                             <div style={{ display: 'flex', alignItems: 'center', gap: '1px' }}>
-                              <div style={{ width: '18px', height: '10px', border: '1px solid #ffffff', borderRadius: '3px', padding: '1px', display: 'flex', alignItems: 'center' }}>
-                                <div style={{ width: '100%', height: '100%', background: '#ffffff', borderRadius: '1.5px' }} />
+                              <div style={{ width: '17px', height: '9.5px', border: '1px solid #ffffff', borderRadius: '2.5px', padding: '1px', display: 'flex', alignItems: 'center' }}>
+                                <div style={{ width: '100%', height: '100%', background: '#ffffff', borderRadius: '1px' }} />
                               </div>
-                              <div style={{ width: '1.5px', height: '4px', background: '#ffffff', borderRadius: '0 1px 1px 0' }} />
+                              <div style={{ width: '1.2px', height: '3.5px', background: '#ffffff', borderRadius: '0 1px 1px 0' }} />
                             </div>
                           </div>
                         </div>
                       </div>
+
 
                       {/* ===================================================== */}
                       {/* CONTENIDO DE PANTALLA MÓVIL SEGÚN PESTAÑA             */}
