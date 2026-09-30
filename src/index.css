@@ -93,6 +93,11 @@
   box-sizing: border-box;
 }
 
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   font-family: var(--font-main);
   background-color: var(--bg-primary);
@@ -101,7 +106,6 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overflow-x: hidden;
 }
 
 input, button, select, textarea {
@@ -137,7 +141,10 @@ button {
 .app-container {
   display: flex;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
   position: relative;
+  overflow-x: hidden;
 }
 
 /* Header & Barra Superior */
@@ -145,6 +152,7 @@ button {
   position: sticky;
   top: 0;
   z-index: 40;
+  width: 100%;
   background: rgba(9, 9, 11, 0.85);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -153,6 +161,13 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .top-navbar {
+    padding: 0.6rem 0.85rem;
+  }
 }
 
 [data-theme='light'] .top-navbar {
@@ -218,17 +233,53 @@ button {
   }
 }
 
+.mobile-bottom-nav {
+  background: rgba(9, 9, 11, 0.92);
+}
+
+[data-theme='light'] .mobile-bottom-nav {
+  background: rgba(255, 255, 255, 0.94) !important;
+  border-top-color: var(--border-medium) !important;
+}
+
 .content-container {
   width: 100%;
   max-width: 1320px;
   margin: 0 auto;
-  padding: 1rem 0.85rem;
+  padding: 0.85rem 0.75rem;
+  box-sizing: border-box;
 }
 
 @media (min-width: 768px) {
   .content-container {
-    padding: 2rem 2.25rem;
+    padding: 1.75rem 2rem;
   }
+}
+
+/* Grid del Dashboard Principal Responsivo */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  width: 100%;
+}
+
+@media (min-width: 1024px) {
+  .dashboard-main-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Utilidades para Contenido Flexible Seguro */
+.safe-flex-child {
+  min-width: 0;
+  flex: 1;
+}
+
+.truncate-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Optimización para dispositivos táctiles */
@@ -250,16 +301,23 @@ button {
   }
 }
 
-
-/* Tarjetas y Paneles */
+/* Tarjetas y Paneles Responsivos */
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
-  padding: 1.5rem;
+  padding: 1.15rem 1rem;
   transition: var(--transition);
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (min-width: 768px) {
+  .card {
+    padding: 1.5rem;
+  }
 }
 
 .card:hover {
@@ -268,7 +326,7 @@ button {
 }
 
 .card-title {
-  font-size: 0.95rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-secondary);
   text-transform: uppercase;
@@ -276,21 +334,18 @@ button {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   margin-bottom: 0.75rem;
 }
 
 .card-value {
   font-family: var(--font-display);
-  font-size: 1.85rem;
+  font-size: clamp(1.4rem, 4.5vw, 2.2rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--text-primary);
-}
-
-@media (min-width: 768px) {
-  .card-value {
-    font-size: 2.2rem;
-  }
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 /* Botones con estilo */

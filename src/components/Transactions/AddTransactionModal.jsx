@@ -11,7 +11,7 @@ export const AddTransactionModal = ({ isOpen, onClose, user, currentPeriod, onTr
     categoryId: 'cat-food',
     date: new Date().toISOString().split('T')[0],
     notes: '',
-    periodQuincena: currentPeriod.quincena === 'ALL' ? (new Date().getDate() <= 15 ? 1 : 2) : Number(currentPeriod.quincena)
+    periodQuincena: currentPeriod?.quincena === 'ALL' ? (new Date().getDate() <= 15 ? 1 : 2) : Number(currentPeriod?.quincena || 1)
   });
 
   if (!isOpen) return null;
@@ -36,7 +36,7 @@ export const AddTransactionModal = ({ isOpen, onClose, user, currentPeriod, onTr
     e.preventDefault();
     if (!formData.title || !formData.amount) return;
 
-    FinancesDB.addTransaction(user.id, {
+    FinancesDB.addTransaction(user?.id, {
       title: formData.title,
       amount: Number(formData.amount),
       type,
@@ -148,10 +148,10 @@ export const AddTransactionModal = ({ isOpen, onClose, user, currentPeriod, onTr
             />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))', gap: '0.75rem' }}>
             <div>
               <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
-                Monto ({user.currencySymbol || '$'}) *
+                Monto ({user?.currencySymbol || '$'}) *
               </label>
               <div style={{ position: 'relative' }}>
                 <DollarSign size={16} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
@@ -204,8 +204,8 @@ export const AddTransactionModal = ({ isOpen, onClose, user, currentPeriod, onTr
             </label>
             <div style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
-              gap: '0.5rem',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 110px), 1fr))',
+              gap: '0.45rem',
               maxHeight: '160px',
               overflowY: 'auto',
               padding: '0.5rem',

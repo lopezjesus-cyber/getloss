@@ -99,22 +99,22 @@ export const ReportsView = ({ user, currentPeriod }) => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.75rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.65rem', width: '100%' }}>
           <button
             type="button"
             onClick={handleExportCSV}
             className="btn-secondary"
-            style={{ fontSize: '0.825rem', padding: '0.6rem 1rem' }}
+            style={{ fontSize: '0.8rem', padding: '0.55rem 0.85rem', flex: '1 1 140px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
           >
             {downloadSuccess === 'EXCEL' ? (
               <>
-                <Check size={16} style={{ color: '#22c55e' }} />
-                <span style={{ color: '#22c55e', fontWeight: '700' }}>¡Excel Descargado!</span>
+                <Check size={15} style={{ color: '#22c55e' }} />
+                <span style={{ color: '#22c55e', fontWeight: '700' }}>¡Excel Listo!</span>
               </>
             ) : (
               <>
-                <FileSpreadsheet size={16} />
-                <span>Exportar CSV (Excel)</span>
+                <FileSpreadsheet size={15} />
+                <span>Exportar CSV</span>
               </>
             )}
           </button>
@@ -123,17 +123,17 @@ export const ReportsView = ({ user, currentPeriod }) => {
             type="button"
             onClick={handleExportPDF}
             className="btn-primary"
-            style={{ fontSize: '0.825rem', padding: '0.6rem 1.15rem' }}
+            style={{ fontSize: '0.8rem', padding: '0.55rem 0.85rem', flex: '1 1 140px', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
           >
             {downloadSuccess === 'PDF' ? (
               <>
-                <Check size={16} style={{ color: '#22c55e' }} />
-                <span>¡PDF Descargado!</span>
+                <Check size={15} style={{ color: '#22c55e' }} />
+                <span>¡PDF Listo!</span>
               </>
             ) : (
               <>
-                <Download size={16} />
-                <span>Descargar Reporte PDF</span>
+                <Download size={15} />
+                <span>Descargar PDF</span>
               </>
             )}
           </button>
@@ -141,7 +141,7 @@ export const ReportsView = ({ user, currentPeriod }) => {
       </div>
 
       {/* Tarjetas de Diagnóstico Financiero */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', gap: '1.25rem', width: '100%' }}>
         {/* Distribución del Ingreso (Regla de Oro: Indispensable vs Estilo de Vida vs Ahorro) */}
         <div className="card">
           <div className="card-title">
@@ -257,8 +257,8 @@ export const ReportsView = ({ user, currentPeriod }) => {
           Detalle Completo de Transacciones Auditadas
         </h3>
 
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.825rem' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch', width: '100%' }}>
+          <table style={{ width: '100%', minWidth: '500px', borderCollapse: 'collapse', fontSize: '0.825rem' }}>
             <thead>
               <tr style={{ borderBottom: '1px solid var(--border-medium)', textAlign: 'left', color: 'var(--text-muted)' }}>
                 <th style={{ padding: '0.6rem 0.5rem' }}>Fecha</th>

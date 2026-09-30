@@ -266,16 +266,16 @@ export default function App() {
                   {/* Tarjetas de Balance */}
                   <BalanceCards summary={summary} user={currentUser} onSelectTab={setActiveTab} />
 
-                  {/* Grid de 2 Columnas: Gastos Indispensables + Movimientos Recientes */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' }}>
-                    <div>
+                  {/* Grid de 2 Columnas Responsivo: Gastos Indispensables + Movimientos Recientes */}
+                  <div className="dashboard-main-grid">
+                    <div style={{ minWidth: 0, width: '100%' }}>
                       <FixedExpensesList
                         user={currentUser}
                         currentPeriod={currentPeriod}
                         onDataChanged={handleDataChanged}
                       />
                     </div>
-                    <div>
+                    <div style={{ minWidth: 0, width: '100%' }}>
                       <TransactionList
                         user={currentUser}
                         currentPeriod={currentPeriod}

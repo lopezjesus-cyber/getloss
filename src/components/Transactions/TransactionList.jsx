@@ -55,8 +55,8 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
         </div>
 
         {/* Barra de Búsqueda y Filtros Rápidos */}
-        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem' }}>
-          <div style={{ position: 'relative', minWidth: '180px' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.5rem', width: '100%' }}>
+          <div style={{ position: 'relative', flex: '1 1 180px', minWidth: '150px' }}>
             <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
             <input
               type="text"
@@ -79,7 +79,8 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
             style={{
-              padding: '0.45rem 0.75rem',
+              flex: '1 1 120px',
+              padding: '0.45rem 0.65rem',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-medium)',
               background: 'var(--bg-surface)',
@@ -96,7 +97,8 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
             style={{
-              padding: '0.45rem 0.75rem',
+              flex: '1 1 140px',
+              padding: '0.45rem 0.65rem',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-medium)',
               background: 'var(--bg-surface)',
@@ -142,18 +144,22 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '0.85rem 1rem',
+                  gap: '0.75rem',
+                  padding: '0.75rem 0.85rem',
                   background: 'var(--bg-surface)',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-subtle)',
-                  transition: 'var(--transition)'
+                  transition: 'var(--transition)',
+                  width: '100%',
+                  boxSizing: 'border-box'
                 }}
               >
-                {/* Lado Izquierdo: Icono + Detalles */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+                {/* Lado Izquierdo: Icono + Detalles con protección overflow */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: 1, minWidth: 0 }}>
                   <div style={{
-                    width: '38px',
-                    height: '38px',
+                    width: '36px',
+                    height: '36px',
+                    flexShrink: 0,
                     borderRadius: 'var(--radius-md)',
                     background: isIncome ? 'rgba(255, 255, 255, 0.12)' : 'var(--bg-card-elevated)',
                     border: '1px solid var(--border-subtle)',
@@ -162,21 +168,39 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
                     justifyContent: 'center',
                     color: 'var(--text-primary)'
                   }}>
-                    <CategoryIcon iconName={cat.icon} size={18} />
+                    <CategoryIcon iconName={cat.icon} size={17} />
                   </div>
 
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: '700', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontWeight: '700',
+                        fontSize: '0.875rem',
+                        color: 'var(--text-primary)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                        maxWidth: '100%'
+                      }}>
                         {t.title}
                       </span>
                       {cat.isIndispensable && (
-                        <span className="badge" style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem' }}>
+                        <span className="badge" style={{ fontSize: '0.6rem', padding: '0.05rem 0.35rem' }}>
                           Indispensable
                         </span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                      fontSize: '0.72rem',
+                      color: 'var(--text-muted)',
+                      marginTop: '0.15rem',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>
                       <span>{t.date}</span>
                       <span>•</span>
                       <span>{cat.name}</span>
@@ -193,18 +217,19 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
                 </div>
 
                 {/* Lado Derecho: Monto + Acción */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <div style={{ textAlign: 'right' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexShrink: 0, textAlign: 'right' }}>
+                  <div>
                     <div style={{
-                      fontSize: '1.05rem',
+                      fontSize: 'clamp(0.9rem, 3.5vw, 1.05rem)',
                       fontWeight: '800',
                       fontFamily: 'var(--font-display)',
-                      color: isIncome ? 'var(--text-primary)' : 'var(--text-secondary)'
+                      color: isIncome ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      whiteSpace: 'nowrap'
                     }}>
                       {isIncome ? '+' : '-'}{formatMoney(t.amount, currency)}
                     </div>
                     <span style={{
-                      fontSize: '0.7rem',
+                      fontSize: '0.68rem',
                       color: isIncome ? 'var(--text-secondary)' : 'var(--text-muted)',
                       textTransform: 'uppercase',
                       fontWeight: '600'
@@ -217,13 +242,14 @@ export const TransactionList = ({ user, currentPeriod, onDataChanged }) => {
                     onClick={() => handleDelete(t.id)}
                     title="Eliminar movimiento"
                     style={{
-                      padding: '6px',
+                      padding: '5px',
                       color: 'var(--text-muted)',
                       borderRadius: 'var(--radius-sm)',
-                      transition: 'var(--transition)'
+                      transition: 'var(--transition)',
+                      flexShrink: 0
                     }}
                   >
-                    <Trash2 size={15} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>

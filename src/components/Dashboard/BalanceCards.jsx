@@ -8,9 +8,10 @@ export const BalanceCards = ({ summary, user, onSelectTab }) => {
   return (
     <div style={{
       display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-      gap: '1rem',
-      marginBottom: '1.75rem'
+      gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 220px), 1fr))',
+      gap: '0.85rem',
+      marginBottom: '1.5rem',
+      width: '100%'
     }}>
       {/* 1. Saldo Neto Disponible */}
       <div className="card" style={{
@@ -35,7 +36,7 @@ export const BalanceCards = ({ summary, user, onSelectTab }) => {
         <div className="card-value" style={{ color: summary.netBalance >= 0 ? 'var(--text-primary)' : '#ef4444' }}>
           {formatMoney(summary.netBalance, currency)}
         </div>
-        <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
           <span className="badge">
             <TrendingUp size={12} />
             {summary.savingsRate}% Ahorro
@@ -118,10 +119,10 @@ export const BalanceCards = ({ summary, user, onSelectTab }) => {
             {summary.fixedPendingAmount > 0 ? <ShieldAlert size={16} /> : <CheckCircle2 size={16} />}
           </div>
         </div>
-        <div className="card-value" style={{ fontSize: '1.8rem' }}>
+        <div className="card-value">
           {formatMoney(summary.fixedPendingAmount, currency)}
         </div>
-        <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+        <div style={{ marginTop: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
           <span className="badge" style={{
             background: summary.fixedPendingAmount === 0 ? 'var(--text-primary)' : 'var(--badge-bg)',
             color: summary.fixedPendingAmount === 0 ? 'var(--text-inverse)' : 'var(--text-secondary)'

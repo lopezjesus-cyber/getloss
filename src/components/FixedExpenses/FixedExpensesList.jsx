@@ -165,27 +165,31 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
         </button>
       </div>
 
-      {/* Pestañas de Filtro Rápido */}
+      {/* Pestañas de Filtro Rápido con scroll horizontal suave en móvil */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '0.4rem',
+        gap: '0.35rem',
         marginBottom: '1rem',
         background: 'var(--bg-surface)',
         padding: '0.25rem',
         borderRadius: 'var(--radius-md)',
-        width: 'fit-content'
+        width: 'fit-content',
+        maxWidth: '100%',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch'
       }}>
         <button
           onClick={() => setViewFilter('ALL')}
           style={{
-            padding: '0.35rem 0.75rem',
+            padding: '0.35rem 0.65rem',
             borderRadius: 'var(--radius-sm)',
             fontSize: '0.75rem',
             fontWeight: viewFilter === 'ALL' ? '700' : '500',
             background: viewFilter === 'ALL' ? 'var(--bg-card-elevated)' : 'transparent',
             color: viewFilter === 'ALL' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            border: viewFilter === 'ALL' ? '1px solid var(--border-medium)' : '1px solid transparent'
+            border: viewFilter === 'ALL' ? '1px solid var(--border-medium)' : '1px solid transparent',
+            whiteSpace: 'nowrap'
           }}
         >
           Todas ({fixedList.length})
@@ -193,13 +197,14 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
         <button
           onClick={() => setViewFilter('QUINCENAL')}
           style={{
-            padding: '0.35rem 0.75rem',
+            padding: '0.35rem 0.65rem',
             borderRadius: 'var(--radius-sm)',
             fontSize: '0.75rem',
             fontWeight: viewFilter === 'QUINCENAL' ? '700' : '500',
             background: viewFilter === 'QUINCENAL' ? 'var(--bg-card-elevated)' : 'transparent',
             color: viewFilter === 'QUINCENAL' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            border: viewFilter === 'QUINCENAL' ? '1px solid var(--border-medium)' : '1px solid transparent'
+            border: viewFilter === 'QUINCENAL' ? '1px solid var(--border-medium)' : '1px solid transparent',
+            whiteSpace: 'nowrap'
           }}
         >
           Quincenales ({countQuincenales})
@@ -207,13 +212,14 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
         <button
           onClick={() => setViewFilter('MENSUAL')}
           style={{
-            padding: '0.35rem 0.75rem',
+            padding: '0.35rem 0.65rem',
             borderRadius: 'var(--radius-sm)',
             fontSize: '0.75rem',
             fontWeight: viewFilter === 'MENSUAL' ? '700' : '500',
             background: viewFilter === 'MENSUAL' ? 'var(--bg-card-elevated)' : 'transparent',
             color: viewFilter === 'MENSUAL' ? 'var(--text-primary)' : 'var(--text-secondary)',
-            border: viewFilter === 'MENSUAL' ? '1px solid var(--border-medium)' : '1px solid transparent'
+            border: viewFilter === 'MENSUAL' ? '1px solid var(--border-medium)' : '1px solid transparent',
+            whiteSpace: 'nowrap'
           }}
         >
           Mensuales ({countMensuales})
@@ -226,11 +232,13 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
         border: '1px solid var(--border-subtle)',
         borderRadius: 'var(--radius-md)',
         padding: '0.85rem 1rem',
-        marginBottom: '1.25rem'
+        marginBottom: '1.25rem',
+        width: '100%',
+        boxSizing: 'border-box'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.8rem' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', fontSize: '0.8rem', flexWrap: 'wrap', gap: '0.4rem' }}>
           <span style={{ fontWeight: '600', color: 'var(--text-secondary)' }}>
-            Cumplimiento del Periodo: {progressPercent}% Pagado
+            Cumplimiento: {progressPercent}% Pagado
           </span>
           <span style={{ fontWeight: '700', color: 'var(--text-primary)' }}>
             {formatMoney(paidAmount, currency)} de {formatMoney(totalAmount, currency)}
@@ -248,7 +256,7 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
         </div>
       </div>
 
-      {/* Lista de Gastos Indispensables */}
+      {/* Lista de Gastos Indispensables con grid auto-adaptable a cualquier ancho */}
       {filteredList.length === 0 ? (
         <div style={{
           padding: '2.5rem 1rem',
@@ -276,7 +284,7 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
           </button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '0.85rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))', gap: '0.85rem', width: '100%' }}>
           {filteredList.map(item => {
             const cat = FinancesDB.getCategoryById(item.categoryId);
             const isPaid = checkIsPaid(item);
@@ -288,19 +296,22 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
                   background: isPaid ? 'rgba(255, 255, 255, 0.02)' : 'var(--bg-surface)',
                   border: isPaid ? '1px solid var(--border-subtle)' : '1px solid var(--border-medium)',
                   borderRadius: 'var(--radius-md)',
-                  padding: '1rem',
+                  padding: '0.9rem',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                   gap: '0.75rem',
-                  transition: 'var(--transition)'
+                  transition: 'var(--transition)',
+                  width: '100%',
+                  boxSizing: 'border-box'
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.5rem', width: '100%' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: 1, minWidth: 0 }}>
                     <div style={{
-                      width: '38px',
-                      height: '38px',
+                      width: '36px',
+                      height: '36px',
+                      flexShrink: 0,
                       borderRadius: 'var(--radius-md)',
                       background: 'var(--bg-card-elevated)',
                       border: '1px solid var(--border-subtle)',
@@ -309,30 +320,34 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
                       justifyContent: 'center',
                       color: 'var(--text-primary)'
                     }}>
-                      <CategoryIcon iconName={cat.icon} size={18} />
+                      <CategoryIcon iconName={cat.icon} size={17} />
                     </div>
-                    <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                         <h4 style={{
-                          fontSize: '0.925rem',
+                          fontSize: '0.875rem',
                           fontWeight: '700',
                           color: 'var(--text-primary)',
                           textDecoration: isPaid ? 'line-through' : 'none',
-                          opacity: isPaid ? 0.75 : 1
+                          opacity: isPaid ? 0.75 : 1,
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '100%'
                         }}>
                           {item.name}
                         </h4>
-                        <span className="badge" style={{ fontSize: '0.62rem', padding: '0.1rem 0.35rem' }}>
+                        <span className="badge" style={{ fontSize: '0.6rem', padding: '0.05rem 0.35rem' }}>
                           {item.targetMode === 'MENSUAL' ? 'Mensual' : 'Quincenal'}
                         </span>
                       </div>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {cat.name}
                       </span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem', flexShrink: 0 }}>
                     <button
                       onClick={() => handleOpenEdit(item)}
                       title="Editar obligación"
@@ -357,15 +372,17 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   paddingTop: '0.5rem',
-                  borderTop: '1px solid var(--border-subtle)'
+                  borderTop: '1px solid var(--border-subtle)',
+                  gap: '0.5rem',
+                  flexWrap: 'wrap'
                 }}>
-                  <div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: '800', color: 'var(--text-primary)' }}>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 'clamp(1rem, 3.5vw, 1.15rem)', fontWeight: '800', color: 'var(--text-primary)', whiteSpace: 'nowrap' }}>
                       {formatMoney(item.amount, currency)}
                     </div>
-                    <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <Clock size={11} />
-                      <span>Vence día {item.dueDay} ({item.targetMode === 'MENSUAL' ? '1 vez al mes' : 'Cada 15 días'})</span>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <Clock size={11} style={{ flexShrink: 0 }} />
+                      <span>Vence día {item.dueDay} ({item.targetMode === 'MENSUAL' ? '1/mes' : '15 días'})</span>
                     </div>
                   </div>
 
@@ -373,17 +390,18 @@ export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) =
                     onClick={() => handleTogglePaid(item.id)}
                     className={isPaid ? 'btn-secondary' : 'btn-primary'}
                     style={{
-                      padding: '0.4rem 0.8rem',
-                      fontSize: '0.75rem',
+                      padding: '0.4rem 0.75rem',
+                      fontSize: '0.72rem',
                       borderRadius: 'var(--radius-sm)',
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: '0.35rem'
+                      gap: '0.35rem',
+                      flexShrink: 0
                     }}
                   >
                     {isPaid ? (
                       <>
-                        <Check size={14} style={{ color: '#22c55e' }} />
+                        <Check size={13} style={{ color: '#22c55e' }} />
                         <span>Pagado</span>
                       </>
                     ) : (

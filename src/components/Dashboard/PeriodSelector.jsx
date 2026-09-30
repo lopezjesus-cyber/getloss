@@ -44,28 +44,30 @@ export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
       background: 'var(--bg-card)',
       border: '1px solid var(--border-subtle)',
       borderRadius: 'var(--radius-lg)',
-      padding: '0.85rem 1.25rem',
+      padding: '0.75rem 0.95rem',
       display: 'flex',
       flexWrap: 'wrap',
       alignItems: 'center',
       justifyContent: 'space-between',
-      gap: '1rem',
-      marginBottom: '1.5rem'
+      gap: '0.75rem',
+      marginBottom: '1.25rem',
+      width: '100%',
+      boxSizing: 'border-box'
     }}>
       {/* Selector de Mes con Flechas */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', width: '100%', maxWidth: '300px' }}>
         <button
           onClick={handlePrevMonth}
           className="btn-icon"
           title="Mes Anterior"
-          style={{ width: '32px', height: '32px' }}
+          style={{ width: '32px', height: '32px', flexShrink: 0 }}
         >
           <ChevronLeft size={16} />
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: '160px', justifyContent: 'center' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, justifyContent: 'center' }}>
           <Calendar size={16} style={{ color: 'var(--text-secondary)' }} />
-          <span style={{ fontWeight: '700', fontSize: '1rem', color: 'var(--text-primary)' }}>
+          <span style={{ fontWeight: '700', fontSize: '0.95rem', color: 'var(--text-primary)' }}>
             {monthName} {year}
           </span>
         </div>
@@ -74,28 +76,31 @@ export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
           onClick={handleNextMonth}
           className="btn-icon"
           title="Mes Siguiente"
-          style={{ width: '32px', height: '32px' }}
+          style={{ width: '32px', height: '32px', flexShrink: 0 }}
         >
           <ChevronRight size={16} />
         </button>
       </div>
 
-      {/* Selector Directo: QUINCENAL vs MENSUAL */}
+      {/* Selector Directo: QUINCENAL vs MENSUAL con ancho adaptable */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
         background: 'var(--bg-surface)',
-        padding: '0.3rem',
+        padding: '0.25rem',
         borderRadius: 'var(--radius-md)',
         border: '1px solid var(--border-medium)',
-        gap: '0.35rem'
+        gap: '0.25rem',
+        flex: 1,
+        minWidth: '240px'
       }}>
         <button
           onClick={() => setMode('QUINCENAL')}
           style={{
-            padding: '0.5rem 1.1rem',
+            flex: 1,
+            padding: '0.45rem 0.65rem',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '0.825rem',
+            fontSize: '0.8rem',
             fontWeight: mode === 'QUINCENAL' ? '700' : '500',
             background: mode === 'QUINCENAL' ? 'var(--btn-primary-bg)' : 'transparent',
             color: mode === 'QUINCENAL' ? 'var(--btn-primary-text)' : 'var(--text-secondary)',
@@ -103,18 +108,21 @@ export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
             transition: 'var(--transition)',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.4rem'
+            justifyContent: 'center',
+            gap: '0.35rem',
+            whiteSpace: 'nowrap'
           }}
         >
-          <span>🗓️ Modo Quincenal</span>
+          <span>🗓️ Quincenal</span>
         </button>
 
         <button
           onClick={() => setMode('MENSUAL')}
           style={{
-            padding: '0.5rem 1.1rem',
+            flex: 1,
+            padding: '0.45rem 0.65rem',
             borderRadius: 'var(--radius-sm)',
-            fontSize: '0.825rem',
+            fontSize: '0.8rem',
             fontWeight: mode === 'MENSUAL' ? '700' : '500',
             background: mode === 'MENSUAL' ? 'var(--btn-primary-bg)' : 'transparent',
             color: mode === 'MENSUAL' ? 'var(--btn-primary-text)' : 'var(--text-secondary)',
@@ -122,17 +130,19 @@ export const PeriodSelector = ({ currentPeriod, onPeriodChange }) => {
             transition: 'var(--transition)',
             display: 'inline-flex',
             alignItems: 'center',
-            gap: '0.4rem'
+            justifyContent: 'center',
+            gap: '0.35rem',
+            whiteSpace: 'nowrap'
           }}
         >
-          <span>📅 Modo Mensual</span>
+          <span>📅 Mensual</span>
         </button>
       </div>
 
       {/* Indicador de Modo */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.8rem' }}>
-        <Clock size={14} />
-        <span>{getPeriodLabel()}</span>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--text-muted)', fontSize: '0.75rem', width: '100%', justifyContent: 'flex-start' }}>
+        <Clock size={13} />
+        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{getPeriodLabel()}</span>
       </div>
     </div>
   );

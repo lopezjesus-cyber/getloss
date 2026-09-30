@@ -124,7 +124,7 @@ export const SqlDatabaseModal = ({ isOpen, onClose, currentUser }) => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        padding: '1rem',
+        padding: '0.5rem',
         animation: 'fadeIn 0.25s ease-out'
       }}
       onClick={onClose}
@@ -134,11 +134,11 @@ export const SqlDatabaseModal = ({ isOpen, onClose, currentUser }) => {
         style={{
           width: '100%',
           maxWidth: '920px',
-          height: '85vh',
-          maxHeight: '800px',
+          height: '92vh',
+          maxHeight: '850px',
           background: 'linear-gradient(145deg, #18181b 0%, #09090b 100%)',
           border: '1px solid rgba(255, 255, 255, 0.18)',
-          borderRadius: '24px',
+          borderRadius: '20px',
           display: 'flex',
           flexDirection: 'column',
           boxShadow: '0 25px 60px -10px rgba(0, 0, 0, 0.95), inset 0 1px 1px rgba(255, 255, 255, 0.15)',
@@ -147,20 +147,23 @@ export const SqlDatabaseModal = ({ isOpen, onClose, currentUser }) => {
           overflow: 'hidden'
         }}
       >
-        {/* Barra Superior */}
+        {/* Barra Superior Responsiva */}
         <div style={{
-          padding: '1.25rem 1.75rem',
+          padding: '0.85rem 1rem',
           borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
           display: 'flex',
+          flexWrap: 'wrap',
           alignItems: 'center',
           justifyContent: 'space-between',
+          gap: '0.65rem',
           background: 'rgba(255, 255, 255, 0.02)'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0 }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
+              width: '36px',
+              height: '36px',
+              flexShrink: 0,
+              borderRadius: '10px',
               background: 'linear-gradient(135deg, #ffffff 0%, #71717a 100%)',
               color: '#000000',
               display: 'flex',
@@ -168,29 +171,30 @@ export const SqlDatabaseModal = ({ isOpen, onClose, currentUser }) => {
               justifyContent: 'center',
               fontWeight: '900'
             }}>
-              <Database size={20} />
+              <Database size={18} />
             </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', margin: 0 }}>Base de Datos Relacional SQL</h3>
-                <span style={{ fontSize: '0.68rem', padding: '0.15rem 0.5rem', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#22c55e', fontWeight: '700' }}>
-                  SQLite 3 WASM Activo
+            <div style={{ minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: '800', margin: 0, whiteSpace: 'nowrap' }}>Base de Datos SQL</h3>
+                <span style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem', borderRadius: '9999px', background: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)', color: '#22c55e', fontWeight: '700' }}>
+                  SQLite 3
                 </span>
               </div>
-              <p style={{ fontSize: '0.75rem', color: '#86868b', margin: 0 }}>
-                Tablas relacionales: users, categories, transactions, fixed_expenses
+              <p style={{ fontSize: '0.7rem', color: '#86868b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                Tablas users, transactions, fixed_expenses
               </p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
             {/* Pestañas de Navegación */}
             <div style={{
               display: 'flex',
               background: 'rgba(255, 255, 255, 0.06)',
-              padding: '0.25rem',
-              borderRadius: '10px',
-              border: '1px solid rgba(255, 255, 255, 0.08)'
+              padding: '0.2rem',
+              borderRadius: '8px',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              overflowX: 'auto'
             }}>
               <button
                 type="button"
