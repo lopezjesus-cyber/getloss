@@ -171,3 +171,10 @@ export const CloudStore = {
     return await saveFullCloudState(state);
   }
 };
+
+export default function handler(req, res) {
+  if (res && typeof res.status === 'function') {
+    return res.status(200).json({ status: 'ok', module: 'cloudStore' });
+  }
+}
+

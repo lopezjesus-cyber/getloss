@@ -26,13 +26,6 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   const [isLogin, setIsLogin] = useState(initialIsLogin);
   const [step, setStep] = useState('FORM'); // 'FORM' | 'VERIFY_EMAIL' | 'SUCCESS'
 
-  useEffect(() => {
-    setIsLogin(initialIsLogin);
-    setStep('FORM');
-    setShowBackupCode(false);
-    setError('');
-  }, [initialIsLogin, isOpen]);
-
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -53,6 +46,13 @@ export const AuthModal = ({ isOpen, onClose, onAuthSuccess, initialIsLogin = tru
   const [showBackupCode, setShowBackupCode] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    setIsLogin(initialIsLogin);
+    setStep('FORM');
+    setShowBackupCode(false);
+    setError('');
+  }, [initialIsLogin, isOpen]);
 
   // Validación de requisitos de contraseña en tiempo real
   const passwordChecks = {

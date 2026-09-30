@@ -18,13 +18,14 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+          const normalized = id.replace(/\\/g, '/');
+          if (normalized.includes('node_modules/react/') || normalized.includes('node_modules/react-dom/')) {
             return 'vendor-react';
           }
-          if (id.includes('node_modules/jspdf') || id.includes('node_modules/html2canvas')) {
+          if (normalized.includes('node_modules/jspdf') || normalized.includes('node_modules/html2canvas')) {
             return 'vendor-pdf';
           }
-          if (id.includes('node_modules/lucide-react')) {
+          if (normalized.includes('node_modules/lucide-react')) {
             return 'vendor-icons';
           }
         }

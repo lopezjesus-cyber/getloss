@@ -15,11 +15,11 @@ import {
 import { BrandLogo } from './BrandLogo';
 
 export const InstallAppModal = ({ isOpen, onClose, pwaInstall }) => {
-  if (!isOpen) return null;
-
   const { platform, triggerInstall, hasNativePrompt, isInstalled } = pwaInstall || {};
   const [activeTab, setActiveTab] = useState(() => (platform === 'ios' || platform === 'android') ? 'mobile' : 'desktop');
   const [installedFeedback, setInstalledFeedback] = useState(false);
+
+  if (!isOpen) return null;
 
   const handleNativeInstall = async () => {
     if (triggerInstall) {

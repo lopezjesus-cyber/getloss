@@ -1,4 +1,4 @@
-import { CloudStore } from './lib/cloudStore.js';
+import { CloudStore } from './_lib/cloudStore.js';
 
 export default async function handler(req, res) {
   // CORS Headers universal para PC, Celular y Localhost

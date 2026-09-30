@@ -1,0 +1,6 @@
+# Vercel Ignore
+api/_lib/**
+.gemini
+.agents
+node_modules
+.git

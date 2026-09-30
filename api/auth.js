@@ -1,4 +1,4 @@
-import { CloudStore } from './lib/cloudStore.js';
+import { CloudStore } from './_lib/cloudStore.js';
 
 export default async function handler(req, res) {
   // Configuración de Cabeceras CORS universal para PC, Móvil, localhost y Vercel
