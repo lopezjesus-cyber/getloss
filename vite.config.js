@@ -14,22 +14,6 @@ export default defineConfig({
     }
   },
   build: {
-    chunkSizeWarningLimit: 1600,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          const normalized = id.replace(/\\/g, '/');
-          if (normalized.includes('node_modules/react/') || normalized.includes('node_modules/react-dom/')) {
-            return 'vendor-react';
-          }
-          if (normalized.includes('node_modules/jspdf') || normalized.includes('node_modules/html2canvas')) {
-            return 'vendor-pdf';
-          }
-          if (normalized.includes('node_modules/lucide-react')) {
-            return 'vendor-icons';
-          }
-        }
-      }
-    }
+    chunkSizeWarningLimit: 2500,
   }
 })
