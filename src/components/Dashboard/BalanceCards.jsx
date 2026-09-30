@@ -2,7 +2,7 @@ import React from 'react';
 import { ArrowUpRight, ArrowDownRight, Wallet, ShieldAlert, CheckCircle2, TrendingUp } from 'lucide-react';
 import { formatMoney } from '../../utils/formatters';
 
-export const BalanceCards = ({ summary, user }) => {
+export const BalanceCards = ({ summary, user, onSelectTab }) => {
   const currency = user?.currency || 'USD';
 
   return (
@@ -97,7 +97,12 @@ export const BalanceCards = ({ summary, user }) => {
       </div>
 
       {/* 4. Gastos Indispensables / Fijos Pendientes */}
-      <div className="card">
+      <div 
+        className="card"
+        onClick={() => onSelectTab && onSelectTab('fixed')}
+        style={{ cursor: onSelectTab ? 'pointer' : 'default', transition: 'var(--transition)' }}
+        title="Ver y Gestionar Gastos Indispensables y Obligaciones"
+      >
         <div className="card-title">
           <span>Obligaciones Fijas</span>
           <div style={{

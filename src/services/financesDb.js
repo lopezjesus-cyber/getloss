@@ -268,18 +268,54 @@ export const FinancesDB = {
     return newFixed;
   },
 
+  updateFixedExpense: (fixedId, data) => {
+    const db = FinancesDB.getRawDatabase();
+    const index = (db.fixedExpenses || []).findIndex(f => f.id === fixedId);
+    if (index === -1) throw new Error('Gasto fijo no encontrado');
+
+    const updated = {
+      ...db.fixedExpenses[index],
+      ...data,
+      amount: Math.abs(Number(data.amount !== undefined ? data.amount : db.fixedExpenses[index].amount)),
+      dueDay: Number(data.dueDay !== undefined ? data.dueDay : db.fixedExpenses[index].dueDay) || 15,
+      targetMode: data.targetMode || db.fixedExpenses[index].targetMode || 'QUINCENAL',
+      name: (data.name !== undefined ? data.name : db.fixedExpenses[index].name).trim()
+    };
+
+    db.fixedExpenses[index] = updated;
+    FinancesDB._saveDatabase(db, updated.userId);
+
+    // Actualizar en Base de Datos Relacional SQL
+    SqlDatabase.sqlUpdateFixedExpense(updated).catch(err => {
+      console.warn('[SQL DB] Error al actualizar gasto fijo SQL:', err.message);
+    });
+
+    return updated;
+  },
+
   toggleFixedExpensePaid: (fixedId, year, month, mode = 'QUINCENAL') => {
     const db = FinancesDB.getRawDatabase();
     const item = (db.fixedExpenses || []).find(f => f.id === fixedId);
     if (!item) throw new Error('Gasto fijo no encontrado');
 
     const periodKey = `${year}-${month}-${mode}`;
-    const isPaid = (item.paidPeriods || []).includes(periodKey);
+    const monthKey = `${year}-${month}`;
+    const quinKey = `${year}-${month}-QUINCENAL`;
+    const menKey = `${year}-${month}-MENSUAL`;
+
+    const isPaid = (item.paidPeriods || []).some(p => 
+      p === periodKey || p === monthKey || p === quinKey || p === menKey
+    );
 
     if (isPaid) {
-      item.paidPeriods = item.paidPeriods.filter(p => p !== periodKey);
+      item.paidPeriods = (item.paidPeriods || []).filter(p => 
+        p !== periodKey && p !== monthKey && p !== quinKey && p !== menKey
+      );
     } else {
       item.paidPeriods = [...(item.paidPeriods || []), periodKey];
+      if (item.targetMode === 'MENSUAL' || mode === 'MENSUAL') {
+        if (!item.paidPeriods.includes(menKey)) item.paidPeriods.push(menKey);
+      }
     }
 
     FinancesDB._saveDatabase(db, item.userId);
@@ -354,17 +390,23 @@ export const FinancesDB = {
 
     const categoryBreakdown = Object.values(categoryTotals).sort((a, b) => b.amount - a.amount);
 
-    // Obligaciones fijas para este modo
+    // Obligaciones fijas para este periodo
     const periodKey = `${year}-${month}-${mode}`;
+    const monthKey = `${year}-${month}`;
+    const quinKey = `${year}-${month}-QUINCENAL`;
+    const menKey = `${year}-${month}-MENSUAL`;
     let totalFixedCommitted = 0;
     let totalFixedPaid = 0;
 
     fixed.forEach(f => {
-      let isRelevant = mode === 'MENSUAL' || f.targetMode === 'QUINCENAL' || !f.targetMode;
+      // Considerar obligaciones del usuario activas para no omitir compromisos financieros
+      const isRelevant = mode === 'MENSUAL' || f.targetMode === 'QUINCENAL' || !f.targetMode || f.targetMode === 'MENSUAL';
 
       if (isRelevant) {
         totalFixedCommitted += f.amount;
-        const isPaid = (f.paidPeriods || []).includes(periodKey);
+        const isPaid = (f.paidPeriods || []).some(p => 
+          p === periodKey || p === monthKey || p === quinKey || p === menKey
+        );
         if (isPaid) totalFixedPaid += f.amount;
       }
     });

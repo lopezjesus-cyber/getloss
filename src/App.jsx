@@ -264,7 +264,7 @@ export default function App() {
               {activeTab === 'dashboard' ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                   {/* Tarjetas de Balance */}
-                  <BalanceCards summary={summary} user={currentUser} />
+                  <BalanceCards summary={summary} user={currentUser} onSelectTab={setActiveTab} />
 
                   {/* Grid de 2 Columnas: Gastos Indispensables + Movimientos Recientes */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '1.25rem' }}>

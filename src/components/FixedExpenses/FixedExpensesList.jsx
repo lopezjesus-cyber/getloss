@@ -1,70 +1,134 @@
 import React, { useState } from 'react';
 import { CategoryIcon } from '../Common/CategoryIcon';
 import { FinancesDB, DEFAULT_CATEGORIES } from '../../services/financesDb';
-import { formatMoney } from '../../utils/formatters';
-import { Plus, Check, Clock, Trash2, ShieldCheck, AlertCircle, Info } from 'lucide-react';
+import { formatMoney, getCurrencySymbol } from '../../utils/formatters';
+import { Plus, Check, Clock, Trash2, ShieldCheck, AlertCircle, Info, Pencil, Calendar, X } from 'lucide-react';
 
-export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
+export const FixedExpensesList = ({ user, currentPeriod = {}, onDataChanged }) => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [newFixed, setNewFixed] = useState({
+  const [editingFixed, setEditingFixed] = useState(null);
+  const [viewFilter, setViewFilter] = useState('ALL'); // 'ALL' | 'QUINCENAL' | 'MENSUAL'
+
+  const currency = user?.currency || 'USD';
+  const symbol = getCurrencySymbol(currency) || user?.currencySymbol || '$';
+  const { year = new Date().getFullYear(), month = new Date().getMonth() + 1, mode = 'QUINCENAL' } = currentPeriod;
+
+  const [formData, setFormData] = useState({
     name: '',
     categoryId: 'cat-services',
     amount: '',
     dueDay: 15,
-    targetMode: currentPeriod.mode || 'QUINCENAL',
+    targetMode: mode || 'QUINCENAL',
     isIndispensable: true,
     notes: ''
   });
 
-  const fixedList = FinancesDB.getFixedExpenses(user.id);
-  const currency = user?.currency || 'USD';
-  const { year, month, mode = 'QUINCENAL' } = currentPeriod;
+  const fixedList = user?.id ? FinancesDB.getFixedExpenses(user.id) : [];
 
-  // Filtrar según el modo activo (Quincenal o Mensual)
+  // Filtrado de la lista según la pestaña seleccionada
   const filteredList = fixedList.filter(item => {
-    if (mode === 'QUINCENAL') return item.targetMode === 'QUINCENAL' || !item.targetMode;
-    return true; // En modo mensual se muestran todas las obligaciones del mes
+    if (viewFilter === 'QUINCENAL') return item.targetMode === 'QUINCENAL' || !item.targetMode;
+    if (viewFilter === 'MENSUAL') return item.targetMode === 'MENSUAL';
+    return true; // 'ALL' muestra todas las obligaciones
   });
 
   const currentPeriodKey = `${year}-${month}-${mode}`;
-  const totalAmount = filteredList.reduce((sum, item) => sum + item.amount, 0);
-  const paidList = filteredList.filter(item => (item.paidPeriods || []).includes(currentPeriodKey));
-  const paidAmount = paidList.reduce((sum, item) => sum + item.amount, 0);
-  const progressPercent = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : 100;
+  const totalAmount = filteredList.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
 
-  const handleTogglePaid = (fixedId) => {
-    FinancesDB.toggleFixedExpensePaid(fixedId, year, month, mode);
-    onDataChanged();
+  // Verificación coherente de si una obligación está pagada
+  const checkIsPaid = (item) => {
+    return (item.paidPeriods || []).some(p => 
+      p === currentPeriodKey || 
+      p === `${year}-${month}` || 
+      p === `${year}-${month}-QUINCENAL` || 
+      p === `${year}-${month}-MENSUAL`
+    );
   };
 
-  const handleDelete = (fixedId) => {
-    if (window.confirm('¿Estás seguro de eliminar este gasto indispensable de tu lista?')) {
-      FinancesDB.deleteFixedExpense(fixedId);
-      onDataChanged();
-    }
-  };
+  const paidList = filteredList.filter(checkIsPaid);
+  const paidAmount = paidList.reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+  const progressPercent = totalAmount > 0 ? Math.round((paidAmount / totalAmount) * 100) : (filteredList.length === 0 ? 100 : 0);
 
-  const handleAddSubmit = (e) => {
-    e.preventDefault();
-    if (!newFixed.name || !newFixed.amount) return;
+  const countQuincenales = fixedList.filter(item => item.targetMode === 'QUINCENAL' || !item.targetMode).length;
+  const countMensuales = fixedList.filter(item => item.targetMode === 'MENSUAL').length;
 
-    FinancesDB.addFixedExpense(user.id, {
-      ...newFixed,
-      amount: Number(newFixed.amount),
-      dueDay: Number(newFixed.dueDay)
-    });
-
-    setNewFixed({
+  const handleOpenAdd = () => {
+    setEditingFixed(null);
+    setFormData({
       name: '',
       categoryId: 'cat-services',
       amount: '',
       dueDay: 15,
-      targetMode: mode,
+      targetMode: mode || 'QUINCENAL',
       isIndispensable: true,
       notes: ''
     });
+    setIsAddModalOpen(true);
+  };
+
+  const handleOpenEdit = (item) => {
+    setEditingFixed(item);
+    setFormData({
+      name: item.name || '',
+      categoryId: item.categoryId || 'cat-services',
+      amount: item.amount !== undefined ? item.amount : '',
+      dueDay: item.dueDay || 15,
+      targetMode: item.targetMode || 'QUINCENAL',
+      isIndispensable: item.isIndispensable !== false,
+      notes: item.notes || ''
+    });
+    setIsAddModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
     setIsAddModalOpen(false);
-    onDataChanged();
+    setEditingFixed(null);
+  };
+
+  const handleTogglePaid = (fixedId) => {
+    try {
+      FinancesDB.toggleFixedExpensePaid(fixedId, year, month, mode);
+      if (onDataChanged) onDataChanged();
+    } catch (err) {
+      console.error('Error al cambiar estado de pago:', err);
+    }
+  };
+
+  const handleDelete = (fixedId) => {
+    if (window.confirm('¿Estás seguro de eliminar esta obligación de tu lista?')) {
+      try {
+        FinancesDB.deleteFixedExpense(fixedId);
+        if (onDataChanged) onDataChanged();
+      } catch (err) {
+        console.error('Error al eliminar obligación:', err);
+      }
+    }
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!formData.name || !formData.amount) return;
+
+    try {
+      if (editingFixed) {
+        FinancesDB.updateFixedExpense(editingFixed.id, {
+          ...formData,
+          amount: Number(formData.amount),
+          dueDay: Number(formData.dueDay) || 15
+        });
+      } else {
+        FinancesDB.addFixedExpense(user.id, {
+          ...formData,
+          amount: Number(formData.amount),
+          dueDay: Number(formData.dueDay) || 15
+        });
+      }
+
+      handleCloseModal();
+      if (onDataChanged) onDataChanged();
+    } catch (err) {
+      alert('Error al guardar la obligación: ' + err.message);
+    }
   };
 
   return (
@@ -86,17 +150,73 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
             </h2>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginTop: '0.2rem' }}>
-            Obligaciones fijas críticas (Servicios, Alquiler, Comida, Transporte) en <strong>Modo {mode === 'QUINCENAL' ? 'Quincenal' : 'Mensual'}</strong>.
+            Obligaciones fijas críticas (Servicios, Alquiler, Comida, Transporte) proyectadas para este periodo.
           </p>
         </div>
 
         <button
-          onClick={() => setIsAddModalOpen(true)}
+          onClick={handleOpenAdd}
           className="btn-primary"
           style={{ padding: '0.55rem 1rem', fontSize: '0.825rem' }}
+          id="btn-add-obligation"
         >
           <Plus size={16} />
           <span>Agregar Obligación</span>
+        </button>
+      </div>
+
+      {/* Pestañas de Filtro Rápido */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.4rem',
+        marginBottom: '1rem',
+        background: 'var(--bg-surface)',
+        padding: '0.25rem',
+        borderRadius: 'var(--radius-md)',
+        width: 'fit-content'
+      }}>
+        <button
+          onClick={() => setViewFilter('ALL')}
+          style={{
+            padding: '0.35rem 0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.75rem',
+            fontWeight: viewFilter === 'ALL' ? '700' : '500',
+            background: viewFilter === 'ALL' ? 'var(--bg-card-elevated)' : 'transparent',
+            color: viewFilter === 'ALL' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            border: viewFilter === 'ALL' ? '1px solid var(--border-medium)' : '1px solid transparent'
+          }}
+        >
+          Todas ({fixedList.length})
+        </button>
+        <button
+          onClick={() => setViewFilter('QUINCENAL')}
+          style={{
+            padding: '0.35rem 0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.75rem',
+            fontWeight: viewFilter === 'QUINCENAL' ? '700' : '500',
+            background: viewFilter === 'QUINCENAL' ? 'var(--bg-card-elevated)' : 'transparent',
+            color: viewFilter === 'QUINCENAL' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            border: viewFilter === 'QUINCENAL' ? '1px solid var(--border-medium)' : '1px solid transparent'
+          }}
+        >
+          Quincenales ({countQuincenales})
+        </button>
+        <button
+          onClick={() => setViewFilter('MENSUAL')}
+          style={{
+            padding: '0.35rem 0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            fontSize: '0.75rem',
+            fontWeight: viewFilter === 'MENSUAL' ? '700' : '500',
+            background: viewFilter === 'MENSUAL' ? 'var(--bg-card-elevated)' : 'transparent',
+            color: viewFilter === 'MENSUAL' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            border: viewFilter === 'MENSUAL' ? '1px solid var(--border-medium)' : '1px solid transparent'
+          }}
+        >
+          Mensuales ({countMensuales})
         </button>
       </div>
 
@@ -121,7 +241,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
             style={{
               width: `${progressPercent}%`,
               height: '100%',
-              background: progressPercent === 100 ? '#ffffff' : 'var(--text-secondary)',
+              background: progressPercent === 100 ? '#22c55e' : 'var(--text-primary)',
               transition: 'width 0.4s ease-out'
             }}
           />
@@ -139,23 +259,33 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
         }}>
           <Info size={28} style={{ color: 'var(--text-muted)', margin: '0 auto 0.5rem auto' }} />
           <p style={{ fontWeight: '600', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            No hay obligaciones asignadas al {mode === 'QUINCENAL' ? 'Modo Quincenal' : 'Modo Mensual'}.
+            {viewFilter === 'ALL'
+              ? 'No tienes obligaciones registradas en tu lista.'
+              : `No hay obligaciones con frecuencia ${viewFilter === 'QUINCENAL' ? 'Quincenal' : 'Mensual'}.`}
           </p>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
-            Agrega tu arriendo, servicios básicos o presupuesto de comida para mantener el control.
+            Agrega tu arriendo, servicios básicos o compras indispensables para mantener tu control financiero al día.
           </p>
+          <button
+            onClick={handleOpenAdd}
+            className="btn-secondary"
+            style={{ marginTop: '0.85rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}
+          >
+            <Plus size={14} />
+            <span>Crear primera obligación</span>
+          </button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(290px, 1fr))', gap: '0.85rem' }}>
           {filteredList.map(item => {
             const cat = FinancesDB.getCategoryById(item.categoryId);
-            const isPaid = (item.paidPeriods || []).includes(currentPeriodKey);
+            const isPaid = checkIsPaid(item);
 
             return (
               <div
                 key={item.id}
                 style={{
-                  background: isPaid ? 'rgba(255, 255, 255, 0.03)' : 'var(--bg-surface)',
+                  background: isPaid ? 'rgba(255, 255, 255, 0.02)' : 'var(--bg-surface)',
                   border: isPaid ? '1px solid var(--border-subtle)' : '1px solid var(--border-medium)',
                   borderRadius: 'var(--radius-md)',
                   padding: '1rem',
@@ -182,28 +312,44 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                       <CategoryIcon iconName={cat.icon} size={18} />
                     </div>
                     <div>
-                      <h4 style={{
-                        fontSize: '0.925rem',
-                        fontWeight: '700',
-                        color: 'var(--text-primary)',
-                        textDecoration: isPaid ? 'line-through' : 'none',
-                        opacity: isPaid ? 0.75 : 1
-                      }}>
-                        {item.name}
-                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <h4 style={{
+                          fontSize: '0.925rem',
+                          fontWeight: '700',
+                          color: 'var(--text-primary)',
+                          textDecoration: isPaid ? 'line-through' : 'none',
+                          opacity: isPaid ? 0.75 : 1
+                        }}>
+                          {item.name}
+                        </h4>
+                        <span className="badge" style={{ fontSize: '0.62rem', padding: '0.1rem 0.35rem' }}>
+                          {item.targetMode === 'MENSUAL' ? 'Mensual' : 'Quincenal'}
+                        </span>
+                      </div>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
                         {cat.name}
                       </span>
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handleDelete(item.id)}
-                    title="Eliminar obligación"
-                    style={{ color: 'var(--text-muted)', padding: '4px' }}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                    <button
+                      onClick={() => handleOpenEdit(item)}
+                      title="Editar obligación"
+                      style={{ color: 'var(--text-secondary)', padding: '5px', borderRadius: 'var(--radius-sm)' }}
+                      className="btn-icon"
+                    >
+                      <Pencil size={13} />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(item.id)}
+                      title="Eliminar obligación"
+                      style={{ color: 'var(--text-muted)', padding: '5px', borderRadius: 'var(--radius-sm)' }}
+                      className="btn-icon"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
                 </div>
 
                 <div style={{
@@ -219,7 +365,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                     </div>
                     <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                       <Clock size={11} />
-                      <span>Vence día {item.dueDay} ({item.targetMode === 'QUINCENAL' ? 'Quincenal' : 'Mensual'})</span>
+                      <span>Vence día {item.dueDay} ({item.targetMode === 'MENSUAL' ? '1 vez al mes' : 'Cada 15 días'})</span>
                     </div>
                   </div>
 
@@ -229,12 +375,15 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                     style={{
                       padding: '0.4rem 0.8rem',
                       fontSize: '0.75rem',
-                      borderRadius: 'var(--radius-sm)'
+                      borderRadius: 'var(--radius-sm)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.35rem'
                     }}
                   >
                     {isPaid ? (
                       <>
-                        <Check size={14} />
+                        <Check size={14} style={{ color: '#22c55e' }} />
                         <span>Pagado</span>
                       </>
                     ) : (
@@ -248,18 +397,23 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
         </div>
       )}
 
-      {/* Modal para Agregar Nuevo Gasto Indispensable */}
+      {/* Modal para Agregar o Editar Obligación Indispensable */}
       {isAddModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-box" style={{ maxWidth: '440px' }}>
-            <h3 style={{ fontSize: '1.15rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>
-              Nueva Obligación Indispensable
-            </h3>
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-box" style={{ maxWidth: '440px' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                {editingFixed ? 'Editar Obligación' : 'Nueva Obligación Indispensable'}
+              </h3>
+              <button onClick={handleCloseModal} className="btn-icon" style={{ width: '28px', height: '28px' }}>
+                <X size={16} />
+              </button>
+            </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '1.25rem' }}>
-              Registra un gasto fijo recurrente (arriendo, servicios de energía/agua, despensa, etc.)
+              Registra un gasto fijo indispensable recurrente (arriendo, luz/agua, despensa, etc.)
             </p>
 
-            <form onSubmit={handleAddSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
               <div>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: '700', textTransform: 'uppercase', color: 'var(--text-secondary)', marginBottom: '0.3rem' }}>
                   Nombre del Gasto Fijo *
@@ -268,8 +422,8 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                   type="text"
                   required
                   placeholder="ej. Factura Luz y Gas"
-                  value={newFixed.name}
-                  onChange={(e) => setNewFixed({ ...newFixed, name: e.target.value })}
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '0.7rem',
@@ -293,8 +447,8 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                     required
                     min="0.01"
                     placeholder="ej. 120.00"
-                    value={newFixed.amount}
-                    onChange={(e) => setNewFixed({ ...newFixed, amount: e.target.value })}
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '0.7rem',
@@ -315,8 +469,8 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                     type="number"
                     min="1"
                     max="31"
-                    value={newFixed.dueDay}
-                    onChange={(e) => setNewFixed({ ...newFixed, dueDay: e.target.value })}
+                    value={formData.dueDay}
+                    onChange={(e) => setFormData({ ...formData, dueDay: e.target.value })}
                     style={{
                       width: '100%',
                       padding: '0.7rem',
@@ -335,8 +489,8 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                   Categoría
                 </label>
                 <select
-                  value={newFixed.categoryId}
-                  onChange={(e) => setNewFixed({ ...newFixed, categoryId: e.target.value })}
+                  value={formData.categoryId}
+                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '0.7rem',
@@ -360,8 +514,8 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                   Frecuencia de la Obligación
                 </label>
                 <select
-                  value={newFixed.targetMode}
-                  onChange={(e) => setNewFixed({ ...newFixed, targetMode: e.target.value })}
+                  value={formData.targetMode}
+                  onChange={(e) => setFormData({ ...formData, targetMode: e.target.value })}
                   style={{
                     width: '100%',
                     padding: '0.7rem',
@@ -380,7 +534,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
               <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.75rem' }}>
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
+                  onClick={handleCloseModal}
                   className="btn-secondary"
                   style={{ flex: 1 }}
                 >
@@ -391,7 +545,7 @@ export const FixedExpensesList = ({ user, currentPeriod, onDataChanged }) => {
                   className="btn-primary"
                   style={{ flex: 1 }}
                 >
-                  Guardar Obligación
+                  {editingFixed ? 'Actualizar Obligación' : 'Guardar Obligación'}
                 </button>
               </div>
             </form>

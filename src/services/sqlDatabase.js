@@ -401,6 +401,27 @@ export const SqlDatabase = {
     return fix;
   },
 
+  sqlUpdateFixedExpense: async (fix) => {
+    const db = await SqlDatabase.init();
+    db.run(
+      `UPDATE fixed_expenses 
+       SET category_id = ?, name = ?, amount = ?, due_day = ?, target_mode = ?, is_indispensable = ?, notes = ?
+       WHERE id = ?;`,
+      [
+        fix.categoryId,
+        fix.name,
+        Number(fix.amount),
+        Number(fix.dueDay) || 15,
+        fix.targetMode || 'QUINCENAL',
+        fix.isIndispensable ? 1 : 0,
+        fix.notes || '',
+        fix.id
+      ]
+    );
+    SqlDatabase._persist();
+    return fix;
+  },
+
   sqlDeleteFixedExpense: async (fixedId) => {
     const db = await SqlDatabase.init();
     db.run('DELETE FROM fixed_expense_payments WHERE fixed_expense_id = ?;', [fixedId]);
